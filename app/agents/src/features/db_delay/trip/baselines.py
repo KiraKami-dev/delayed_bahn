@@ -23,6 +23,9 @@ NUMERIC = [
     "hist_days", "station_late_3h", "station_late_24h", "station_late_72h", "station_stops_24h",
     "network_late_3h", "network_late_24h", "network_late_72h",
 ]
+# Columns that newer builds add; used when the frame has them, so old and new builds both score.
+OPTIONAL_NUMERIC = ["prev_n", "prev_last", "prev_mean", "prev_gap_last", "hist_median_long", "hist_p90_long",
+                    "hist_median_7", "station_late_same_hour", "network_late_same_hour"]
 CATEGORICAL = ["cls", "train_type", "hist_level"]
 Prediction = tuple[np.ndarray, np.ndarray, np.ndarray | None]
 
