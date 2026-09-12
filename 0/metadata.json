@@ -3,12 +3,20 @@
   "checkpoint_id": "01M2BWSWMCTBZTPH0EYJSMNA5Q",
   "session_id": "08b27428-84e8-4f05-a359-bfa800d53b0f",
   "strategy": "manual-commit",
-  "created_at": "2026-09-12T22:46:26.874861Z",
+  "created_at": "2026-09-12T22:46:29.537917Z",
   "branch": "main",
   "checkpoints_count": 5,
   "files_touched": [
+    "app/backend/src/features/delay-prediction/backends/http.js",
+    "app/backend/src/features/delay-prediction/backends/mock.js",
+    "app/backend/src/features/delay-prediction/connection.js",
+    "app/backend/src/features/delay-prediction/routes/delay-prediction.js",
+    "app/backend/src/features/pwa-shell/static.js",
     "app/backend/src/features/share-parser/fixtures/stations.json",
-    "app/backend/src/features/share-parser/stations.js"
+    "app/backend/src/features/share-parser/grammar.js",
+    "app/backend/src/features/share-parser/routes/share-parser.js",
+    "app/backend/src/features/share-parser/stations.js",
+    "app/backend/src/features/share-parser/vbid.js"
   ],
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
@@ -17,25 +25,25 @@
   "transcript_lines_at_start": 663,
   "compact_transcript_start": 65,
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 32,
+    "cache_creation_tokens": 1188,
+    "cache_read_tokens": 242684,
+    "output_tokens": 854,
+    "api_call_count": 1
   },
   "session_metrics": {
     "turn_count": 5
   },
   "initial_attribution": {
-    "calculated_at": "2026-09-12T22:46:26.818237Z",
-    "agent_lines": 143,
+    "calculated_at": "2026-09-12T22:46:29.488616Z",
+    "agent_lines": 0,
     "agent_removed": 0,
-    "human_added": 728,
+    "human_added": 49,
     "human_modified": 0,
     "human_removed": 0,
-    "total_committed": 871,
-    "total_lines_changed": 871,
-    "agent_percentage": 16.417910447761194,
+    "total_committed": 49,
+    "total_lines_changed": 49,
+    "agent_percentage": 0,
     "metric_version": 2
   }
 }
