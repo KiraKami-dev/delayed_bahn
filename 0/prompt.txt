@@ -1,0 +1,17 @@
+in gitignore entire said .entire files and all should not be in git ignore
+
+---
+
+dis should be ignored ryt ?
+
+---
+
+node files and all should be ignored too ryt? think and tell me
+
+---
+
+what do you mean by chain the hooks ?
+
+---
+
+yes chain both hooks and merge the claude settings and just push it so my team can use it
