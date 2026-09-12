@@ -409,11 +409,14 @@ def main() -> None:
     parser.add_argument("--val-start")
     parser.add_argument("--test-start")
     parser.add_argument("--label-cutoff", help="drop targets planned at or after this local time")
+    parser.add_argument("--series-hours", type=int, help="length of the hourly station and network series (default 72)")
     args = parser.parse_args()
     files = tuple(str(Path(args.raw) / f"data-{m}.parquet") for m in args.months)
     base = Config(files=files)
     overrides = {key: value for key, value in {"train_start": args.train_start, "val_start": args.val_start,
                  "test_start": args.test_start, "label_cutoff": args.label_cutoff}.items() if value}
+    if args.series_hours:
+        overrides["series_hours"] = args.series_hours
     cfg = replace(base, examples_per_class={k: int(v * args.scale) for k, v in base.examples_per_class.items()},
                   **overrides)
     build(cfg, Path(args.out))

@@ -94,6 +94,7 @@ def as_text(values: np.ndarray) -> str:
 
 
 MODES = ("series", "text", "both")
+TEXT_HOURS = 72  # the prompt never carries more than this many hourly values; the encoder gets them all
 
 
 def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dict:
@@ -122,14 +123,20 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dic
     raw = [
         ("Departure delay at each stop so far" if run else "No departures yet", run or [0.0], "minutes"),
         (f"Daily median arrival delay at {stop}, last 30 days", row["hist_series"], "minutes"),
-        (f"Hourly share of late stops at {stop}, last 72 hours", row["station_series"], "share"),
-        (f"Hourly share of late {row['cls']} stops nationwide, last 72 hours", row["network_series"], "share"),
+        (f"Hourly share of late stops at {stop}, last {len(row['station_series'])} hours", row["station_series"], "share"),
+        (f"Hourly share of late {row['cls']} stops nationwide, last {len(row['network_series'])} hours",
+         row["network_series"], "share"),
     ]
     if mode in ("text", "both"):
         # The same numbers written into the prompt; in ``text`` no time-series encoder is involved.
-        lines = [f"{label}, in {'percent' if unit == 'share' else unit}: "
-                 f"{as_text(np.asarray(values, dtype=np.float64) * (100 if unit == 'share' else 1))}"
-                 for label, values, unit in raw]
+        lines = []
+        for label, values, unit in raw:
+            values = np.asarray(values, dtype=np.float64)
+            if unit == "share" and len(values) > TEXT_HOURS:  # long hourly series: the text gets the recent end
+                values = values[-TEXT_HOURS:]
+                label = label.rsplit(", last ", 1)[0] + f", last {TEXT_HOURS} hours"
+            lines.append(f"{label}, in {'percent' if unit == 'share' else unit}: "
+                         f"{as_text(values * (100 if unit == 'share' else 1))}")
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)
     series = [] if mode == "text" else [normalised(values, label, unit) for label, values, unit in raw]
     post_prompt = (f"How many minutes late will the train arrive at {stop}? Reason from the data, "

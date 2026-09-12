@@ -33,13 +33,14 @@ def main() -> None:
     parser.add_argument("--test-limit", type=int, default=5000)
     parser.add_argument("--generate", type=int, default=16)
     parser.add_argument("--timeout", default="2h")
+    parser.add_argument("--examples", default="data/examples.parquet", help="examples object in the bucket")
     args = parser.parse_args()
 
     spec = json.loads(Path(args.template).read_text())
     spec["name"] = args.name or f"jonas-{args.tag}"
     spec["timeout"] = args.timeout
     spec["env"] = {"RUN_TAG": args.tag, "RUNS": args.runs, "STEPS": str(args.steps), "VAL_LIMIT": str(args.val_limit),
-                   "TEST_LIMIT": str(args.test_limit), "GENERATE": str(args.generate), "CUSTOM_ARGS": args.custom_args}
+                   "TEST_LIMIT": str(args.test_limit), "GENERATE": str(args.generate), "CUSTOM_ARGS": args.custom_args, "EXAMPLES": args.examples}
     spec["injectedFiles"] = [{"containerPath": "/workspace/run_ablations.sh",
                               "content": base64.b64encode(RUNNER.read_bytes()).decode()}]
     print(json.dumps(spec, indent=2))
