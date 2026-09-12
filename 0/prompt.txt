@@ -1,0 +1,24 @@
+<task-notification>
+<task-id>bnmfu8xq1</task-id>
+<summary>Monitor event: "overnight TSLM queue on the devbox: progress every 500 steps, eval results, crashes"</summary>
+<event>step 6500/12000 {'loss': 2.5028, 'token_ce': 0.1036, 'soft_ce': 2.1536, 'crps': 2.4561} 6513s (1.00s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b4uexrsws</task-id>
+<summary>Monitor event: "H100 plain-loss follow-ups (5k steps, 2x learning rate): states, progress, eval results, crashes"</summary>
+<event>h100 plain-5k: PROVISIONING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b4uexrsws</task-id>
+<summary>Monitor event: "H100 plain-loss follow-ups (5k steps, 2x learning rate): states, progress, eval results, crashes"</summary>
+<event>h100 plain-lr2x: PROVISIONING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
