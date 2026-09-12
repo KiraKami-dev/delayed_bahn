@@ -4,11 +4,7 @@
   "strategy": "manual-commit",
   "branch": "main",
   "checkpoints_count": 6,
-  "files_touched": [
-    "app/frontend/package.json",
-    "app/frontend/src/lib/motion.ts",
-    "app/frontend/src/lib/store.tsx"
-  ],
+  "files_touched": null,
   "sessions": [
     {
       "metadata": "/0/metadata.json",
