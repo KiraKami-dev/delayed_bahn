@@ -196,7 +196,7 @@ Also budget for provisioning time (a few minutes per job) and any bucket storage
 | `NEBIUS_PROJECT_ID is not set` | copy `.env.example` → `.env` |
 | `nebius iam get-access-token` returns nothing | `nebius profile create …`, log in in the browser |
 | 403 on create | the account/service account lacks editor on the project |
-| `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset |
+| `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset. Check the **region** first: platforms are per project/region. Our tenant's `default-project-eu-west1` (the console default) only offers `gpu-h200-sxm`, and every 8-GPU H200 request there timed out. `default-project-us-central1` (`project-u00re9y9kc00bwpa7d9ftt`, team default) has B200, H200, RTX6000; `default-project-eu-north1` (`project-e00g0c62pr00fj32s0h4gj`) has H100, H200, L40S-a and L40S-d. Single-GPU jobs schedule in both within 2–3 min; the 8× H200 node did not schedule in any region on 12 Sep 2026 (VM stays STOPPED in PROVISIONING, then errors). Never request the 8-GPU preset for a 0.5B/3B fine-tune |
 | `FAILED` / `TimeoutExceeded` | raise `--timeout` |
 | `FAILED` right after `RUNNING` | `logs <id>`; usually a pip install or script error |
 | Preset rejected | run `nebius compute platform list` and use the IDs it prints; the catalog in `spec.js` is a convenience, not the source of truth |
