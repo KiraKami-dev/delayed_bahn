@@ -1,0 +1,144 @@
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-2k: PROVISIONING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-12k: PROVISIONING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 text-only | [text_only] step 1000/2000 {'loss': 2.5573, 'token_ce': 0.0967, 'soft_ce': 2.2311, 'crps': 2.2948} 726s (0.73s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 plain-ce | [plain_ce] validation {"n": 3000, "cancel_rate": 0.03666666666666667, "mae_median": 2.788235294117647, "crps": 2.239650336914952, "coverage_10_90": 0.9131487889273356, "width_10_90": 7.9442906574394465, "late_rate": 0.21</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 ecg-sp-start | [ecg_sp_start] validation {"n": 3000, "cancel_rate": 0.03666666666666667, "mae_median": 2.8069204152249134, "crps": 2.2760025496266616, "coverage_10_90": 0.9242214532871972, "width_10_90": 7.829411764705882, "late_rate":</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 random-encoder | [random_encoder] validation {"n": 3000, "cancel_rate": 0.03666666666666667, "mae_median": 2.8245674740484428, "crps": 2.2849153159715896, "coverage_10_90": 0.9235294117647059, "width_10_90": 7.9941176470588236, "late_rat</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-2k: STARTING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 plain-ce: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 plain-ce | [plain_ce] test {"n": 5000, "cancel_rate": 0.0542, "mae_median": 3.702262634806513, "crps": 2.9536043004529717, "coverage_10_90": 0.8993444702897019, "width_10_90": 10.185662930852189, "late_rate": 0.2630577289067456, "b
+h100 plain-ce | [plain_ce] generation {"n": 16, "parse_rate": 1.0, "mae_generated": 2.125}
+h100 plain-ce | 2026-09-12T21:45:03Z plain_ce exit 0
+h100 plain-ce | 2026-09-12T21:45:03Z all runs finished
+h100 plain-ce | 2026-09-12T21:45:03Z results copied</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 ecg-sp-start | [ecg_sp_start] test {"n": 5000, "cancel_rate": 0.0542, "mae_median": 3.7105096214844577, "crps": 2.9937963962560237, "coverage_10_90": 0.9122436032987947, "width_10_90": 9.471347007824065, "late_rate": 0.2630577289067456
+h100 ecg-sp-start | [ecg_sp_start] generation {"n": 16, "parse_rate": 1.0, "mae_generated": 2.1875}
+h100 ecg-sp-start | 2026-09-12T21:44:59Z ecg_sp_start exit 0
+h100 ecg-sp-start | 2026-09-12T21:44:59Z all runs finished
+h100 ecg-sp-start | 2026-09-12T21:45:00Z results copied</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 random-encoder: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 random-encoder | [random_encoder] test {"n": 5000, "cancel_rate": 0.0542, "mae_median": 3.7267921336434764, "crps": 3.005918687605035, "coverage_10_90": 0.911820680905054, "width_10_90": 9.645591034045253, "late_rate": 0.2630577289067456
+h100 random-encoder | [random_encoder] generation {"n": 16, "parse_rate": 1.0, "mae_generated": 2.125}
+h100 random-encoder | 2026-09-12T21:45:26Z random_encoder exit 0
+h100 random-encoder | 2026-09-12T21:45:26Z all runs finished
+h100 random-encoder | 2026-09-12T21:45:26Z results copied</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-2k: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-12k: IMAGE_PULLING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 plain-ce: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
