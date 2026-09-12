@@ -3,8 +3,10 @@
   "checkpoint_id": "01M2BWTKFQQ31NQ6R9X9CJS306",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 5,
-  "files_touched": null,
+  "checkpoints_count": 6,
+  "files_touched": [
+    "app/frontend/public/seed/recommendation.json"
+  ],
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -12,13 +14,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": ""
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 64,
+    "cache_creation_tokens": 2073,
+    "cache_read_tokens": 139873,
+    "output_tokens": 707,
+    "api_call_count": 2
   }
 }
