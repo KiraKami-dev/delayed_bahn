@@ -236,3 +236,7 @@ should i have public or private endpoint ?
 ---
 
 aijob-e01y1ghzpgqscgpj81
+
+---
+
+how do we connect it and get it up in github so everyone can use it
