@@ -39,7 +39,7 @@
     {
       "id": "t-bfb3bec0ec83535e9fbe0485c5baafb3",
       "title": "GPU access / training setup; check real GPU speed",
-      "status": "building",
+      "status": "demo-ready",
       "owner": null,
       "sub_owners": [],
       "depends_on": [],
@@ -51,7 +51,7 @@
     {
       "id": "t-fa97919195df50a9922a74d7c49018c7",
       "title": "Data: October 2025 \u2192 August 2026 (~10\u201320 GB)",
-      "status": "backlog",
+      "status": "building",
       "owner": null,
       "sub_owners": [],
       "depends_on": [
