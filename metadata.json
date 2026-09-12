@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BV892EXWS4WVBX06BVR3AZ",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/nebius/sync_bucket.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 5948,
+    "cache_creation_tokens": 1042149,
+    "cache_read_tokens": 132827459,
+    "output_tokens": 592917,
+    "api_call_count": 288
+  }
+}
