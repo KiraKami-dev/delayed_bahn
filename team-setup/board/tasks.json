@@ -1,3 +1,261 @@
 {
-  "tasks": []
+  "tasks": [
+    {
+      "id": "t-1f7875b13aa85913a5fa3352a8998081",
+      "title": "API connection",
+      "status": "demo-ready",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [],
+      "target_time": null,
+      "mvp": "round-1",
+      "stage": "Infra",
+      "notes": "Done. Timetable API working; 60 req/min per client ID + secret. Stick with it."
+    },
+    {
+      "id": "t-8cddf5ed35825abf822c17c201eada7f",
+      "title": "Audio transcription of team discussions",
+      "status": "demo-ready",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [],
+      "target_time": null,
+      "mvp": "round-1",
+      "stage": "Infra",
+      "notes": "Done. Recording from now on; structured record goes to state/meetings/."
+    },
+    {
+      "id": "t-cdd5a82f008c589792756d690bab7425",
+      "title": "Agentic workflow for the data (bonus points)",
+      "status": "building",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [],
+      "target_time": null,
+      "mvp": "bonus",
+      "stage": "Data",
+      "notes": "In progress. Agentic pipeline that fetches/prepares the training data."
+    },
+    {
+      "id": "t-bfb3bec0ec83535e9fbe0485c5baafb3",
+      "title": "GPU access / training setup; check real GPU speed",
+      "status": "building",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [],
+      "target_time": null,
+      "mvp": "round-1",
+      "stage": "Infra",
+      "notes": "In progress. Nebius Serverless AI jobs via app/backend training-jobs. Measure real run time \u2014 should be a bit less than planned."
+    },
+    {
+      "id": "t-fa97919195df50a9922a74d7c49018c7",
+      "title": "Data: October 2025 \u2192 August 2026 (~10\u201320 GB)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-1f7875b13aa85913a5fa3352a8998081"
+      ],
+      "target_time": "T+20%",
+      "mvp": "round-1",
+      "stage": "Data",
+      "notes": "Format changed in October, so only Oct\u2192Aug. Cut to the storyline route."
+    },
+    {
+      "id": "t-9dfb8c134dc95bef97906c48911b4c51",
+      "title": "Pick the storyline route (biggest DB trouble)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [],
+      "target_time": "T+10%",
+      "mvp": "round-1",
+      "stage": "Pitch / Data",
+      "notes": "Blocks data cut, training and the demo script freeze. Pick now."
+    },
+    {
+      "id": "t-39f80030be68594babc16f2cbbcaf1b8",
+      "title": "Decide per station vs per train number",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-fa97919195df50a9922a74d7c49018c7"
+      ],
+      "target_time": null,
+      "mvp": "round-1",
+      "stage": "Model",
+      "notes": "Per train number fractures the data; try per station; compare with connection-level."
+    },
+    {
+      "id": "t-3b47460ddf2e50c88a6d4c57465c5aa7",
+      "title": "Training (6 min per run now; ~2 h \u2192 two runs)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-fa97919195df50a9922a74d7c49018c7",
+        "t-bfb3bec0ec83535e9fbe0485c5baafb3",
+        "t-9dfb8c134dc95bef97906c48911b4c51"
+      ],
+      "target_time": "T+45%",
+      "mvp": "round-1",
+      "stage": "Model",
+      "notes": "Fine-tune 0.5B / 3B on the route's Oct\u2192Aug data. Budget for two full runs."
+    },
+    {
+      "id": "t-e2cb9325823b5e6995c664fb94d9df78",
+      "title": "Baseline: raw data into GPT / Claude Opus, compare with fine-tuned 0.5B / 3B",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-fa97919195df50a9922a74d7c49018c7"
+      ],
+      "target_time": null,
+      "mvp": "round-1",
+      "stage": "Model",
+      "notes": "Given baseline. One chart, one number for demo shot 0:60."
+    },
+    {
+      "id": "t-2c8fd7c2f1385a18a805bcf4a5c30274",
+      "title": "Core: per-train delay prediction, chained across the journey",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-3b47460ddf2e50c88a6d4c57465c5aa7",
+        "t-39f80030be68594babc16f2cbbcaf1b8"
+      ],
+      "target_time": "T+55%",
+      "mvp": "round-1",
+      "stage": "Model",
+      "notes": "Backend inference endpoint: journey \u2192 per-train delay \u2192 probability the plan fails. Answer includes reasoning/sources/confidence."
+    },
+    {
+      "id": "t-cd5ce1a1309f5214918e18cbb00334a6",
+      "title": "Write the pitch",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-9dfb8c134dc95bef97906c48911b4c51"
+      ],
+      "target_time": null,
+      "mvp": "round-1",
+      "stage": "Pitch",
+      "notes": "Start now, in parallel with the build. Storyline: too frustrated to come to Zurich. Seed in state/06-polish-and-pitch/pitch.md."
+    },
+    {
+      "id": "t-a8de2661d50c59b2b1566c5b99162f14",
+      "title": "Recommendation algorithm (after the core works)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-2c8fd7c2f1385a18a805bcf4a5c30274"
+      ],
+      "target_time": "T+65%",
+      "mvp": "round-1",
+      "stage": "Recommendation",
+      "notes": "Separate algorithm on top of the delay output: buffer, more reliable route, how early to come, what next if cancelled. Least stressful journey. Can also say 'this connection is good'."
+    },
+    {
+      "id": "t-303d5dbdbe14583e8e1bb07d8ac8ebe4",
+      "title": "PWA (installable web app)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [],
+      "target_time": "T+40%",
+      "mvp": "round-1",
+      "stage": "Product",
+      "notes": "Installable web app, share-target manifest, calls the backend for inference."
+    },
+    {
+      "id": "t-db77b7a87ed85ba0934f2655674ea90a",
+      "title": "Share-text parser (DB share \u2192 raw text \u2192 grammar \u2192 journey)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-303d5dbdbe14583e8e1bb07d8ac8ebe4"
+      ],
+      "target_time": "T+45%",
+      "mvp": "round-1",
+      "stage": "Product",
+      "notes": "DB Share gives raw text, sometimes with several connections; grammar picks the right one; maybe text \u2192 URL."
+    },
+    {
+      "id": "t-55256003af97577097ac9f81b17d23fc",
+      "title": "Extra API client IDs (60 req/min limit)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-1f7875b13aa85913a5fa3352a8998081"
+      ],
+      "target_time": null,
+      "mvp": "nice-to-have",
+      "stage": "Infra",
+      "notes": "Register several client ID/secret pairs if the rate limit bites."
+    },
+    {
+      "id": "t-7e9a7707aa6858e9bf5ccb8dc3fed633",
+      "title": "Check notifications in PWA",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-303d5dbdbe14583e8e1bb07d8ac8ebe4"
+      ],
+      "target_time": null,
+      "mvp": "nice-to-have",
+      "stage": "Product",
+      "notes": "Only check whether they work; not a demo shot."
+    },
+    {
+      "id": "t-7d0e90f029665c83a814f29a64781389",
+      "title": "Map view (later)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-2c8fd7c2f1385a18a805bcf4a5c30274"
+      ],
+      "target_time": null,
+      "mvp": "later",
+      "stage": "Product",
+      "notes": "(3D) map from \u2192 to, zooms in, shows probability. Not for this demo."
+    },
+    {
+      "id": "t-e7f1be5090ed589ab84aed758d0320db",
+      "title": "Next-train delay as input (later)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-2c8fd7c2f1385a18a805bcf4a5c30274"
+      ],
+      "target_time": null,
+      "mvp": "later",
+      "stage": "Model",
+      "notes": "Series of delays: previous/next train delay as model input. Add only if the core is done."
+    },
+    {
+      "id": "t-4fe8b5dca531561889b881191b9179b8",
+      "title": "Level 3: causes / disaster probability (evaluation, not a feature)",
+      "status": "backlog",
+      "owner": null,
+      "sub_owners": [],
+      "depends_on": [
+        "t-a8de2661d50c59b2b1566c5b99162f14"
+      ],
+      "target_time": null,
+      "mvp": "later",
+      "stage": "Recommendation",
+      "notes": "Scientific evaluation after recommendation."
+    }
+  ]
 }

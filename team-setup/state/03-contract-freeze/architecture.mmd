@@ -1,3 +1,12 @@
-%% Mermaid diagram, generated from contract.md.
+%% Mermaid diagram, generated from contract.md (DRAFT — regenerate at freeze).
 graph LR
-  A[fill me in]
+  DB[DB app — Share sheet] -->|raw connection text| FE[app/frontend — PWA share target]
+  FE -->|POST /api/journeys/parse| BE[app/backend — Node API]
+  FE -->|POST /api/predict| BE
+  FE -->|POST /api/recommend| BE
+  FE -->|GET /api/seed/demo| BE
+  BE -->|Journey| AG[app/agents — delay model + recommendation]
+  AG -->|Prediction / Recommendation| BE
+  BE -->|Explained values| FE
+  TJ[app/backend training-jobs — Nebius GPU] -->|fine-tuned 0.5B / 3B| AG
+  API[DB timetable API — 60 req/min] --> AG

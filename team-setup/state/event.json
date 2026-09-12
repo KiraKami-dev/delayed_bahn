@@ -3,20 +3,25 @@
   "coordination_branch": "main",
   "coordination_maintainer": "Herit",
   "event_name": "Temporal AI",
-  "venue": "",
+  "venue": "EHL Zurich",
   "build_starts": "2026-09-12T12:30:00.000Z",
   "submission_deadline": "2026-09-13T10:00:00.000Z",
   "submit_target_offset_hours": -1,
-  "tracks": [],
-  "tracks_known_in_advance": false,
+  "tracks": [
+    "Temporal AI"
+  ],
+  "tracks_known_in_advance": true,
   "reveal_window": "",
   "team_formation_deadline": "",
   "submission_format": "live_pitch",
   "pitch_length_minutes": null,
-  "partners": [],
+  "partners": [
+    "Deutsche Bahn (timetable API, RIS disruption feed)",
+    "Nebius (GPU training)"
+  ],
   "credits": {
-    "provider": "",
-    "amount": ""
+    "provider": "Nebius",
+    "amount": "$600"
   },
   "sleep_rota": [
     {

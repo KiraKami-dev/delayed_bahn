@@ -1,0 +1,103 @@
+# Team discussion — Sat 12 Sep 2026 (EHL Zurich, Temporal AI track)
+
+Structured from the recorded transcript. Only what was said is included; garbled passages are left out rather than guessed.
+
+---
+
+## 1. Core — what the model does
+
+- The model predicts the **delay of each train separately** — not one train for the whole journey. ("Your idea was better — we just do different trains.")
+- Across the journey the delays chain: train 1 delayed 5 min → maybe you still catch train 2 → overall delay is now 15 min → you miss train 3.
+- Output: the probability that your plan fails — you miss connections / you won't make it to the end within the time.
+- "The main core thing is only about predicting the delays." Recommendations are a completely separate algorithm.
+- Modelling unit: Claude Code did a quick analysis — per train number fractures the data too much; it would look per station instead. Something to try; check whether it is better than looking at connections separately.
+- Inference runs on a **backend**, not on the phone — heavy model (~10 GB), no sense on the phone.
+
+## 2. Recommendation — second step, after the core works
+
+- Split the work in two: (1) estimate the probability of the delay, (2) give recommendations on what to do based on the amount of delay. Do (1) first; the recommendation is another algorithm on top.
+- Give the insights from the model back and suggest an alternative connection based on the delays.
+- Questions it should answer:
+  - How much time / buffer should I plan? (Half an hour of buffer didn't work.)
+  - Is there another route that is more reliable?
+  - How early should you come?
+  - I'm already here — what can I do next, e.g. if it gets cancelled?
+- Principle: the journey should be **as non-stressful / comfortable as possible**. Even if you can catch the next train by running with luggage, you end up more tired and stressed — suggest the comfortable connection with decent time in between. It might be longer, but that's the delay's fault.
+- Weather-forecast analogy: don't just show data ("it's going to rain today") — say what to do ("take an umbrella").
+- Also be able to say: "this connection is good."
+
+## 3. Level 3 — causes
+
+- After recommendations: give the causes / possibility of a disaster happening.
+- "I would never even call this a feature — it's a scientific evaluation." Level three.
+
+### Idea, maybe later
+
+- Put the previous and the next train in: if the first train is 10 min late, the next one probably also has delay — there will be a series of delays, the connecting train isn't always on time.
+- "I don't know if that's a feature we can ship — we can imagine it for the time being and then add it."
+
+## 4. Data & training
+
+- Since October the data format has changed → use **October to August** (~8 months). Reduces to maybe 10–20 GB — probably enough.
+- A training takes **6 minutes** now. If a training takes ~2 hours, we get two trainings in. Check the GPU speed — it should be a bit less than planned.
+- Baseline (given): paste the raw data, not fine-tuned, into GPT / Claude Opus. If the fine-tuned 0.5B or 3B model is better than that — really cool.
+- Train on the route chosen for the storyline (that's why the route must be picked now).
+- Timetable data; the RIS disruption feed was mentioned.
+- Still missing for bonus points: the **agentic workflow for the data** — someone is working on it.
+
+## 5. API & infra
+
+- "API is working? Awesome." → confirmed. Stick with this.
+- Rate limit: **60 requests per minute**. You get a client ID and a client secret — maybe register several.
+- GPU access / training setup: being looked at.
+- Audio transcription of the team is working — recording from now on so decisions aren't lost.
+
+## 6. Frontend / product
+
+- **PWA finalised** (progressive web app): anything built for the web can be installed like an app; no separate Android / iOS to worry about — time constraint. Check whether notifications work.
+- Share idea: in the DB app you press **Share** → it gives some raw text → share it to our app → we extract the journey and give the probability out of it.
+  - "We are building on top of DB — we are not making an exchange just because they are bad."
+  - The shared text sometimes has more than one connection in it → a grammar (or similar) to know which one / where the information is; maybe turn the text into a URL.
+- If it says "take another one", we make other suggestions; it should also be able to say "yes, this connection is good."
+- Map idea: (3D) map view — type in from → to, it visualises and zooms in, then tells you the probability of whether you'll make it. First version just shows the delays; features get added level by level.
+- Inference on the backend; the web app calls it.
+
+## 7. Locked in — round one
+
+Discuss again around midnight. What we need for round one:
+
+1. **Data**
+2. **Training**
+3. **GPU access**
+4. **Pitch**
+
+- Storyline / demo depends on **one route**: our biggest trouble with Deutsche Bahn. Pick it now, because the training data is for that route. It can turn into a good storyline and a demo, and show the emotion ("too frustrated to come to Zurich").
+- Someone should write the pitch already, while the rest builds.
+- Build order: core delay prediction → recommendation (separate algorithm) → level 3 causes.
+- Asked "anything else, anybody want to add?" — nothing else was missing.
+
+---
+
+## Task list (things named as work)
+
+| # | Task | Status | Area |
+|---|------|--------|------|
+| 1 | API connection | ✅ Done | Infra |
+| 2 | Audio transcription of team discussions | ✅ Done | Infra |
+| 3 | Agentic workflow for the data (bonus points) | 🔄 In progress | Data |
+| 4 | GPU access / training setup; check real GPU speed | 🔄 In progress | Infra |
+| 5 | Data: October → August (~10–20 GB) | ☐ | Data |
+| 6 | Pick the storyline route (biggest DB trouble) | ☐ | Pitch / Data |
+| 7 | Training (6 min per run now; ~2 h → two runs) | ☐ | Model |
+| 8 | Decide per station vs per train number | ☐ | Model |
+| 9 | Baseline: raw data into GPT / Claude Opus, compare with fine-tuned 0.5B / 3B | ☐ | Model |
+| 10 | Core: per-train delay prediction, chained across the journey | ☐ | Model |
+| 11 | Write the pitch | ☐ | Pitch |
+| 12 | Recommendation algorithm (after the core works) | ☐ | Recommendation |
+| 13 | PWA (installable web app) | ☐ | Product |
+| 14 | Share-text parser (DB share → raw text → grammar → journey) | ☐ | Product |
+| 15 | Extra API client IDs (60 req/min limit) | ☐ | Infra |
+| 16 | Check notifications in PWA | ☐ | Product |
+| 17 | Map view (later) | ☐ | Product |
+| 18 | Next-train delay as input (later) | ☐ | Model |
+| 19 | Level 3: causes / disaster probability (evaluation, not a feature) | ☐ | Recommendation |

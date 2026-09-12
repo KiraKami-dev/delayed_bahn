@@ -24,6 +24,13 @@ same as directory ownership — nothing here is fixed by background.
 
 | Feature | Owner | Sub-owners |
 |---|---|---|
+| training-jobs (backend, Nebius GPU jobs) | | |
+| delay-prediction (backend/agents: model, inference endpoint) | | |
+| recommendation (backend/agents: algorithm on top of delays) | | |
+| share-parser (frontend: DB share text → journey) | | |
+| pwa-shell (frontend: installable app, share target, UI) | | |
+| data-pipeline (agents: Oct→Aug data cut, agentic workflow) | | |
+| evaluation (agents: baseline vs fine-tuned chart) | | |
 
 ## Gate roles
 

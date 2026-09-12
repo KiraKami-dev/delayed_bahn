@@ -1,6 +1,6 @@
 {
   "_comment": "The machine-readable spine. window_start_pct/window_end_pct are fractions (0-100) of the planning window (submit_target - build_starts) from event.json, resolved to real clock times at read time by board/app.js and board/serve.py. null pct means pre-build (runs before build_starts). owner is a ROLE, the actual name is looked up in state/owners.md's Gate roles table, never hardcoded here.",
-  "current_stage": "challenge-pick",
+  "current_stage": "demo-script",
   "stages": [
     {
       "id": "reveal-capture",
@@ -29,9 +29,9 @@
       "outputs": [
         "state/01-challenge-pick/challenge.md"
       ],
-      "status": "in_progress",
+      "status": "done",
       "started_at": "2026-09-12T14:20:09.310956+00:00",
-      "completed_at": null
+      "completed_at": "2026-09-12T18:36:41+00:00"
     },
     {
       "id": "demo-script",
@@ -45,8 +45,8 @@
         "state/02-demo-script/demo-script.md",
         "state/02-demo-script/not-building.md"
       ],
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-09-12T18:36:41+00:00",
       "completed_at": null
     },
     {
