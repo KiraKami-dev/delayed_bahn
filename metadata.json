@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BH8MPS56WP4H0K2NSS8DSX",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "app/agents/src/features/db_delay/DESIGN.md",
+    "app/agents/src/features/db_delay/analysis/README.md",
+    "app/agents/src/features/db_delay/analysis/grouping_skill.py",
+    "app/agents/src/features/db_delay/analysis/load_3b.py",
+    "app/agents/src/features/db_delay/analysis/longdistance_ids.py",
+    "app/agents/src/features/db_delay/analysis/num_tokens.py",
+    "app/agents/src/features/db_delay/analysis/route_pattern.py",
+    "app/agents/src/features/db_delay/analysis/tok_ints.py",
+    "app/agents/src/features/db_delay/analysis/trip_signal.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1204,
+    "cache_creation_tokens": 208159,
+    "cache_read_tokens": 7511317,
+    "output_tokens": 94964,
+    "api_call_count": 47,
+    "subagent_tokens": {
+      "input_tokens": 226,
+      "cache_creation_tokens": 72827,
+      "cache_read_tokens": 352617,
+      "output_tokens": 9214,
+      "api_call_count": 8
+    }
+  }
+}

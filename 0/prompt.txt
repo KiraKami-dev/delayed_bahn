@@ -1,0 +1,94 @@
+We already built a db-train-idea train example. See the handoff there. We now have to build this properly. You can also use the ssh devbox for it. Can you first check what would you build now? Which range of data? What to have as the data etc. And the challenge description is this one, so we want to build the strongest project possible for it: /Users/jonasstenglein/Downloads/Aionic_Temporal_AI_Hackathon.pdf
+
+---
+
+We can also use a better model, like the 3B one. You said I need to accept some license though / log in somehow to access that?
+
+---
+
+"Target user: a regional operations controller watching hundreds of stations." I thought we wanted to have it for an end user also? E.g. we had the idea share a trip from  the db app (not sth to build here but later for the demo) and then it gives like an output how likely the train arrives on time or not (maybe some text).  Can we also do all stations or how much overhead would it be? We also saw DB has an API for how much time one needs for changeovers (like how much the ways take) but would we add that the model or after the fact? The split: Is that good to take the latest data as split only esp. as we then predict also current (sept 2026 data)? (like for the live demo) Or is that common? Also we had the idea: Is it really good to do the data aggregation by station and local vs interregional or should we do it more by line (as most other prediction services do for db, maybe you can check online). I also requested access to llama and Gemma. And yeah, we can fine tune from the checkpoint.
+
+---
+
+<task-notification>
+<task-id>a96cb3fbdc24a2aae</task-id>
+<tool-use-id>toolu_016t8bx8AQ7e8EN3Xhxcdudm</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/abdb3068-b181-45de-82c2-0cdd5152ab32/tasks/a96cb3fbdc24a2aae.output</output-file>
+<status>completed</status>
+<summary>Agent "Research DB delay predictors and APIs" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>The existing services model delay per stop and per train run, then combine arrival and departure forecasts into a connection probability. None of the tools I checked groups delays by line. The dataset is live: its last commit was about 40 minutes before I checked.
+
+## 1. How existing services model it
+
+- **bahnvorhersage.de (formerly TCP):** it predicts a probability distribution of arrival and departure delay for every stop of a train run ("for each stop a probability with which the train departs 1, 2, or 3 minutes earlier") [1]. For each change it combines the arriving train's distribution, the departing train's distribution and DB's transfer time, assuming the minimum transfer time is kept [2][3]. The press reports XGBoost, about 470M training points, a rolling 6-week window and daily retraining [3]. The 38C3 slides list the factors: time of day, train type, distance already travelled, how far ahead the forecast is, and DB's current delay forecast; training data is about 1B stops [4]. The code moved to GitLab [5]; the old GitHub TCP repo is archived [6].
+- **Zugfinder:** it has statistics for the last 30 days per train number (older history is paid), arrival tables per station, some timetable routes (Kursbuchstrecken), a check of how safe a change between two trains is, and an AI forecast 3 days ahead (about 79% reliability, per the press) [7][8]. I could not find how the model works.
+- **bahn.expert:** the code is no longer public; the repo is only used for issues [9]. I found no evidence of its own delay model.
+- **DB Navigator:** it warns when a connection is at risk ("connection will presumably not be reached"), lets you set a longer transfer time, and falls back to historical values when there is no live data [10][11]. I found no public description of a probability model.
+- **Academic work on DB data:**
+  - Nair et al. (TR-C) combined a random forest (traffic state, weather, events, work zones), a kernel regression per train and a simulation. For about 25,000 trains a day they got +25% forecasts within 1 minute and -50% RMSE compared with the timetable [12]. This is from the abstract only.
+  - Consileon's system for DB predicts the change in delay per route section, from current delay and planned running time, and sums the sections [13].
+  - The GATv2 paper [14] uses Dutch data, not DB.
+
+## 2. Aggregation by line
+
+I found no service that aggregates by line. Units seen are per stop and run [1], per train number or station [7], per route section [13], and per station or train type [15]. My unverified guess at why: train number plus stop already identifies a line, and delay builds up along the run, so a line average hides the effect of where on the route the stop is [4].
+
+## 3. Transfer times
+
+- **RIS::Stations** (DB API Marketplace) returns transfer times for commuters, occasional travellers and mobility-impaired travellers, and for the station, its surroundings and the city area. Endpoints: `GET /connecting-times/{evaNumber}` and `GET /connecting-times/{fromEva}/{toEva}` [16]. It works per station or station pair. I could not confirm whether it gives times per platform pair.
+- **Access to RIS::Stations:** DB must approve you. There is a free test plan (10 requests/s, 10k requests/month); paid plans start at €4,200/year. Data is CC BY 4.0 [16].
+- **db-rest (v6.db.transport.rest):** it now runs on db-vendo-client because the old HAFAS API was shut off. `/stops/reachable-from` no longer works and rate limits are lower [17]. `/journeys` only takes a `transferTime` minimum (default 0), plus `walkingSpeed` and walking legs [18][19]. Neither db-rest nor db-vendo-client returns station transfer times or whether a connection is feasible [20].
+- I did not check StaDa, FaSta or RIS::Connections in detail.
+
+## 4. Dataset freshness
+
+- The scraper runs 4 times a day against the StaDa and Timetables APIs. Raw data is stored per hour, and a processed monthly release follows [21].
+- The HF commit log shows commits every 4 to 6 hours, the latest at 2026-09-12 18:15 UTC. The "Monthly data release for 2026-08" commit landed about 10 days earlier [22].
+- The schema changed in February 2026: `train_name` was split, and cancellations became separate arrival and departure fields. `train_line_ride_id` and `train_line_station_num` exist [21].
+
+**Sources**
+[1] https://bahnvorhersage.de/blog/time-histograms/
+[2] https://travel-dealz.de/blog/bahn-vorhersage/
+[3] https://www.ingenieur.de/technik/fachbereiche/kuenstliche-intelligenz/zuverlaessigkeit-von-zugverbindungen-vorhersagen-so-hilft-ki-bei-der-reiseplanung/
+[4] https://fahrplan.events.ccc.de/congress/2024/fahrplan/media/38c3/submissions/MUZZ7C/resources/pr%C3%A4si_38c3_kHP8xdf.pdf
+[5] https://gitlab.com/bahnvorhersage/bahnvorhersage
+[6] https://github.com/TrAInConnectionPrediction/tcp
+[7] https://www.zugfinder.net/de/start
+[8] https://www.giga.de/artikel/ist-mein-zug-puenktlich-bahn-verspaetungen-online-sehen/
+[9] https://github.com/marudor/bahn.expert
+[10] https://www.bahn.de/service/fahrplaene/digitale-reisebegleitung
+[11] https://www.riffreporter.de/de/gesellschaft/db-navigator-bahn-app-falsche-angaben-verspaetungen
+[12] https://www.sciencedirect.com/science/article/abs/pii/S0968090X18317984
+[13] https://www.consileon.de/en/delay-forecast-for-train-travelers/
+[14] https://arxiv.org/html/2510.09350v1
+[15] https://piebro.github.io/deutsche-bahn-statistics/
+[16] https://developers.deutschebahn.com/db-api-marketplace/apis/product/ris-stations
+[17] https://github.com/derhuerst/db-rest
+[18] https://v6.db.transport.rest/api.html
+[19] https://github.com/public-transport/hafas-client/blob/main/docs/journeys.md
+[20] https://github.com/public-transport/db-vendo-client
+[21] https://github.com/piebro/deutsche-bahn-data
+[22] https://huggingface.co/datasets/piebro/deutsche-bahn-data/commits/main</result>
+<usage><subagent_tokens>74832</subagent_tokens><tool_uses>41</tool_uses><duration_ms>150245</duration_ms></usage>
+</task-notification>
+
+---
+
+"probabilities for on time / 6 to 15 min / 16 to 30 / over 30 / cancelled" probabilities or an estimate of the delay (maybe combined with a certainty)? "line_number is null for 100% of ICE, IC and EC stops." is there sth else identifying it? Cause website shows like which id they have? Or is that just not available in the dataset that is provided and only in the live api? "Llama-3.2-3B: still GatedRepoError, waiting on Meta." is this a manual review thingy, or can we get the data from elsewhere?
+
+---
+
+buckets or just an int prediction? Or try both? Cause that seems to make more sense than these ranges? "route (origin to destination) × station │ 0.162" is this just start x end (as sometimes stop / route in between also differs) 3. I got rejected. Use the mirror one e.g. unsloth if the weights are identical
+
+---
+
+"training treats 8 and 9 minutes as unrelated answers. With 100k+ examples it should learn the smoothness anyway." how would we fix it? And then cancelled would be its own token? And the 0 to 999 delay the standard or different tokens?   "So the best key is a fallback: use the most specific key with at least 10 past observations. Ten months of data will raise coverage further." sounds solid.
+
+---
+
+Sounds like a plan, also for the target. Do you maybe want to document all these choices we made first before building.
+
+---
+
+Sounds like a plan, also for the target. Do you maybe want to document all these choices we made first before building?
