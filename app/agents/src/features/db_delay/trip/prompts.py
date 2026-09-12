@@ -93,12 +93,20 @@ def as_text(values: np.ndarray) -> str:
     return ", ".join(f"{value:.0f}" for value in values)
 
 
-def sample(row: pd.Series, text_only: bool = False) -> dict:
+MODES = ("series", "text", "both")
+
+
+def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dict:
     """One OpenTSLM sample, plus the answer prefix used to read out the distribution.
 
-    With ``text_only`` the four series are written into the prompt as numbers and no series
-    is passed, which is the baseline without a time-series encoder.
+    ``mode`` decides how the four series reach the model: through the time-series encoder
+    (``series``), written into the prompt as numbers with no encoder (``text``, the baseline;
+    ``text_only`` is the same), or both at once (``both``).
     """
+    if text_only:
+        mode = "text"
+    if mode not in MODES:
+        raise ValueError(f"mode must be one of {MODES}, got {mode!r}")
     arrival = pd.Timestamp(row["k_arr_pt"])
     via = [v for v in as_list(row["via"]) if isinstance(v, str) and v]
     stop = name(row["k_station"])
@@ -117,15 +125,13 @@ def sample(row: pd.Series, text_only: bool = False) -> dict:
         (f"Hourly share of late stops at {stop}, last 72 hours", row["station_series"], "share"),
         (f"Hourly share of late {row['cls']} stops nationwide, last 72 hours", row["network_series"], "share"),
     ]
-    if text_only:
-        # Baseline: the same numbers written into the prompt, so no time-series encoder is involved.
+    if mode in ("text", "both"):
+        # The same numbers written into the prompt; in ``text`` no time-series encoder is involved.
         lines = [f"{label}, in {'percent' if unit == 'share' else unit}: "
                  f"{as_text(np.asarray(values, dtype=np.float64) * (100 if unit == 'share' else 1))}"
                  for label, values, unit in raw]
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)
-        series = []
-    else:
-        series = [normalised(values, label, unit) for label, values, unit in raw]
+    series = [] if mode == "text" else [normalised(values, label, unit) for label, values, unit in raw]
     post_prompt = (f"How many minutes late will the train arrive at {stop}? Reason from the data, "
                    f"then answer with whole minutes or {CANCELLED}.\nRationale:")
     reasoning = rationale(row)
