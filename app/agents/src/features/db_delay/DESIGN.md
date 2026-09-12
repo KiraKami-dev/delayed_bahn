@@ -323,6 +323,134 @@ predicts per stop of a run, Zugfinder keeps statistics per train number.
 - LoRA on; offline synthetic smoke tests.
 - Pin station or key rankings once before looping over months.
 
+## 15. Implementation (2026-09-12)
+
+Code lives in `trip/` (see `trip/README.md`). What was built, what the data turned out
+to be, and where the implementation departs from the sections above.
+
+### Data facts found while building
+
+- **Schema:** all ten monthly files share one schema; no per-month handling is needed.
+- **`delay_in_min` is the departure delay** (the arrival delay only at a run's last stop).
+  One ICE arrived 41 minutes late and left 46 late; the column says 46. The target is
+  therefore computed from `arrival_planned_time` and `arrival_change_time`.
+- **Run id:** `id` without its trailing `-<stop number>` identifies one run on one day
+  (1.29M runs in August, no duplicate stops). Stop numbers start at 1 and have small
+  gaps (0.38 missing numbers per run on average).
+- **Cancelled stops** still carry a delay value, so cancellation comes from the flags.
+
+### Example set
+
+- **Scale:** 142,183,754 stops loaded; 298,430 examples; the build takes about 70 s.
+
+| Split | Period of the prediction moment | Examples |
+|---|---|---|
+| Train | 15 Nov 2025 to 30 Apr 2026 | 174,070 |
+| Validation | 2 May to 31 May 2026 | 30,622 |
+| Test | 2 Jun to 31 Aug 2026 | 93,738 |
+
+- **Train starts on 15 November** so the 30-day history has data; the day before
+  validation and the day before test are dropped.
+- **Sampling** is hash-seeded and reproducible: 48% of long-distance runs, 1.9% of
+  regional and 2.3% of S-Bahn runs, one target stop per run. 23% of examples are
+  before departure, placed 0 to 120 minutes before the first planned departure.
+- **Pattern key includes the train type**, so an RE and an S-Bahn on the same stations
+  keep separate history (slightly more specific than the key measured in §7).
+- **History level used:** stop pattern for 77% of long-distance and 96% of regional and
+  S-Bahn examples; no key with 10 observations for 0.1 to 0.3%.
+- **Station and network series** use only hours strictly before the hour of the
+  prediction moment.
+- **Lead time** is measured to the planned arrival; 4.4% of examples are already past
+  it because the train is late.
+
+### Prompt and answer
+
+- **The rationale is written from the inputs alone and never states the minutes.**
+  This replaces the prototype rule of deriving the closing clause from the answer
+  (§14): if the text named a number before `Answer:`, the distribution read afterwards
+  would collapse onto it. Because the rationale is a function of the inputs,
+  evaluation teacher-forces it and reads P(cancelled) and the minute distribution in
+  one forward pass; a free-generation check on a small test sample confirms the model
+  also writes it.
+- **Minute smoothing applies only at the answer token.** Numbers inside the rationale
+  (times, delays so far) keep plain cross-entropy, since they are facts copied from the
+  input.
+- **Four series per example:** departure delay at each stop so far (a single zero
+  before departure), 30-day daily median at the target stop, 72 hourly late shares at
+  the target station, 72 hourly late shares for the train class nationwide. Each is
+  z-normalised with its mean and spread stated in the text.
+
+### Model and training
+
+- **Padding bug fixed:** OpenTSLM's batching keeps the first N tokens of each text
+  segment, which is only correct with right padding. The mirror tokenizer pads on the
+  left, which would have trained on truncated prompts without any error. The wrapper
+  forces right padding and sets pad to EOS, as in the original checkpoints.
+- **Memory:** OpenTSLM computes full 128k-vocabulary logits at every position and uses
+  eager attention. The wrapper runs the backbone, applies the output layer only at
+  answer positions, and switches to SDPA: peak memory fell from 48.3 to 40.9 GB and a
+  step from 0.92 to 0.79 s at batch 8. Batch 16 does not fit in 48 GB.
+- **Settings:** LoRA r 16, alpha 32 on all attention and MLP projections (24.3M
+  parameters), plus the encoder and projector; learning rate 1e-4 for LoRA and 2e-4 for
+  the encoder, 3% warmup, cosine decay to a tenth; 12,000 steps at batch 8 (about 96k
+  examples, a little over half an epoch). Soft-target width b = 1 + 0.1 y, CRPS weight
+  0.1.
+- **Readout sanity (smoke run):** 97 to 99% of the probability after `Answer:` falls on
+  the space or `cancelled` tokens, and over 99.99% after the space falls on number tokens.
+- **Evaluation subsets:** 3,000 validation and 30,000 test examples, seeded, identical for
+  every TSLM run; `report.py` scores all models on the shared example ids.
+
+### Baseline results (test, 93,738 examples)
+
+| Model | Median error (min) | CRPS | 10 to 90% coverage | Brier late | Cancel log loss |
+|---|---|---|---|---|---|
+| Persistence (current delay, residual spread per lead bucket) | 3.746 | 3.105 | 0.839 | 0.104 | 0.216 |
+| Key history (quantiles of the 30-day series) | 5.545 | 4.703 | 0.633 | 0.157 | 0.195 |
+| XGBoost (19 quantiles, late and cancel classifiers) | 3.462 | 2.759 | 0.825 | 0.087 | 0.143 |
+
+XGBoost with 5,000 instead of 1,500 trees scores the same (3.462 / 2.759), so it is
+converged. TSLM results go here once the overnight runs finish.
+
+### Built after the first runs were queued
+
+- **Robustness check:** the first overnight launch crashed within a minute, because 61
+  target stations and 136 via lists have no name in the scrape. `check_samples.py` now
+  renders all 298,430 examples and checks the answer tokens on 30,000 before any
+  unattended run: 0 failures; prompts are 370 text tokens at the median and 493 at most,
+  plus 72 series tokens.
+- **Connection probability** (`connection.py`, §10): the arriving and departing delay
+  distributions are convolved and compared with the planned buffer minus the minimum
+  transfer time, then multiplied by the chance both trains run. Changes are chained as
+  independent. A Monte Carlo test checks the convolution.
+- **TimeNet connector** (`timenet_connector/`, `timef_export.py`): `error404/db-trip-delay`
+  downloads the monthly files idempotently, builds the examples and converts them to TimeF.
+  - One record per example; the run's delays sit on an ordinal axis.
+  - The daily history and both hourly series share one timeline, starting at local midnight
+    30 days before the prediction moment.
+  - Annotations, plus a minute task carrying the input-only rationale and a cancellation task.
+  - TimeNet's integrity check passes on the written version.
+  - Two TimeF rules shaped it: one `spec_type` may not have two contracts, so each series
+    has its own type; an annotation needs a value, so missing fields are skipped.
+- **September forward test** (§9, `run_forward_eval.sh`): the upstream monthly release
+  script (MIT, piebro/deutsche-bahn-data) turns the raw September API responses into the
+  same schema, and the builder takes prediction moments from 1 September.
+  - The raw scrape stores fetch times in UTC and timetable times in German local time; the
+    last change feed was fetched at 19:50 local on 12 September.
+  - Upstream fills a missing change time with the planned time, so a stop after the last
+    snapshot would look punctual. `--label-cutoff` keeps only targets planned before 18:00
+    local on 12 September.
+  - The period is newer than every published monthly file and than the training data. It is
+    an out-of-time test, not predictions made before the trains ran.
+
+### Still open
+
+- **Live inference** from the DB Timetables API for the demo; `predict.py` replays recorded
+  trips and changes.
+- **Frontier LLM baseline** (the team's chosen baseline): needs an API key, and none is
+  configured on the build machines.
+- **Text-only LLM baseline and the random-encoder and `ecg-sp` ablations** (§9); only the
+  plain cross-entropy ablation runs.
+
 ## Sources
 
 - Challenge deck: Aionic Labs, "Temporal AI Challenge" (hackathon handout).
