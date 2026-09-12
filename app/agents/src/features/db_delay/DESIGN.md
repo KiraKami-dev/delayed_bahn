@@ -491,6 +491,8 @@ Test, the same 5,000 seeded examples for every model:
 | Main, the reference for the ablations | 2,000 | 3.711 | 2.994 | 0.911 | 0.088 | 0.167 |
 | Text only: numbers in the prompt, no encoder | 2,000 | 3.635 | 2.938 | 0.914 | 0.086 | 0.164 |
 | Plain cross-entropy | 2,000 | 3.702 | 2.954 | 0.899 | 0.089 | 0.155 |
+| Plain cross-entropy | 5,000 | 3.678 | 2.923 | 0.903 | 0.087 | 0.146 |
+| Plain cross-entropy, doubled learning rates | 2,000 | 3.717 | 2.956 | 0.895 | 0.089 | 0.152 |
 | `ecg-sp` starting checkpoint | 2,000 | 3.711 | 2.994 | 0.912 | 0.088 | 0.165 |
 | Random encoder | 2,000 | 3.727 | 3.006 | 0.912 | 0.089 | 0.166 |
 | Blend: 0.6 main quantiles + 0.4 XGBoost | 5,000 | 3.691 | 2.951 | 0.856 | 0.087 | 0.140 |
@@ -498,6 +500,12 @@ Test, the same 5,000 seeded examples for every model:
 | Blend by lead time: plain and XGBoost | 2,000 | 3.646 | 2.924 | 0.831 | 0.086 | 0.140 |
 | Blend by lead time: main and XGBoost | 5,000 | 3.671 | 2.950 | 0.856 | 0.087 | 0.140 |
 | Blend by lead time: text only and XGBoost | 2,000 | 3.627 | 2.928 | 0.858 | 0.086 | 0.140 |
+| Blend by lead time: plain and XGBoost | 5,000 | 3.641 | 2.907 | 0.830 | 0.086 | 0.139 |
+
+- **More steps keep helping the plain loss:** 5,000 steps improve on 2,000 (CRPS -0.031, -0.064 to
+  +0.004 on the 5,000 examples), and its lead-time blend has the widest margin over XGBoost so
+  far: CRPS -0.064 (-0.119 to -0.027), median error -0.058 (-0.120 to -0.015). Doubling the
+  learning rates changes nothing.
 
 - **The time-series encoder does not earn its place at 2,000 steps.** The text-only run, which
   writes the same four series into the prompt as numbers, beats the reference trained the same way
@@ -553,7 +561,6 @@ Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against X
 
 ### Pending at the time of writing
 
-- Plain cross-entropy at 5,000 steps and with doubled learning rates.
 - Text only with the plain loss, and numbers in the prompt plus the encoder with the plain loss.
 - The plain 2,000-step checkpoint on the full 93,738-example test set.
 - The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
