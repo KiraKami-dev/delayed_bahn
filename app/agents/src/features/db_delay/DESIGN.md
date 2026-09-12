@@ -575,6 +575,45 @@ Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against X
   writes in 287 s, and TimeNet's `verify()` passes on the result.
 - **Team backend bug:** injected job files are sent as plain text instead of base64.
 
+## 17. What the literature says about tonight's findings
+
+Checked against primary sources on 13 September, so the write-up can present the results as
+corroborated rather than surprising.
+
+- **Numbers as text is a known strong recipe.** LLMTime (Gruver, Finzi, Qiu, Wilson, NeurIPS 2023,
+  arXiv:2310.07820) forecasts by writing the series as digit strings and finds tokenisation decides
+  the outcome. Llama 3 tokenises every integer 0 to 999 as one token, which is exactly our answer
+  space and our input regime (delays are small integers). Zhang et al. (arXiv:2504.08818) show
+  learned tokenisers or encoders can overfit the training distribution and mask the backbone's
+  own ability.
+- **The extra time-series module is often dispensable.** Tan et al. ("Are Language Models Actually
+  Useful for Time Series Forecasting?", NeurIPS 2024 spotlight, arXiv:2406.16964) find that removing
+  or replacing the LLM-side adapter does not hurt, and pretrained parts do no better than from
+  scratch; our "random encoder equals pretrained encoder" and "text beats encoder" results are the
+  same shape. Qiu et al. (arXiv:2602.14744, 2026) argue the opposite on much larger data, so the
+  claim is contested, not settled.
+- **OpenTSLM's own text-only baseline** (Langer et al., arXiv:2510.02410) loses to the encoder by
+  a few F1 points on short series (HAR) and only collapses on long ones (sleep staging, ECG with
+  80k tokens). Our four series are short, so the encoder's advantage is not expected here; it
+  buys memory and context, which this task does not need.
+- **Horizon-dependent combination is standard forecasting practice** (Wang, Hyndman, Li, Kang,
+  International Journal of Forecasting 2023; Cerqueira and Torgo, arXiv:2306.14563), with the
+  warning that per-horizon weights overfit small calibration sets. Our five bucket weights are
+  fitted on 3,000 validation examples and confirmed on 88,479 test examples.
+- **Train delay prediction.** Published real-time MAEs of 0.5 to 2.5 minutes (Kecman and Goverde
+  2015 on NS; Oneto et al. 2018 on RFI; Spanninger et al. 2022 review) come from short horizons on
+  more punctual networks; the RIDE benchmark (Elliker et al., arXiv:2606.05070, Belgian network,
+  temporal split) reports persistence 1.61, XGBoost 1.28 and graph networks 1.23 minutes MAE
+  within 40 minutes, degrading to 4 to 5 minutes beyond 45, and calls persistence hard to beat by
+  a wide margin. Our 3.4 minutes over horizons up to hours on a German summer with 60% long-distance
+  punctuality is in the expected band; the per-lead-bucket numbers are the comparable ones.
+  Probabilistic per-stop output with CRPS is rare (Spanninger, Wiedemann, Corman 2024 is the
+  nearest), which is a fair novelty claim. Deutsche Bahn's own RI-Prognose publishes no delay
+  error, only 74% accuracy on cancellation and platform-change announcements.
+- **Data sanity.** Official 2025 punctuality (under 6 minutes): long-distance 60.1%, regional
+  88.7%; H1 2026 long-distance 58.7% with 8% partly or fully cancelled. Our 25% late stops and 5%
+  cancellations across all classes are consistent with that.
+
 ## Sources
 
 - Challenge deck: Aionic Labs, "Temporal AI Challenge" (hackathon handout).
