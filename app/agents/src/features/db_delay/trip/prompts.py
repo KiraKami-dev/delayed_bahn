@@ -38,9 +38,22 @@ def train_label(row: pd.Series) -> str:
     return service
 
 
-def normalised(values, label: str, unit: str) -> tuple[str, list[float]]:
-    """Z-normalise a series and state its mean and spread, as OpenTSLM's own datasets do."""
+SCALINGS = ("z", "fixed")
+MINUTES_PER_UNIT = 10.0  # fixed scaling: minutes divided by this, shares as they are
+
+
+def normalised(values, label: str, unit: str, scaling: str = "z") -> tuple[str, list[float]]:
+    """Scale a series for the encoder.
+
+    ``z``: z-normalise and state mean and spread, as OpenTSLM's own datasets do; the encoder then
+    sees shape only. ``fixed``: keep the level, minutes divided by 10 and shares as they are, so
+    +2 and +40 minutes stay different for the encoder.
+    """
     series = np.asarray(values, dtype=np.float64)
+    if scaling == "fixed":
+        scale = MINUTES_PER_UNIT if unit == "minutes" else 1.0
+        note = f"in tens of minutes" if unit == "minutes" else "as a share from 0 to 1"
+        return f"{label}, {note}:", (series / scale).tolist()
     mean = float(series.mean())
     std = max(float(series.std()), MIN_STD)
     return f"{label}, in {unit}, mean {mean:.2f} and std {std:.2f}:", ((series - mean) / std).tolist()
@@ -105,7 +118,7 @@ TEXT_HOURS = 72  # the prompt never carries more than this many hourly values; t
 TEXT_DAYS = 30  # likewise for the daily route history
 
 
-def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dict:
+def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scaling: str = "z") -> dict:
     """One OpenTSLM sample, plus the answer prefix used to read out the distribution.
 
     ``mode`` decides how the four series reach the model: through the time-series encoder
@@ -149,7 +162,7 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dic
             lines.append(f"{label}, in {'percent' if unit == 'share' else unit}: "
                          f"{as_text(values * (100 if unit == 'share' else 1))}")
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)
-    series = [] if mode == "text" else [normalised(values, label, unit) for label, values, unit in raw]
+    series = [] if mode == "text" else [normalised(values, label, unit, scaling) for label, values, unit in raw]
     post_prompt = (f"How many minutes late will the train arrive at {stop}? Reason from the data, "
                    f"then answer with whole minutes or {CANCELLED}.\nRationale:")
     reasoning = rationale(row)
@@ -162,3 +175,41 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dic
         "prefix": f"{reasoning} Answer:",
         "example_id": int(row["example_id"]),
     }
+
+
+
+CAPTION_PRE = "You read railway time series and answer with one whole number."
+CAPTION_REASON = "Read off the series."
+
+
+def caption_sample(row: pd.Series, seed: int, scaling: str = "z") -> dict:
+    """A series-reading question with an exact numeric answer, for teaching the encoder to read.
+
+    OpenTSLM trains its models in stages, captioning before the target task; this mixes the same
+    idea into training. The series go through the encoder only, so the answer has to come from it.
+    """
+    base = sample(row, mode="series", scaling=scaling)
+    stop = name(row["k_station"])
+    run = [max(0.0, float(v)) for v in as_list(row["run_delays"])]
+    station = np.asarray(row["station_series"], dtype=np.float64)
+    network = np.asarray(row["network_series"], dtype=np.float64)
+    hist = np.asarray(row["hist_series"], dtype=np.float64)
+    questions = [
+        (f"In how many of the last 24 hours were more than 20% of stops at {stop} late?", int((station[-24:] > 0.2).sum())),
+        (f"What share of stops at {stop} were late in the most recent hour, in percent?", int(round(100 * station[-1]))),
+        ("What share of stops nationwide were late in the most recent hour, in percent?", int(round(100 * network[-1]))),
+        ("What was the median of the daily delay history, in whole minutes?", int(round(float(np.median(hist))))),
+        ("What was the highest daily median delay in the history, in whole minutes?", int(round(float(hist.max())))),
+    ]
+    if run:
+        questions += [
+            ("What was the departure delay at the last stop, in minutes?", int(round(run[-1]))),
+            ("What was the highest departure delay so far, in minutes?", int(round(max(run)))),
+            ("From how many stops has the train departed so far?", len(run)),
+            ("By how many minutes does the highest delay so far exceed the first, in minutes?", int(round(max(run) - run[0]))),
+        ]
+    question, answer = questions[seed % len(questions)]
+    answer = min(max(answer, 0), 999)
+    base.update(pre_prompt=CAPTION_PRE, post_prompt=f"{question}\nRationale:",
+                answer=f"{CAPTION_REASON} Answer: {answer}", prefix=f"{CAPTION_REASON} Answer:")
+    return base
