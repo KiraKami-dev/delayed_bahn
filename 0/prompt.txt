@@ -1,0 +1,94 @@
+when i try get the gpu up and running its giving me 
+temporalai
+Error
+Created: 4 hr. ago
+ID:
+aijob-e01y1ghzpgqscgpj81
+Not enough resources
+operation failed [id=computeoperation-e01mvadqee0rbwwpq1, code=8]:
+caused by service error:
+Not enough resources NotEnoughResources: service compute, violations:
+virtualMachine (requested 8gpu-128vcpu-1600gb): VM schedule timeout, most likely due to insufficient hardware resources, for more information see https://docs.nebius.com/compute/virtual-machines/not-enough-resources
+
+---
+
+we have enough credits but it isn't working
+
+---
+
+ok then use another region which supports it
+
+---
+
+i want the best one running change region to usa that also works
+
+---
+
+<task-notification>
+<task-id>bwo1ku311</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/c9b8f163-bf1b-477b-9c75-63d2988ebf63/tasks/bwo1ku311.output</output-file>
+<status>completed</status>
+<summary>Background command "Run the one-GPU smoke job in eu-north1 and wait for it" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+eu-north 1 should be running NVIDIA® H200 NVLink
+Regular    
+8 GPUs, 128 vCPUs, 1,600 GiB
+
+---
+
+<task-notification>
+<task-id>b7s8yn0c8</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/c9b8f163-bf1b-477b-9c75-63d2988ebf63/tasks/b7s8yn0c8.output</output-file>
+<status>completed</status>
+<summary>Background command "Run the one-B200 smoke job in us-central1 and wait for it" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+its been 22 mins its still stuck on Provisioning
+
+---
+
+<task-notification>
+<task-id>bcgy1z195</task-id>
+<summary>Monitor event: "us-central1 8xH200 smoke job state changes"</summary>
+<event>[0m] PROVISIONING / vm: - /</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+why did cancel the eu one ?
+
+---
+
+is it normal to be stuck on provising that long ?
+
+---
+
+here is the mcp for 
+Fetch and follow the installation guide: https://github.com/nebius/mcp-server/blob/main/AGENT_SETUP.md
+
+---
+
+<task-notification>
+<task-id>bi0iqv1h5</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/c9b8f163-bf1b-477b-9c75-63d2988ebf63/tasks/bi0iqv1h5.output</output-file>
+<status>failed</status>
+<summary>Background command "Confirm B200 result and submit the 8xH200 smoke job in eu-north1" failed with exit code 1</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bcgy1z195</task-id>
+<summary>Monitor event: "us-central1 8xH200 smoke job state changes"</summary>
+<event>[6m] PROVISIONING / vm: STOPPED /</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
