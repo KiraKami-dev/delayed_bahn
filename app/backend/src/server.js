@@ -4,6 +4,11 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerRoutes as registerTrainingJobs } from './features/training-jobs/routes/training-jobs.js';
+import { registerRoutes as registerPwaShell, createStaticHandler } from './features/pwa-shell/routes/pwa-shell.js';
+import { registerRoutes as registerShareParser } from './features/share-parser/routes/share-parser.js';
+import { registerRoutes as registerDelayPrediction } from './features/delay-prediction/routes/delay-prediction.js';
+import { registerRoutes as registerRecommendation } from './features/recommendation/routes/recommendation.js';
+import { registerRoutes as registerCauses } from './features/causes/routes/causes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -60,13 +65,33 @@ export function sendJson(res, status, payload) {
 
 export function createApp({ env = process.env } = {}) {
   const router = new Router();
-  router.get('/api/health', async () => ({ status: 'ok', service: 'app-backend', time: new Date().toISOString() }));
+  // Contract says { ok: true }; the older fields stay for existing callers.
+  router.get('/api/health', async () => ({ ok: true, status: 'ok', service: 'app-backend', time: new Date().toISOString() }));
   registerTrainingJobs(router, { env });
+  registerPwaShell(router, { env });
+  registerShareParser(router, { env });
+  const predict = registerDelayPrediction(router, { env });
+  registerRecommendation(router, { env, predict });
+  registerCauses(router, { env });
+  const serveStatic = createStaticHandler({ dir: env.STATIC_DIR || path.join(__dirname, '..', '..', 'frontend', 'dist') });
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
+    if (env.CORS_ORIGIN) {
+      // Dev only: the Vite dev server on another port calling :8000 directly.
+      res.setHeader('Access-Control-Allow-Origin', env.CORS_ORIGIN);
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Max-Age', '600');
+      res.setHeader('Vary', 'Origin');
+    }
+    if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     const matched = router.match(req.method, url.pathname);
-    if (!matched) return sendJson(res, 404, { error: `No route for ${req.method} ${url.pathname}` });
+    if (!matched) {
+      if (url.pathname.startsWith('/api/')) return sendJson(res, 404, { error: `No route for ${req.method} ${url.pathname}` });
+      if (await serveStatic(req, res, url.pathname)) return;
+      return sendJson(res, 404, { error: `No route for ${req.method} ${url.pathname}`, hint: 'Build the PWA first: npm --prefix app/frontend run build (or set STATIC_DIR)' });
+    }
     try {
       const body = req.method === 'GET' || req.method === 'DELETE' ? {} : await readJson(req);
       const result = await matched.handler({ params: matched.params, query: url.searchParams, body, req, res });
@@ -88,5 +113,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(`  GET  /api/health`);
     console.log(`  GET  /api/training/catalog | /whoami | /jobs | /jobs/:id | /jobs/:id/logs`);
     console.log(`  POST /api/training/jobs | /jobs/dry-run | /jobs/:id/cancel   DELETE /jobs/:id`);
+    console.log(`  GET  /api/seed/demo | /api/causes?eva=   POST /api/journeys/parse | /api/predict | /api/recommend | /api/reroute`);
+    console.log(`  static PWA from ${process.env.STATIC_DIR || path.join(__dirname, '..', '..', 'frontend', 'dist')}`);
   });
 }

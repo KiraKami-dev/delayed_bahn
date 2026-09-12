@@ -13,7 +13,7 @@
 import { createHash } from 'node:crypto';
 
 const TRAIN_TYPES = 'ICE|ICS|IC|ECE|EC|IRE|IR|RE|RB|S|TGV|RJX|RJ|NJ|FEX|MEX|BRB|ALX|AG|M|EN|D|EST|THA|WB|FLX';
-const TRAIN_RE = new RegExp(`^(${TRAIN_TYPES})\\s?(\\d{1,5})(?:\\s*\\((\\d{1,6})\\))?\\b`, 'i');
+const TRAIN_RE = new RegExp(`^(${TRAIN_TYPES})\\s?(\\d{1,5})(?:\\s*\\((\\d{1,6})\\))?(?!\\d)`, 'i');
 const STOP_TAGGED_RE = /^(from|to|ab|an|dep|arr|departure|arrival|abfahrt|ankunft)\.?:?\s*(\d{1,2}):(\d{2})(?:\s*uhr)?\s+(.+)$/i;
 const STOP_LEADING_TIME_RE = /^(\d{1,2}):(\d{2})(?:\s*uhr)?\s+(?:(ab|an|dep|arr)\.?\s+)?(.+)$/i;
 const STOP_TRAILING_TAG_RE = /^(.+?)\s+(ab|an|dep|arr)\.?\s+(\d{1,2}):(\d{2})$/i;
@@ -85,18 +85,19 @@ export function parseConnections(tokens) {
   let cur = null; // open leg awaiting its arrival
   let pendingTrain = null;
 
-  function fresh() { return { legs: [], date: null, origin: null, dest: null, url: null, vbid: null, complete: true }; }
+  function fresh() { return { legs: [], date: null, origin: null, dest: null, url: null, vbid: null, complete: true, touched: false }; }
   function closeLeg() {
     if (cur) { conn.complete = false; cur = null; }
   }
   function flush() {
     closeLeg();
-    if (conn.legs.length || conn.url || conn.origin) conns.push(conn);
+    if (conn.touched) conns.push(conn);
     conn = fresh();
     pendingTrain = null;
   }
 
   for (const t of tokens) {
+    if (t.type !== 'BOUNDARY' && t.type !== 'NOISE') conn.touched = true;
     switch (t.type) {
       case 'BOUNDARY': flush(); break;
       case 'DATE': conn.date = { y: t.y, m: t.m, d: t.d }; break;

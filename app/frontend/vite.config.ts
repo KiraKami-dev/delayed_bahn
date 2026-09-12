@@ -48,7 +48,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/[abcd]\.basemaps\.cartocdn\.com\/.*/i,
+            urlPattern: /^https:\/\/(tiles\.openfreemap\.org|server\.arcgisonline\.com)\/.*/i,
             handler: "CacheFirst",
             options: {
               cacheName: "tiles",

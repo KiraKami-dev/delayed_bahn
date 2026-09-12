@@ -34,6 +34,17 @@ export function geometric(median, size = 240) {
   return probs;
 }
 
+/**
+ * Real delay distributions have a fat tail: most runs are a few minutes late,
+ * a minority hit a disruption and run 20-60 min late. Mix a routine geometric
+ * with a disruption geometric so transfers under ~15 min carry visible risk.
+ */
+export function fatTailed(median, size = 240, disruptionShare = 0.18) {
+  const routine = geometric(median, size);
+  const disrupted = geometric(median * 4 + 12, size);
+  return routine.map((p, k) => (1 - disruptionShare) * p + disruptionShare * disrupted[k]);
+}
+
 export function describeLeg(leg) {
   const cls = trainClass(leg.trainId);
   const hours = Math.max(0.25, minutesBetween(leg.plannedDeparture, leg.plannedArrival) / 60);
@@ -55,8 +66,8 @@ export function createMockBackend({ size = 240 } = {}) {
           const hh = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' }).format(new Date(leg.plannedDeparture));
           return {
             trainId: leg.trainId,
-            arrival: forecast(geometric(median, size), pCancel),
-            departure: forecast(geometric(Math.max(1, Math.round(median * 0.4)), size), pCancel),
+            arrival: forecast(fatTailed(median, size), pCancel),
+            departure: forecast(fatTailed(Math.max(1, Math.round(median * 0.4)), size, 0.08), pCancel),
             reasoning: `Prior for ${cls} departing ${hh} on a ${hours.toFixed(1)} h leg: typical +${median} min; no live data behind this number.`,
             sources: ['mock: train-class × hour × duration prior v1'],
           };
