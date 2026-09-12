@@ -1,0 +1,1 @@
+If we start this from fresh, can you give a hand-off document for a new agent to retry this: Like what was good, what would you change etc.? And also: What is the minimal scope: Just some time or just some years / months?
