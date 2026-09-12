@@ -84,5 +84,8 @@ run plain_ce_lr2x --loss-mode plain --lr 2e-4 --lr-encoder 4e-4
 run text_only --text-only --grad-checkpointing
 run ecg_sp_start --start-checkpoint OpenTSLM/llama-3.2-3b-ecg-sp
 run random_encoder --start-checkpoint none
+# Anything else, without editing this file: RUNS=custom CUSTOM_ARGS="--loss-mode plain --lr 3e-4".
+# shellcheck disable=SC2086
+run custom ${CUSTOM_ARGS:-}
 wait
 echo "$(date -u +%FT%TZ) all runs finished" | tee -a "$LOCAL/status.log"
