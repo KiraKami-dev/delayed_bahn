@@ -63,13 +63,6 @@
     "cache_creation_tokens": 251229,
     "cache_read_tokens": 8659002,
     "output_tokens": 88308,
-    "api_call_count": 67,
-    "subagent_tokens": {
-      "input_tokens": 112,
-      "cache_creation_tokens": 303459,
-      "cache_read_tokens": 2723729,
-      "output_tokens": 49449,
-      "api_call_count": 56
-    }
+    "api_call_count": 67
   }
 }

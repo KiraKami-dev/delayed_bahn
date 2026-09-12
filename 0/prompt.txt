@@ -515,3 +515,844 @@ Variables (names only): `DB_CLIENT_ID`, `DB_API_KEY`, `NEBIUS_PROJECT_ID`, `NEBI
 **Directory conventions** (`app/README.md`, both feature READMEs): one folder per feature under `src/features/&lt;name&gt;/`, **not** a top-level `components/`/`routes/`/`models/` split; copy `src/features/_TEMPLATE/`; **feature names match 1:1 across layers** (`frontend/src/features/&lt;x&gt;/` ↔ `backend/src/features/&lt;x&gt;/`). Frontend template ships `components/` and `hooks/` subfolders ("this feature's, not shared ones"); backend template ships `routes/`. Each feature README must say which contract endpoint or demo shot it serves, and the template states the **only required scaffolding step**: add yourself to the Feature ownership table in `owners.md` ("spec acceptance criterion 35"). Per `contract.md`, the feature names are already fixed as `share-parser`, `delay-prediction`, `recommendation`, `pwa-shell`.</result>
 <usage><subagent_tokens>77289</subagent_tokens><tool_uses>25</tool_uses><duration_ms>196898</duration_ms></usage>
 </task-notification>
+
+---
+
+<task-notification>
+<task-id>a923c7d7111c654f7</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/a923c7d7111c654f7.output</output-file>
+<status>completed</status>
+<summary>Agent "Higgsfield website skill options" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>## Bottom line first
+
+You have **110 credits**. A single 15s scroll-scrub film — the *mandatory default* Tier-1 mechanic for `--type website` — costs **97.5 credits at 720p / 135 credits at 1080p** (measured via `higgsfield generate cost seedance_2_5 --duration 15`). 1080p is literally unaffordable, and 720p leaves ~12 credits for everything else. The Higgsfield website builder is also **video-scrub-shaped, not interactive-3D-shaped**: the scroll journey is a pre-rendered MP4 the user scrubs, which is the opposite of a live 3D globe you zoom into. Full findings below.
+
+---
+
+## 1. `higgsfield-websites` skill
+
+**Paths:** `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/.agents/skills/higgsfield-websites/SKILL.md` (symlinked from `.claude/skills/higgsfield-websites`), plus 42 files in `references/` and 11 Python scripts in `scripts/`.
+
+### CLI commands (verified against the installed binary, not just docs)
+
+```bash
+higgsfield website create --type website [--template scroll-scrub] --subdomain &lt;slug&gt; --category &lt;slug&gt;
+higgsfield website repo-access &lt;website_id&gt;   # clone URL + branch + scoped token
+higgsfield website deploy &lt;website_id&gt;        # build + ship the LIVE site (no preview stage)
+higgsfield website publish &lt;website_id&gt;       # list on community feed only
+higgsfield website status &lt;website_id&gt;
+higgsfield website list
+higgsfield website db {tables,schema,rows,query}   # READ-ONLY SELECT/WITH
+higgsfield website secrets {set,list,delete}
+higgsfield website rename | categories | contest
+```
+
+`--type` is required and is one of `website | app | game`. `--category` is required; valid slugs from `higgsfield website categories` are `viral-trends, ads-marketing, ugc-social, cinematic, characters-avatars, product-ecommerce, portrait-lifestyle, other` — note **none of these fit a train-route product**, so you'd file under `other`.
+
+### Generated stack — yes, as you guessed
+
+From `references/runtime-and-infra.md` and `references/website-flow.md` ("## Stack"):
+- React 19 + **TanStack Start**, SSR, file-based routes in `app/src/routes/`
+- **Vite 7 + bun**, Tailwind v4 in `app/src/styles.css`
+- Single **Cloudflare Worker**; build emits `dist/server/server.js` + `dist/client`
+- Project lives in `app/` inside the repo
+- Explicitly banned: "No Next.js, Remix, Astro, `app/src/pages`, Hono app, Express app, or separate API framework."
+
+### Arbitrary npm packages — yes
+
+`references/app-flow.md:423`: "**Adding a dependency: `bun add`.**" and `references/website-flow.md:505`: `bun install # only when you changed dependencies / package.json`. `references/containers.md:25` shows the pattern: `cd app &amp;&amp; bun add @cloudflare/containers`.
+
+The skill's own approved list (`references/wow-maker.md` §4) already includes `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/postprocessing`, `ogl`, `cobe` (the 5KB WebGL globe), `gsap`, `lenis`, `maath`, `swiper`. **`maplibre-gl`, `mapbox-gl`, `cesium`, and `react-globe.gl` are not mentioned anywhere** in the skill — but nothing blocks `bun add`. Caveat from wow-maker line 210: keep all `three`/shader code behind `React.lazy` + a mounted client boundary, and self-host HDRIs in `public/` rather than `&lt;Environment preset=…&gt;`.
+
+One real friction: **every route SSRs per request**, and "A top-level `window` reference crashes SSR — the #1 recurring build failure" (`website-flow.md:213`). MapLibre/Cesium/globe.gl all touch `window`/`document` at import time, so every one needs a client-only dynamic-import wrapper.
+
+### Bring your own source files — yes
+
+`higgsfield website repo-access &lt;website_id&gt;` returns "the website's git clone URL, branch, and a scoped token" (verbatim from `--help`). You clone with git and edit on the local filesystem with `git` + `bun` — SKILL.md line ~"You drive the whole lifecycle through the Higgsfield CLI …, then edit code on the local filesystem with `git` + `bun`." It is **not** prompt-only; it's a real repo you clone and push to. Deploy reads what you pushed. So you could, in principle, drop a hand-built React app into `app/src/` — though you'd be fighting the TanStack Start route conventions, the required `app/src/app-meta.json`, and the `app/packages/` vendored Quanta snapshots you must not delete.
+
+### External API vs D1/KV — external calls are allowed
+
+- `SKILL.md:70`: "A website may still use ordinary non-generation third-party APIs — **payments, maps, email** — with the user's own keys."
+- Your Node backend is reachable via outbound `fetch()` from `createServerFn` handlers or `app/src/routes/api/**` server routes (`references/security.md:47` "Worker → External API").
+- Keys go through `higgsfield website secrets set &lt;website_id&gt; --name … --value …`, read server-side as `bindings().SECRET_NAME`.
+- D1/KV/R2 are **opt-in, not required**: "A new website gets **no D1, no R2, no KV, no Durable Object**" — declared in `app/app.manifest.json`, capped at ≤1 each.
+- Hard constraint: `--type website` "never calls `https://fnf.internal/*`" and must do **no AI generation of any kind** at runtime — not even via a non-Higgsfield provider. If your product generates anything, it must be `--type app`, which forces Sign-in-with-Higgsfield + Quanta UI.
+
+### PWA manifest / web share target — **zero support, zero mention**
+
+A grep for `pwa|service.worker|manifest.webmanifest|share.target` across all 42 reference files returns **nothing**. The only manifest in the system is `app/app.manifest.json`, which is a Cloudflare infra declaration, not a web app manifest. You could hand-write `public/manifest.webmanifest` and register a service worker yourself, but you'd be doing it with no guidance, against an SSR Worker, and the platform CI rebuilds with `HF_DESIGN_INSPECTOR=1` injected on every deploy — an inspector bridge iframe runtime you cannot turn off on the live site.
+
+### Deploy / publish gates
+
+- **Deploy is production.** "Every deploy ships the live public site immediately — there is no preview stage." One deploy, one D1, one R2. `env.HF_ENV` is always `"production"`.
+- **Pre-deploy gate (Phase 5):** the mechanical grep checklist in `references/review-rubric.md` §A — placeholders, em-dashes, banned palette families, `h-screen`, SSR safety, reduced-motion coverage, repeated CTA classes, `opacity-0 + whileInView`. Plus SEO infra is non-optional: `robots.txt`, `sitemap.xml`, canonical URLs, security headers, no trailing slash.
+- **Publish gate (hard):** `app/src/app-meta.json` must have real `og_title`, `og_description`, `favicon_url`, `og_image_url`, `marketplace_cover_url`. Publishing with empties is "a BROKEN publish." Publish no longer deploys — deploy first, every time.
+- **Mandatory cover generation:** SKILL.md is explicit that the branded launch cover is a **build** step with "No 'simple app' exception" and "No permission needed" — so the agent will spend credits on cover images whether or not you want them.
+- **Mandatory intake question:** every `--type website` build must ask Animated vs Non-animated, and Animated is the recommended default.
+
+### Cost + time expectations
+
+The skill documents **no credit prices**. Measured live via `higgsfield generate cost`:
+
+| Item | Credits |
+|---|---|
+| `gpt_image_2_5` image | 1 |
+| `nano_banana_2` / `nano_banana_pro` | 2 |
+| `recraft_v4_1` (logos/vector) | 1.25 |
+| `z_image` (cheap iteration) | 0.15 |
+| `seed_audio` | 0.1 |
+| `kling3_0_turbo` 5s | 7.5 |
+| `seedance_2_5` 5s 720p | 32.5 |
+| `seedance_2_5` 12s 720p / 1080p | 78 / 108 |
+| **`seedance_2_5` 15s 720p / 1080p** | **97.5 / 135** |
+
+The default website pipeline wants: one reference board image **per section** (6 sections ≈ 6–12 images with re-rolls), a full asset kit (hero ×2 candidates, section plates, content imagery, custom icon set, logo/monogram/favicon, OG card), **plus** the ~15s scrub film. `references/asset-system.md:217` even warns "Unused generations are wasted credits." Realistically the stock pipeline is a 150–250 credit build. You have 110.
+
+Time: `multi-leg` journeys cost "several extra minutes PER LEG" and are strictly sequential (each leg starts from the previous leg's real last frame). `single-shot` is the documented default and the cheap path.
+
+---
+
+## 2. `higgsfield-generate`
+
+**Path:** `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/.agents/skills/higgsfield-generate/SKILL.md`
+
+**Defaults:** GPT Image 2.5 (`gpt_image_2_5`) for general/design/text-in-image; Seedance 2.5 (`seedance_2_5`) for video (4–30s, up to 1080p); Nano Banana 2/Lite/Pro for character/reference work; Recraft V4.1 for logos/vector; Z Image for cheap iteration; Seed Audio 1.0 for audio; `multi_image_to_3d` for actual GLB meshes from 1–4 reference images.
+
+**Core command shape — one shot with `--wait`:**
+```bash
+higgsfield generate create gpt_image_2_5 --prompt "…" --aspect_ratio 16:9 --resolution 2k --wait
+higgsfield generate create seedance_2_5 --prompt "…" --mode omni_reference --start-image ./first.png --duration 12 --resolution 1080p --wait
+higgsfield generate create multi_image_to_3d --image ./front.png --image ./side.png --should_texture true --wait
+higgsfield generate cost &lt;job_type&gt; [params]      # credit estimate, creates nothing
+```
+
+**Output retrieval:** `--wait` blocks and **prints the result URL on stdout**; add `--json` for the full job object array. No automatic local download — you `curl` the URL yourself. Retrospection via `higgsfield generate list --json` / `higgsfield generate get &lt;id&gt; --json`, and `higgsfield generate wait &lt;id&gt;` rejoins a job started without `--wait`. Media inputs take a local path (auto-uploaded) or a UUID.
+
+Notably for your use case: `multi_image_to_3d` produces a real **GLB** you could load into your own R3F scene — that's a genuinely useful "Higgsfield for assets only" play at image-tier cost rather than video-tier cost.
+
+**Skill UX rule worth overriding:** "Don't pre-estimate cost or optimize for cheaper models unless the user asks." With 110 credits, tell it to always run `generate cost` first.
+
+---
+
+## 3. `higgsfield-brandkit` and `higgsfield-video-explainer`
+
+**`/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/.agents/skills/higgsfield-brandkit/SKILL.md`** — produces a full visual identity: palettes, SVG logo marks, typography, mockups, social graphics, packaging, signage, merch, posters, decks, and editable PPTX/PDF brandbooks. Runs `recraft_v4_1` / `seedream_v5_pro` / `gpt_image_2` plus a local `scripts/brandkit.py` for deterministic composition, state, and brandbook assembly. Workdir is `./brandkit/` with `state.json` for approvals. Image-tier costs (~1–2 credits per generation) — a logo exploration round is single-digit credits; a full brandbook with mockups across all applications is plausibly 30–60 credits. It stops and waits for your approval at each of palette/logo/typography, so spend is controllable.
+
+**`/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/.agents/skills/higgsfield-video-explainer/SKILL.md`** — a narrated explainer built from fixed **10-second blocks**, `N = duration_minutes × 6`. Per block: one `seed_audio` take + one `gemini_omni` clip, then server-side assembly via `explainer_video`. Subtitles cost 0.05 credit per voiced block. Minimum is 1 minute = **6 blocks = 6 video generations**, so even the shortest explainer is a video-tier spend — with 110 credits this is effectively out of reach unless `gemini_omni` is far cheaper than Seedance (worth a `higgsfield generate cost gemini_omni` check before committing). It also mandates two separate user-input turns before generating.
+
+---
+
+## 4. Tooling status
+
+| Check | Result |
+|---|---|
+| `which higgsfield` | `/opt/homebrew/bin/higgsfield` |
+| `higgsfield --version` | `higgsfield 1.1.24 (74e091aaff6…) built 2026-08-29T03:23:05Z` |
+| `npx --no-install @higgsfield/cli --version` | fails — `npm error could not determine executable to run`. Not an npm install; it's the homebrew/curl binary. |
+| `higgsfield account status` | `akshatkhair41@gmail.com — plus plan, **110 credits**` |
+| `higgsfield website list` | **empty** — no websites created yet |
+| `.mcp.json` | **does not exist** in the repo |
+
+`.claude/` contains only `settings.json` and the `skills/` symlink dir. Skills resolve to `.agents/skills/` and are tracked in `skills-lock.json`.
+
+**`team-setup/playbooks/mcp-setup.md:28-33`** on Higgsfield: "optional image/video-generation tooling **for demo assets**. It is **not vendored, installed by bootstrap, or enabled in `.mcp.json`**. Follow the provider's current CLI setup for `@higgsfield/cli`, authenticate individually, and keep account-specific configuration local. **Check costs and data handling before using generation features.**"
+
+That is the repo's own stated position: Higgsfield is a demo-asset tool, not the product stack.
+
+---
+
+## 5. Repo frontend situation
+
+**`app/frontend/package.json`** is an explicit placeholder:
+```json
+"_hackos_placeholder": true,
+"_hackos_note": "Stack not chosen yet. Replace this whole file with your real package.json once the team picks a frontend framework on the day. bootstrap.sh detects real dependencies here and runs npm install automatically -- it does not assume Next.js, Vite, or anything else."
+```
+`app/frontend/README.md` documents only the convention: feature folders in `src/features/`, one per feature, mirroring `app/backend/src/features/` names 1:1; copy `src/features/_TEMPLATE/` to start one. `_TEMPLATE` is just `README.md` + `components/.gitkeep` + `hooks/.gitkeep`. Nothing is built yet.
+
+**`AGENTS.md`** deliberately does not pick a stack:
+- line 60: "The dashboard UI uses Vite, React, Tailwind and shadcn/ui in `team-setup/board/web/`; **its Node dependencies are separate from whichever product stack the team chooses**."
+- line 84: "**No sample schema, endpoint, or product stack is a requirement.**"
+- Rule 7 (line ~101) requires any accepted direction change to be appended to `team-setup/state/decisions.md` as `- [d-&lt;uuid&gt;] [T+HH:MM] &lt;decision&gt; — &lt;who decided&gt; — &lt;reason&gt;`. **Your build-vs-buy call needs a decision record.**
+- Rule 2: "No speculative abstractions, new dashboards, providers, or services."
+
+**`team-setup/board/web/`** is a working, modern React 19 setup you can mirror wholesale:
+- `package.json`: React 19.2.8, Vite 8.2.2, `@vitejs/plugin-react` 6.1.1, Tailwind 4.3.3 via `@tailwindcss/vite`, TypeScript 7.0.2, `radix-ui` 1.6.7, `lucide-react`, `class-variance-authority`, `clsx`, `tailwind-merge`, `tw-animate-css`, `sonner`, `react-markdown` + `remark-gfm`
+- `components.json`: shadcn `new-york` style, `rsc: false`, baseColor `neutral`, CSS variables, lucide icons, `@/components` / `@/lib/utils` aliases
+- `vite.config.ts`: `@` → `./src` alias, port 5173 strictPort, `cors: false`, and a hardened `/api` proxy to `http://127.0.0.1:${HACKOS_API_PORT||8420}` that destroys cross-origin proxied requests
+- Verified by `npm --prefix team-setup/board/web run build` (`tsc --noEmit &amp;&amp; vite build`) per AGENTS.md line 134
+
+---
+
+## Direct answer to the build-vs-buy question
+
+**The Higgsfield website builder is the wrong shape for your product, on four independent grounds:**
+
+1. **Its "interactive" is scrubbed video, not real-time 3D.** `references/scroll-scrub.md` is emphatic: one continuous ~15s film, "no hard cuts," scrubbed forward and backward by scroll. A 3D globe that *zooms into a train route* is camera-driven live geometry with real user control — the opposite of a fixed pre-rendered take. You'd be paying video credits for a mechanic you then have to fight.
+2. **The credit math fails outright.** 110 credits total; the default 15s film alone is 97.5 (720p) or 135 (1080p). Add mandatory reference boards, the mandatory asset kit, and the mandatory branded cover, and the stock pipeline does not fit in your balance. A Vite+React build costs 0 credits.
+3. **No PWA story at all.** Zero mentions of manifests, service workers, or share targets across 42 reference files, on an SSR Cloudflare Worker that CI force-injects a design-inspector bridge into on every deploy.
+4. **The repo already told you the answer.** `team-setup/playbooks/mcp-setup.md` scopes Higgsfield to "demo assets," and `team-setup/board/web/` is a verified React 19 + Vite 8 + Tailwind 4 + shadcn setup sitting right there.
+
+**Recommended split:** build the PWA yourself by mirroring `team-setup/board/web/`'s config into `app/frontend/` (copy `vite.config.ts`, `components.json`, `tsconfig.json`, and the dep set; keep the `src/features/&lt;name&gt;/` convention from `app/frontend/README.md`, and keep the `/api` proxy pattern pointing at your Node backend). Use Higgsfield purely through `higgsfield generate create` for demo assets at image tier — hero imagery, iconography, and especially `multi_image_to_3d` for GLB props you load into your own R3F/globe scene at ~1–2 credits a shot instead of ~100. Consider `higgsfield-brandkit` for the identity if you need one, since it's image-tier and gated on your approval at each step.
+
+Two things to flag before you commit: I costed `seedance_2_5` but **not** `gemini_omni`, so the video-explainer estimate in section 3 is inferred rather than measured — run `higgsfield generate cost gemini_omni` if that option matters. And per AGENTS.md rule 7, whichever way you go, append the decision to `team-setup/state/decisions.md`.</result>
+<usage><subagent_tokens>91842</subagent_tokens><tool_uses>28</tool_uses><duration_ms>195898</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a7092564a791f69bd</task-id>
+<tool-use-id>toolu_014ZUStRr3CXs6drJKoZG3K5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/a7092564a791f69bd.output</output-file>
+<status>completed</status>
+<summary>Agent "Plan PWA globe frontend" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I have everything needed; no further reads are required. Findings that shape the plan, then the plan itself.
+
+## Ground truth from the repo
+
+- `app/frontend/` is a bare placeholder (`package.json` with `_hackos_placeholder: true`, `src/features/_TEMPLATE/{components,hooks}/.gitkeep`). `team-setup/state/owners.md` has an empty `app/frontend` row and empty `share-parser` / `pwa-shell` feature rows.
+- Reference stack to mirror (do not edit): `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/web/{package.json,vite.config.ts,tsconfig.json,components.json,index.html,src/main.tsx,src/lib/utils.ts,src/components/ui/button.tsx,src/components/ui/card.tsx}`. Versions pinned there: react 19.2.8, vite 8.2.2, @vitejs/plugin-react 6.1.1, tailwindcss + @tailwindcss/vite 4.3.3, typescript 7.0.2, radix-ui 1.6.7, lucide-react 1.41.0, cva 0.7.1, clsx 2.1.1, tailwind-merge 3.6.0, tw-animate-css 1.4.0. Its shadcn files import `cn` from the npm package `"cn"`; in our copy switch to `@/lib/utils`.
+- Backend (`app/backend/src/server.js`): zero-dep Node router, `sendJson` only, no CORS, no static files, 404 for any non-`/api` path. So the production build cannot be served by the backend until its owner adds a static handler. That is a cross-owner ask, recorded below.
+- Agents pipeline names that the UI should echo truthfully: `connection.py` returns `{change_probabilities, plan_success, plan_fail}`; `predict.py` headline is "about +8 min, likely 3 to 20 min, 72% chance of arriving on time"; evaluation metrics in `metrics.py` are `mae_median`, `crps`, `brier_late`, `brier_cancel`, `log_loss_cancel`. The proof chart should use `brier_late` or `mae_median`, not an invented "accuracy".
+- Toolchain: node v26.8.2, npm 11.19.1, brew present, `cloudflared` not installed (`brew install cloudflared`). Registry checks: `maplibre-gl` 6.9.0, `vite-plugin-pwa` 1.3.0 (peer `vite ^8.0.0` OK, needs `workbox-build`/`workbox-window` 7.4.1), `motion` 13.2.0 (react 19 OK).
+- Demo script and contract are DRAFT; storyline route unpicked. Everything data-shaped must come from a seed fixture that lives in the frontend too.
+
+---
+
+# Frontend implementation plan (10 h)
+
+## 0. Decisions (with justification)
+
+| # | Decision | Why |
+|---|---|---|
+| 1 | **MapLibre GL JS 6.9 with `projection: 'globe'`**, dark raster basemap from Carto `dark_all` (`https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png`, no key) as the tile source; upgrade to a hand-written dark vector style over OpenFreeMap tiles only in the polish hour. | Only option that gives a true earth-to-street zoom, GeoJSON route layers, `flyTo`/`fitBounds`, and no API key. `cobe`/react-globe.gl cannot zoom into a city; Cesium is ~10x heavier and needs an Ion token. Raster is a 3-line source, renders on the globe in v5+, and is trivially cacheable by the service worker. Bundle: maplibre ≈ 900 kB min / ≈ 240 kB gzip, precached by the SW. **Offline fallback is built in**: if tiles fail the globe still draws as a dark sphere with the glowing route and station dots on top, which reads as an intentional stylised mode. Add a `NetworkFirst`→`CacheFirst` tile cache and pre-warm it by running presenter mode once on venue wifi. |
+| 2 | Dark, full-bleed globe; overlay panel = right rail (desktop/projector) / bottom panel (phone). Risk scale green→amber→red on legs and cards; DB red `#ec0016` only for the wordmark. `prefers-reduced-motion` + `?motion=0` disable flyTo animation, line draw and count-up. | Matches "minimalistic", keeps the map the hero, large type for projector via a root `data-present` font-size bump. |
+| 3 | Presenter mode = `?present=1` or key `P`; ArrowRight/Left/Space step a 7-step machine; data comes from bundled seed fixtures first, API second. | Must work with wifi down. Same components as user mode; only the step index and camera choreography differ. |
+| 4 | PWA via **`vite-plugin-pwa`** (generateSW, `registerType: 'autoUpdate'`), `share_target` **GET** with `action: "/share"`, `params: {title, text, url}`. | DB shares plain text (+ URL); GET needs no SW `fetch` handler, no multipart parsing, and the `/share` route is just `URLSearchParams`. vite-plugin-pwa writes manifest + workbox SW with one config object; hand-writing a SW costs an hour we do not have. |
+| 5 | Proof: `public/proof.json` rendered as inline SVG bars; if fetch 404s, show `public/proof.png`. | Both paths cost &lt; 30 min combined; the ML teammate can drop either file without touching code. |
+| 6 | State: one React context + `useReducer` (`src/lib/store.tsx`), mirroring the `WorkspaceProvider` pattern in `team-setup/board/web/src/lib/workspace.tsx`. No router lib: two paths (`/`, `/share`) read from `location.pathname`. | No speculative abstraction; two routes and ~8 state fields. |
+| 7 | Animation: `motion` 13.2 for card stagger and the count-up (`animate(0, n)`); CSS/tw-animate-css elsewhere. **First thing to cut** if behind (replace with CSS keyframes and a 20-line rAF hook). | Single dep, big polish win per line of code. |
+
+## 1. Files to create (all under `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/frontend/`)
+
+```
+package.json                      # replaces placeholder
+vite.config.ts
+tsconfig.json                     # copy of team-setup/board/web/tsconfig.json
+components.json                   # copy, style new-york, neutral
+index.html
+public/
+  icons/icon-192.png  icon-512.png  icon-maskable-512.png  apple-touch-icon.png   # Higgsfield (≤ 6 credits) or SVG→PNG
+  favicon.svg
+  seed/journey.json  seed/prediction.json  seed/recommendation.json               # offline fixtures, contract-shaped
+  proof.json  (proof.png optional, supplied by ML)
+  present/pain.jpg  (optional photo for shot 0)   present/backdrop.jpg (optional Higgsfield)
+src/
+  main.tsx                        # ErrorBoundary + StoreProvider + App + registerSW
+  App.tsx                         # route switch (/ vs /share), presenter key handler, layout shell
+  index.css                       # Tailwind v4 @theme, dark tokens, risk colours, presenter type scale, reduced-motion
+  lib/
+    contract.ts                   # verbatim types from team-setup/state/03-contract-freeze/contract.md + Station.lat/lon optional
+    api.ts                        # parseJourney, predict, recommend, seedDemo, health (fetch + timeout)
+    store.tsx                     # context + reducer; loadSeed(), runPipeline(text|journey)
+    stations.ts                   # normaliseName(), lookup(name|eva) → {lat,lon}; imports stations.json
+    stations.json                 # ~45 DE/CH/AT/FR/NL hubs {name, evaNumber, lat, lon, aliases[]}
+    geo.ts                        # legCoords(leg), routeBounds(journey), riskColour(p)
+    utils.ts                      # cn() copied from reference
+    motion.ts                     # useReducedMotion(), durations
+  components/ui/button.tsx card.tsx   # copied from reference, import cn from "@/lib/utils"
+  features/
+    pwa-shell/                    # README.md, components/AppShell.tsx (map + panel slots), components/InstallHint.tsx,
+                                  # components/OfflineBanner.tsx, hooks/useRoute.ts, hooks/useShareTarget.ts
+    globe-map/                    # README.md, components/GlobeMap.tsx, hooks/useMap.ts (create/destroy),
+                                  # hooks/useRouteLayers.ts (sources/layers/line-gradient draw), camera.ts (idle spin, fitRoute, flyToStation)
+    share-parser/                 # README.md, components/SharePanel.tsx (paste box + "Use demo journey"),
+                                  # components/SharePage.tsx (/share handler), components/LegCard.tsx, components/JourneyCards.tsx
+    delay-prediction/             # README.md, components/PredictionPanel.tsx, components/LegDelayRow.tsx,
+                                  # components/ChainStrip.tsx (train1 late → transfer shrinks → train3 missed), components/FailHeadline.tsx (count-up)
+    recommendation/               # README.md, components/RecommendationPanel.tsx, components/AlternativeToggle.tsx
+    presenter/                    # README.md, steps.ts (state machine), components/Presenter.tsx (overlay chrome + step slides),
+                                  # components/slides/{PainSlide,ShareSlide,ProofSlide,CloseSlide}.tsx, components/ProofChart.tsx
+```
+
+Feature names `pwa-shell`, `share-parser`, `delay-prediction`, `recommendation` match `owners.md`; `globe-map` and `presenter` are frontend-only (allowed: the 1:1 rule applies only where a feature spans layers). Each feature folder gets the one-paragraph README the `_TEMPLATE` asks for. Delete `src/features/_TEMPLATE` is NOT required; leave it.
+
+Also (outside the frontend, coordination, your own edits): add `Akshat` to the `app/frontend`, `share-parser`, `pwa-shell` rows in `team-setup/state/owners.md`, and append a decision line for the map/PWA choices to `team-setup/state/decisions.md`.
+
+## 2. `package.json`
+
+```json
+{
+  "name": "app-frontend", "private": true, "version": "0.1.0", "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit &amp;&amp; vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "class-variance-authority": "0.7.1", "clsx": "2.1.1", "tailwind-merge": "3.6.0",
+    "lucide-react": "1.41.0", "radix-ui": "1.6.7",
+    "react": "19.2.8", "react-dom": "19.2.8",
+    "maplibre-gl": "6.9.0",
+    "motion": "13.2.0",
+    "tw-animate-css": "1.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3", "tailwindcss": "4.3.3",
+    "@types/node": "26.4.1", "@types/react": "19.2.18", "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1", "typescript": "7.0.2", "vite": "8.2.2",
+    "vite-plugin-pwa": "1.3.0", "workbox-build": "7.4.1", "workbox-window": "7.4.1"
+  }
+}
+```
+`bootstrap.sh` auto-detects real deps here and runs `npm install`; run it manually anyway.
+
+## 3. `vite.config.ts` (mirrors the reference, adds PWA)
+
+```ts
+import { fileURLToPath, URL } from "node:url"
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import tailwindcss from "@tailwindcss/vite"
+import { VitePWA } from "vite-plugin-pwa"
+
+export default defineConfig({
+  plugins: [react(), tailwindcss(), VitePWA({
+    registerType: "autoUpdate",
+    includeAssets: ["favicon.svg", "icons/*.png", "seed/*.json", "proof.json"],
+    manifest: {
+      id: "/", name: "error404.ai — will my DB plan fail?", short_name: "error404",
+      description: "Share a DB connection, get the probability your plan fails and what to do.",
+      start_url: "/", scope: "/", display: "standalone", orientation: "portrait",
+      background_color: "#07070c", theme_color: "#07070c",
+      icons: [
+        { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+        { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+        { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
+      ],
+      share_target: { action: "/share", method: "GET", params: { title: "title", text: "text", url: "url" } }
+    },
+    workbox: {
+      globPatterns: ["**/*.{js,css,html,svg,png,jpg,json,woff2}"],
+      maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,     // maplibre chunk
+      navigateFallback: "/index.html",
+      runtimeCaching: [
+        { urlPattern: /^https:\/\/basemaps\.cartocdn\.com\/.*/i, handler: "CacheFirst",
+          options: { cacheName: "tiles", expiration: { maxEntries: 3000, maxAgeSeconds: 7 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },
+        { urlPattern: /\/api\/seed\/demo$/, handler: "NetworkFirst", options: { cacheName: "seed", networkTimeoutSeconds: 3 } }
+      ]
+    },
+    devOptions: { enabled: false }
+  })],
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  server: { host: "127.0.0.1", port: 5173, strictPort: true, proxy: { "/api": { target: "http://127.0.0.1:8000", changeOrigin: true } } },
+  preview: { host: "127.0.0.1", proxy: { "/api": { target: "http://127.0.0.1:8000", changeOrigin: true } } },
+  build: { sourcemap: false, outDir: "dist" }
+})
+```
+Drop the reference's Origin-blocking `configure` hook; it exists for the board's CSRF story, not ours. `index.html`: copy the reference, set `theme-color #07070c`, add `&lt;link rel="apple-touch-icon"&gt;` and `&lt;meta name="apple-mobile-web-app-capable"&gt;`; vite-plugin-pwa injects the manifest link.
+
+## 4. Contract, API client, state
+
+`src/lib/contract.ts`: paste the contract types verbatim; extend `Station` with `lat?: number; lon?: number`. When `app/shared/` gets generated, switch the import; until then this is the frontend's copy.
+
+`src/lib/api.ts` (all functions `fetch` with `AbortSignal.timeout(8000)`, throw on `!ok`):
+`health()`, `parseJourney(text) → Journey`, `predict(journey) → Prediction`, `recommend(journey, prediction) → Recommendation`, `seedDemo() → Journey`. Plus `loadSeedFixtures()` reading `/seed/*.json` for the offline path.
+
+`src/lib/store.tsx` state:
+```ts
+type Stage = "idle" | "shared" | "parsing" | "parsed" | "predicting" | "predicted" | "recommending" | "done" | "error"
+type State = {
+  stage: Stage; sharedText?: string; journey?: Journey; prediction?: Prediction; recommendation?: Recommendation
+  showAlternative: boolean; offline: boolean; error?: string
+  presenter: { active: boolean; step: number }
+}
+```
+Actions: `share(text)`, `journeyReady`, `predictionReady`, `recommendationReady`, `toggleAlternative`, `presenter/set`, `presenter/next`, `presenter/prev`, `fail(msg)`, `reset`.
+Thunks in the provider: `runFromText(text)` = parse→predict→recommend, dispatching per stage so the UI progresses shot by shot; `runFromSeed()` = try `GET /api/seed/demo` then predict/recommend; on any failure fall back to the three bundled fixtures and set `offline: true` (a small "seed / offline" pill, never a broken screen). Stations get `lat/lon` either from the backend response or from `stations.ts` lookup, applied in one `hydrateCoords(journey)` call before storing.
+
+## 5. Stations table and geometry
+
+`src/lib/stations.json`: ~45 entries. Seed at least: Berlin Hbf (8011160; 52.5251, 13.3694), Frankfurt(Main) Hbf (8000105; 50.1071, 8.6638), Basel SBB (8500010; 47.5476, 7.5896), Zürich HB (8503000; 47.3779, 8.5403), Hamburg Hbf, München Hbf, Köln Hbf, Stuttgart Hbf, Hannover Hbf, Leipzig Hbf, Dresden Hbf, Nürnberg Hbf, Mannheim Hbf, Karlsruhe Hbf, Freiburg(Breisgau) Hbf, Düsseldorf Hbf, Essen Hbf, Dortmund Hbf, Bremen Hbf, Erfurt Hbf, Fulda, Kassel-Wilhelmshöhe, Würzburg Hbf, Göttingen, Augsburg Hbf, Ulm Hbf, Offenburg, Frankfurt(M) Flughafen Fernbf, Bonn Hbf, Koblenz Hbf, Mainz Hbf, Wolfsburg Hbf, Aachen Hbf, Münster(Westf) Hbf, Heidelberg Hbf, Regensburg Hbf, Bern, Luzern, Basel Bad Bf, Wien Hbf, Salzburg Hbf, Innsbruck Hbf, Amsterdam Centraal, Paris Est, Strasbourg. Spot-check EVA numbers against the DB Timetables output the backend already has (`scripts/db_timetables.py`); coordinates only need city accuracy at the zooms used.
+
+`normaliseName(s)`: lowercase, NFD-strip diacritics (ü→u, also map ß→ss), collapse whitespace, drop parentheses content variants ("Frankfurt (Main) Hbf" ≡ "Frankfurt(Main) Hbf" ≡ "Frankfurt Main Hbf"), strip trailing "Hbf"/"HB"/"Hauptbahnhof" for a second-pass match. Lookup order: evaNumber exact → normalised name exact → normalised name without suffix.
+
+`geo.ts`: `legLine(leg) → [[lon,lat],[lon,lat]]` straight segment (600 km legs; MapLibre projects onto the globe, the curve difference is invisible), `routeBounds(legs)`, `riskColour(p)`: `p &lt; 0.15 → --risk-low`, `&lt; 0.4 → --risk-mid`, else `--risk-high`. Leg colour = the `missProbability` of the transfer at the end of that leg (last leg: its `expectedDelayMinutes` scaled), which is exactly the "chain" story.
+
+## 6. Globe feature
+
+- `useMap.ts`: create `new maplibregl.Map({ container, style: {version:8, sources:{carto:{type:"raster", tiles:[...], tileSize:256, attribution}}, layers:[{id:"bg",type:"background",paint:{"background-color":"#07070c"}},{id:"tiles",type:"raster",source:"carto",paint:{"raster-opacity":0.85}}], projection:{type:"globe"}}, center:[10,50], zoom:1.8, pitch:0, attributionControl:false })`. Clean up with `map.remove()` in the effect return (StrictMode double-mount safe). Import `maplibre-gl/dist/maplibre-gl.css`.
+- Idle: rAF loop nudging `center.lng` by 0.03°/frame while `stage === "idle"` and not reduced-motion; stops on first interaction.
+- `useRouteLayers.ts`: one GeoJSON source per journey (`main`, `alt`) with `lineMetrics: true`; per leg a `line` layer filtered by `leg` property, `line-width` 4 (6 in presenter), `line-blur` 0.5, plus a duplicated wider low-opacity layer for glow; `circle` layer for stations (white core, colour ring); `symbol` layer with station names (needs a glyph URL: `https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf`; if offline just skip labels, cards carry the names).
+- **Animated draw**: keep geometry static, animate the paint property `line-gradient` with `["interpolate",["linear"],["line-progress"],0,colour, t,colour, Math.min(t+0.001,1),"rgba(0,0,0,0)"]` from `t=0→1` over 700 ms per leg, chained leg by leg. Reduced motion: set `t=1` immediately.
+- Alternative route: same layers with `line-dasharray [2,2]` and the low-risk colour; toggled by `showAlternative`.
+- `camera.ts`: `fitRoute(map, bounds, {padding: {right: rail ? 480 : 24, bottom: sheet ? 320 : 24}, duration: 2200, essential: true})`; `flyToStation(map, station, zoom 9.5, pitch 45)`; `homeGlobe(map)` back to zoom 1.8. All read `useReducedMotion()` and pass `duration: 0` when set.
+
+## 7. Panel features
+
+- `LegCard`: train id large, `from → to`, planned HH:MM–HH:MM, transfer pill "12 min change". Stagger in with `motion` variants (index * 80 ms).
+- `LegDelayRow`: same card plus "+8 min · likely 3–20" (echo `predict.py` wording) and a risk bar; `confidence` shown as three dots, `reasoning` under a "why" disclosure (Explained&lt;T&gt; is on screen, satisfying AGENTS rule 8: sources + rationale visible, never presented as calibrated).
+- `ChainStrip`: horizontal strip of legs joined by transfer nodes; node width = transferMinutes, shrink animation subtracts expected delay; a broken node turns red with "missed". This is the 0:30 shot visual.
+- `FailHeadline`: "Probability your plan fails" + count-up `animate(0, value*100, {duration: 1.2})` to `NN%`; colour by `riskColour`.
+- `RecommendationPanel`: verdict badge (`good` / `add-buffer` / `take-alternative`), `advice.value` in large type, buffer minutes, button "Show alternative" → `toggleAlternative` (draws alt route and fits both).
+- `SharePanel` (user mode idle): big textarea "Paste what the DB app shared", primary button "Check my plan", secondary "Use the demo journey". `SharePage` for `/share`: read `text ?? title ?? url` from `URLSearchParams`, `history.replaceState` to `/`, dispatch `share(text)` and `runFromText`.
+- `OfflineBanner` / seed pill and `InstallHint` (listen `beforeinstallprompt`, show a small "Install" button; also used in the close slide).
+
+## 8. Presenter state machine (`src/features/presenter/steps.ts`)
+
+```ts
+export const STEPS = [
+  { id: "pain",    panel: "slide:pain",   camera: "globe-idle",   data: "none" },
+  { id: "share",   panel: "slide:share",  camera: "globe-idle",   data: "sharedText" },       // share sheet mock + text arriving
+  { id: "parsed",  panel: "cards",        camera: "fit-route",    data: "journey", draw: "legs" },
+  { id: "predict", panel: "prediction",   camera: "fly-break",    data: "prediction", draw: "recolour+chain+countup" },
+  { id: "advise",  panel: "recommend",    camera: "fit-both",     data: "recommendation", draw: "alt-dashed" },
+  { id: "proof",   panel: "slide:proof",  camera: "hold",         data: "proof.json|png" },
+  { id: "close",   panel: "slide:close",  camera: "globe-home",   data: "none" },
+] as const
+```
+- Entering presenter (`?present=1` or `P`): `runFromSeed()` eagerly so every step's data is already in the store; set `document.documentElement.dataset.present = "1"` (type scale), hide the paste UI, show a 4px step progress bar at the bottom and a faint "3/7" counter.
+- Keys: `ArrowRight`/`Space`/`PageDown` → next, `ArrowLeft`/`PageUp` → prev, `Home` → 0, `Esc` → exit, `F` → `requestFullscreen`, `M` → toggle motion. `useEffect` on `presenter.step` runs the step's `camera` and `draw` actions; the draw functions are idempotent so going backwards is safe (re-render at final state instantly).
+- User mode is the same component tree driven by `stage` instead of `step` (idle → SharePanel; parsed → cards + fit-route; predicted → prediction + fly-break; done → recommendation). The map choreography functions are shared, so presenter costs only `steps.ts`, the four slide components and the key handler.
+- "fly-break" camera: find the first leg whose `missProbability.value` ≥ 0.4 and fly to its `to` station; if none, fit route.
+
+## 9. Layout, colour, projector
+
+`index.css`: Tailwind v4 `@import "tailwindcss"; @import "tw-animate-css"; @theme inline { ... }` as in the reference, but dark tokens: `--background #07070c`, `--foreground #f4f4f5`, `--card rgba(20,20,28,.72)` with `backdrop-filter: blur(16px)`, `--muted-foreground #9a9aa8`, `--risk-low #34d399`, `--risk-mid #fbbf24`, `--risk-high #f87171`, `--db-red #ec0016`, `--font-sans` system stack (no webfont download → nothing to fail offline).
+Grid: `.shell { position: fixed; inset: 0 }`, map fills it; panel `position: absolute`. Breakpoints: `&lt; 1024px` bottom panel `max-height: 56dvh`, rounded top, scrollable, safe-area padding; `≥ 1024px` right rail `width: clamp(380px, 32vw, 520px)`. Presenter: `html[data-present] { font-size: clamp(18px, 1.35vw, 24px) }`, headline number `text-[9rem]`, panel width 560 px, hide the OS-ish chrome. `@media (prefers-reduced-motion: reduce)` and `html[data-motion="0"]` zero out transitions; JS hook reads both.
+
+## 10. Icons and images (Higgsfield budget ≤ 6 credits)
+
+Generate one 1024×1024 flat mark (dark background, single white/red glyph: a broken rail link or "404" ligature), one maskable variant with 20% safe-zone padding, optionally one dark backdrop for the close slide. Downscale to 192/512/180 with `sips` (macOS built-in) during implementation. No video.
+
+## 11. Cross-owner asks (write them on the board now, in parallel)
+
+1. Backend: serve `app/frontend/dist` statically for any non-`/api` GET: files by path, else `index.html` (SPA fallback so `/share?text=…` works); MIME `application/manifest+json` for `.webmanifest`, `Cache-Control: no-cache` on `sw.js` and `index.html`. ~25 lines in `server.js` using `node:fs`.
+2. Backend: `lat`/`lon` optional on `Station` in every response (frontend falls back to `stations.json`).
+3. ML: drop `public/proof.json` as `{ "metric": "brier_late", "label": "Brier score, late ≥ 6 min (lower is better)", "lowerIsBetter": true, "n": 30000, "split": "Sep 2026 forward", "models": [ { "name": "error404 fine-tuned", "value": 0.12, "highlight": true }, { "name": "Claude Opus, raw data", "value": 0.21 }, { "name": "GPT, raw data", "value": 0.22 } ] }` — or a `proof.png`.
+4. Route pick: as soon as chosen, update `public/seed/journey.json` (that file is the single frontend place that hardcodes the story).
+
+## 12. Time-boxed order of work
+
+| Hour | Deliver | Done when |
+|---|---|---|
+| 1 | Scaffold: package.json, vite/ts/components config, index.html, index.css tokens, `main.tsx`, `App.tsx`, `contract.ts`, `api.ts`, `store.tsx`, seed fixtures, owners.md claim | `npm install &amp;&amp; npm run build` green; dev server shows dark shell with "Use the demo journey" and logs the seed pipeline |
+| 2 | Globe: MapLibre globe + raster tiles, idle spin, `stations.json` + lookup, route layers, `fitRoute` | Seed route drawn Berlin→Zürich, coloured, camera flies from globe to route |
+| 3 | Journey cards + paste flow + `/share` page + manifest/share_target + register SW | Paste text → cards; `/share?text=` works in dev |
+| 4 | Prediction: LegDelayRow, ChainStrip, FailHeadline count-up, leg recolour, fly-to-break | Shot 0:30 works from seed |
+| 5 | Recommendation panel + alternative dashed route + fit both | Shot 0:45 works |
+| 6 | Presenter: steps.ts, key handling, four slides (pain/share/proof/close), progress bar, type scale | ArrowRight walks 7 steps offline (backend stopped) |
+| 7 | Proof chart (SVG + PNG fallback), icons via Higgsfield, install hint, offline pill | Chart renders from proof.json; Lighthouse PWA installable |
+| 8 | Production path: build, backend static serve integration, `brew install cloudflared`, tunnel, Android install + share-target test, warm tile cache | Phone shares from DB app into the PWA over the tunnel |
+| 9 | Polish: 375 px bottom panel, 1920×1080 projector pass, reduced-motion, error states, README per feature | Responsive checks at 375/768/1024/1920 |
+| 10 | Buffer: two full keyboard rehearsals, record backup screen video, `smoke.sh` config, snapshot tag | `demo-ok-*` snapshot exists |
+
+**Cut list, in order, if behind:** custom vector style (never start it unless hour 9 is free) → `motion` dep (CSS instead) → animated line draw (instant) → alternative route on the map (text only) → SVG proof chart (PNG only) → station labels layer → pain-slide photo → bottom-sheet polish. **Never cut:** bundled seed fixtures, presenter keyboard steps, the headline number, the paste-text fallback (share target may fail on the day; paste never does).
+
+## 13. Verification
+
+1. `cd app/frontend &amp;&amp; npm run build` — tsc + Vite clean; `dist/manifest.webmanifest`, `dist/sw.js`, `dist/workbox-*.js` exist; maplibre chunk &lt; 4 MB.
+2. Dev: `cd app/backend &amp;&amp; npm run dev` + `cd app/frontend &amp;&amp; npm run dev`; open `http://127.0.0.1:5173`, click "Use the demo journey"; Network tab shows `/api/seed/demo`, `/api/predict`, `/api/recommend` proxied to 8000. Stop the backend, reload: offline pill appears, seed fixtures render, globe still draws.
+3. Prod: `npm run build`, start backend with static serving, open `http://localhost:8000`; Chrome DevTools → Application → Manifest (icons, share_target listed, installability no errors) and Service Workers (activated, `tiles` and `workbox-precache` caches populated after one presenter walk). Toggle "Offline" in DevTools, reload: app and route render.
+4. Share target: `brew install cloudflared &amp;&amp; cloudflared tunnel --url http://localhost:8000`; on Android Chrome open the `https://*.trycloudflare.com` URL, install (menu → Install app), open the DB app, Share connection → pick error404 → app lands on `/share` and shows cards. Also test `https://…/share?text=&lt;urlencoded DB text&gt;` directly in the phone browser.
+5. Presenter: open `/?present=1`, press `F`, walk `→` through all 7 steps and `←` back; check camera moves, leg-by-leg draw, count-up, alt route toggle, proof chart, close slide; repeat with backend killed; repeat with `?present=1&amp;motion=0`.
+6. Responsive: 375×812 (bottom panel scrolls, map visible above), 768, 1024 (rail), 1920×1080 (headline readable from 5 m).
+7. `team-setup/scripts/smoke.sh`: set `SMOKE_HEALTH_URL=http://localhost:8000/api/health` and `SMOKE_COMMAND="npm --prefix app/frontend run build"` so the team smoke covers the frontend build.
+
+### Critical Files for Implementation
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/frontend/vite.config.ts (new; mirrors /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/web/vite.config.ts and adds VitePWA manifest + share_target + tile cache)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/frontend/src/lib/store.tsx (new; state model, seed/offline pipeline, presenter step state; pattern from team-setup/board/web/src/lib/workspace.tsx)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/frontend/src/features/globe-map/hooks/useRouteLayers.ts (new; MapLibre globe, leg layers, line-gradient draw, camera choreography)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/frontend/src/features/presenter/steps.ts (new; the 7-step shot machine that both key handling and camera effects consume)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/server.js (backend owner: add static serving of app/frontend/dist with SPA fallback; the demo cannot run same-origin without it)</result>
+<usage><subagent_tokens>93117</subagent_tokens><tool_uses>14</tool_uses><duration_ms>341371</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a320287e7435f5954</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/a320287e7435f5954.output</output-file>
+<status>completed</status>
+<summary>Agent "Plan backend contract endpoints" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I have everything I need; here is the plan.
+
+# Backend implementation plan — error404.ai (10 h)
+
+## 0. What I found in the repo that shapes the plan
+
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/server.js` — the request loop is 15 lines: `router.match` → JSON 404 → `readJson` → handler → `sendJson`. There is no OPTIONS/HEAD handling; `Router.match` filters by exact method, so a `HEAD` or `OPTIONS` request currently gets the JSON 404. `sendJson` uses `res.writeHead(status, {...})`, which Node merges with headers previously set via `res.setHeader`, so CORS headers can be set up front without touching `sendJson`.
+- Feature pattern to copy verbatim: `createXService(ctx)` factory + `registerRoutes(router, ctx)` that returns the service (`app/backend/src/features/training-jobs/routes/training-jobs.js:83-98`). Errors carry `.status` on a plain `Error` (line 15) rather than importing `HttpError` — keep that: a feature module importing `HttpError` from `../../../server.js` creates an ESM import cycle (server.js imports the feature). It works, but it's a foot-gun; use `Object.assign(new Error(msg), { status: 400 })` instead.
+- Tests: `node:test` + `node:assert/strict`, exercise handlers via `new Router()` + `router.match(...).handler({ params, query, body })` (training-jobs.test.js:151-163). Fake `fetch` via `fetchImpl` injection (line 107). Reuse both idioms.
+- Python math to port: `connection.py` — `change_probability` = P(A − D ≤ floor(buffer − minTransfer)) × (1−pc_a)(1−pc_d); `journey_probability` = product of change probs; `plan_fail = 1 − success`. `predict.py` shows the traveller summary to mimic (median / p10–p90 / `on_time = CDF(LATE_MINUTES−1 = 5) × (1−p_cancel)`), and that the connecting train's departure delay is approximated by its arrival delay. Model distributions are length 1000 (`MAX_MINUTES = 999`) — port must accept any length.
+- `scripts/db_timetables.py` — `station/{pattern}` returns `&lt;station name=".." eva=".."/&gt;` elements; parse with a regex, no XML lib needed.
+- Node on this machine is v26.8.2 (`process.loadEnvFile`, `AbortSignal.timeout`, `Intl` `longOffset` all available). `.gitignore` already whitelists `.env.example`.
+- `team-setup/scripts/smoke.sh` runs `npm --prefix app/backend test` and can take `SMOKE_HEALTH_URL`; set it to `/api/health` at the end.
+- Governance: `owners.md` lists share-parser / pwa-shell as frontend features; backend folders with the same names are the sanctioned "spans layers" case. `lat/lon` on `Station` needs one appended line in `team-setup/state/decisions.md` (AGENTS.md rule 4) — flag for a human, don't self-approve.
+
+## 1. File map (create / modify)
+
+```
+app/backend/src/server.js                                   MODIFY (health ok:true, CORS/OPTIONS, static fallback, register 4 features)
+app/backend/README.md                                       MODIFY (endpoints, env, serve-the-PWA)
+.env.example                                                MODIFY (PORT, CORS_ORIGIN, STATIC_DIR, PREDICT_URL, PREDICT_BACKEND, PREDICT_TIMEOUT_MS, MIN_TRANSFER_MINUTES, BAHN_VBID_RESOLVER)
+
+app/backend/src/features/pwa-shell/README.md                serves GET /api/seed/demo + static PWA; demo shots 0:10, "all shots offline fallback"
+app/backend/src/features/pwa-shell/fixtures/seed-journey.json
+app/backend/src/features/pwa-shell/fixtures/dist-sample/    index.html, manifest.webmanifest, sw.js, assets/app-abc123.js   (test fixture only)
+app/backend/src/features/pwa-shell/static.js                createStaticHandler({ dir })
+app/backend/src/features/pwa-shell/routes/pwa-shell.js      createSeedService, registerRoutes
+app/backend/src/features/pwa-shell/pwa-shell.test.js
+
+app/backend/src/features/share-parser/README.md             serves POST /api/journeys/parse; shot 0:20
+app/backend/src/features/share-parser/fixtures/stations.json
+app/backend/src/features/share-parser/fixtures/share-texts/{de-multiline,en-multiline,two-connections,bahn-url}.txt
+app/backend/src/features/share-parser/grammar.js            tokenizeLines, parseConnections, pickFirstComplete
+app/backend/src/features/share-parser/stations.js           normaliseName, createStationResolver
+app/backend/src/features/share-parser/vbid.js               resolveVbid (flagged, best-effort)
+app/backend/src/features/share-parser/routes/share-parser.js  createShareParserService, registerRoutes
+app/backend/src/features/share-parser/share-parser.test.js
+
+app/backend/src/features/delay-prediction/README.md         serves POST /api/predict; shot 0:30
+app/backend/src/features/delay-prediction/connection.js     JS port of connection.py (+ quantile, onTime)
+app/backend/src/features/delay-prediction/backends/mock.js
+app/backend/src/features/delay-prediction/backends/http.js
+app/backend/src/features/delay-prediction/routes/delay-prediction.js  createPredictionService, registerRoutes
+app/backend/src/features/delay-prediction/delay-prediction.test.js
+
+app/backend/src/features/recommendation/README.md           serves POST /api/recommend; shot 0:45
+app/backend/src/features/recommendation/fixtures/alternatives.json
+app/backend/src/features/recommendation/routes/recommendation.js  createRecommendationService, registerRoutes
+app/backend/src/features/recommendation/recommendation.test.js
+```
+
+Zero npm deps throughout: `node:http`, `node:fs`, `node:path`, `node:crypto`, global `fetch`, `Intl`.
+
+## 2. server.js diff points (smallest change)
+
+```js
+// imports
+import { registerRoutes as registerPwaShell, createStaticHandler } from './features/pwa-shell/routes/pwa-shell.js';
+import { registerRoutes as registerShareParser } from './features/share-parser/routes/share-parser.js';
+import { registerRoutes as registerDelayPrediction } from './features/delay-prediction/routes/delay-prediction.js';
+import { registerRoutes as registerRecommendation } from './features/recommendation/routes/recommendation.js';
+
+export function createApp({ env = process.env } = {}) {
+  const router = new Router();
+  // additive: contract wants { ok: true }; keep old fields
+  router.get('/api/health', async () =&gt; ({ ok: true, status: 'ok', service: 'app-backend', time: new Date().toISOString() }));
+  registerTrainingJobs(router, { env });
+  registerPwaShell(router, { env });
+  registerShareParser(router, { env });
+  const predict = registerDelayPrediction(router, { env });          // returns the service
+  registerRecommendation(router, { env, predict });                  // DI: recommendation re-chains via predict
+  const serveStatic = createStaticHandler({ dir: env.STATIC_DIR || path.join(__dirname, '..', '..', 'frontend', 'dist') });
+
+  return http.createServer(async (req, res) =&gt; {
+    const url = new URL(req.url, 'http://localhost');
+    // 1) CORS (dev only) + OPTIONS before routing — Router has no options()
+    if (env.CORS_ORIGIN) {
+      res.setHeader('Access-Control-Allow-Origin', env.CORS_ORIGIN);
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Max-Age', '600');
+    }
+    if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    // 2) API routes first
+    const matched = router.match(req.method, url.pathname);
+    if (!matched) {
+      // 3) API namespace never falls through to the SPA
+      if (url.pathname.startsWith('/api/')) return sendJson(res, 404, { error: `No route for ${req.method} ${url.pathname}` });
+      // 4) static file, then SPA fallback (index.html), handled inside serveStatic
+      if (await serveStatic(req, res, url.pathname)) return;
+      // 5) no dist built / not found
+      return sendJson(res, 404, { error: `No route for ${req.method} ${url.pathname}`, hint: 'build the PWA: npm --prefix app/frontend run build (or set STATIC_DIR)' });
+    }
+    ...unchanged try/catch...
+```
+Ordering rule: **route → /api 404 → static file → SPA index.html → 404**. HEAD requests never match the Router (method filter) and drop straight into `serveStatic`, which handles them. Also extend the startup `console.log` list with the four new endpoints. Note for the frontend: if Vite's dev server proxies `/api` to 8000 (`server.proxy`), `CORS_ORIGIN` is unnecessary; it's only for calling 8000 directly from 5173.
+
+## 3. pwa-shell
+
+**`static.js` — `createStaticHandler({ dir, indexFile = 'index.html' }) → async (req, res, pathname) =&gt; boolean`**
+- Path safety: `const file = path.resolve(dir, '.' + path.posix.normalize(decodeURIComponent(pathname)))`; reject if `!file.startsWith(path.resolve(dir) + path.sep) &amp;&amp; file !== path.resolve(dir)` → return false.
+- `stat` via `fs.promises.stat`; directory → `index.html` inside it. ENOENT → SPA fallback only for `GET`/`HEAD` and only if the request has no file extension (`!path.extname(pathname)`) or `Accept` contains `text/html`; serve `dir/index.html` with 200 (if that is also missing → return false).
+- MIME table: `.html text/html; .js/.mjs text/javascript; .css text/css; .json application/json; .webmanifest application/manifest+json; .svg image/svg+xml; .png .jpg .jpeg .webp .ico .woff .woff2 .txt .map .wasm`. Unknown → `application/octet-stream`.
+- Cache headers: `sw.js`, `index.html`, `manifest.webmanifest` → `Cache-Control: no-cache` (+ `Service-Worker-Allowed: /` on sw.js); anything under `/assets/` (Vite content-hashed) → `public, max-age=31536000, immutable`; else `no-cache`.
+- Streaming: `res.writeHead(200, { 'Content-Type', 'Content-Length': st.size, 'Cache-Control', 'Last-Modified' })`; for HEAD `res.end()`; else `fs.createReadStream(file).pipe(res)` with `stream.on('error', () =&gt; res.destroy())`.
+- Returns `true` whenever it wrote a response.
+
+**`routes/pwa-shell.js`**
+```js
+export function createSeedService({ fixture } = {}) {
+  const seed = fixture ?? JSON.parse(readFileSync(new URL('../fixtures/seed-journey.json', import.meta.url)));
+  return { demo: () =&gt; structuredClone(seed) };
+}
+export function registerRoutes(router, ctx = {}) {
+  const svc = ctx.service || createSeedService(ctx);
+  router.get('/api/seed/demo', () =&gt; svc.demo());
+  return svc;
+}
+export { createStaticHandler } from '../static.js';
+```
+
+**`fixtures/seed-journey.json`** (Sun 13 Sep 2026, CEST = +02:00; leaves 50 min of headroom for the alternative to arrive at the same time)
+```json
+{ "id": "seed-ber-zrh-2026-09-13", "source": "seed", "legs": [
+  { "trainId": "ICE 1005", "from": { "evaNumber": "8011160", "name": "Berlin Hbf", "lat": 52.5251, "lon": 13.3694 },
+    "to": { "evaNumber": "8000105", "name": "Frankfurt(Main) Hbf", "lat": 50.1071, "lon": 8.6638 },
+    "plannedDeparture": "2026-09-13T06:34:00+02:00", "plannedArrival": "2026-09-13T10:12:00+02:00", "transferMinutes": 12 },
+  { "trainId": "ICE 75", "from": {Frankfurt...}, "to": { "evaNumber": "8500010", "name": "Basel SBB", "lat": 47.5476, "lon": 7.5897 },
+    "plannedDeparture": "2026-09-13T10:24:00+02:00", "plannedArrival": "2026-09-13T13:26:00+02:00", "transferMinutes": 9 },
+  { "trainId": "IC 3", "from": {Basel...}, "to": { "evaNumber": "8503000", "name": "Zürich HB", "lat": 47.3779, "lon": 8.5403 },
+    "plannedDeparture": "2026-09-13T13:35:00+02:00", "plannedArrival": "2026-09-13T14:28:00+02:00" } ] }
+```
+`lat`/`lon` are optional additions → one appended decision line in `decisions.md` (human sign-off) — note this in the pwa-shell README.
+
+**Tests (`pwa-shell.test.js`)**: (a) `router.match('GET','/api/seed/demo')` → 3 legs, EVAs, transfers 12/9, every station has lat/lon; (b) spin up `createApp({ env: { STATIC_DIR: fixtures/dist-sample } }).listen(0)` and `fetch`: `/` → 200 text/html; `/manifest.webmanifest` → `application/manifest+json`; `/sw.js` → `cache-control: no-cache`; `/assets/app-abc123.js` → immutable; `/some/spa/route` → index.html body; `/api/nope` → JSON 404; `/../package.json` → not 200; `/api/health` → `ok === true`; `OPTIONS /api/predict` with `CORS_ORIGIN` → 204 + ACAO header.
+
+## 4. share-parser
+
+**Line tokenizer** (`grammar.js`). Pre-split: `text.split(/\r?\n|\s[–|→]\s/)`, trim, drop blanks. Classify each line by the first matching rule, in this priority order (order matters: a `Dauer 7:54` line contains a time, and a `Richtung Frankfurt(Main) Hbf` train line contains a station):
+
+| # | Token | Regex (case-insensitive) | Payload |
+|---|---|---|---|
+| 1 | URL | `https?:\/\/\S+` | `{ url, vbid }` (`vbid=([0-9a-f-]{8,})`) |
+| 2 | TRANSFER | `(Umstieg|Umsteigezeit|Umsteigen|transfer(?:\s*time)?|change)\D*(\d+)\s*(min)` | `{ minutes }` |
+| 3 | SUMMARY | `^(Dauer|Duration|Reisedauer|Fahrtzeit)\b` or `\d{1,2}:\d{2}\s*[–-]\s*\d{1,2}:\d{2}` (two times on one line) | connection boundary |
+| 4 | HEADER | `^(Verbindung|Connection|Option)\s*\d+` or `^-{3,}$` | connection boundary |
+| 5 | DATE | `(\d{1,2})\.(\d{1,2})\.(\d{4})` / `(\d{4})-(\d{2})-(\d{2})` | `{ y, m, d }` |
+| 6 | STOP | `^(?:(ab|an|dep|arr)\.?\s+)?(\d{1,2}:\d{2})(?:\s*Uhr)?(?:\s+(ab|an|dep|arr))?\s+(.+?)(?:\s*(?:Gl\.|Gleis|Platform|Pl\.|Track)\s*\S+)?$` | `{ tag: 'dep'|'arr'|null, hh, mm, station }` |
+| 7 | TRAIN | `\b(ICE|IC|EC|ECE|IR|IRE|RE|RB|S|TGV|RJ|RJX|NJ|FEX|MEX)\s?(\d{1,5})\b` | `{ trainId: "ICE 1005" }` (normalise to one space) |
+| 8 | NOISE | anything else | ignored |
+
+**State machine** (`parseConnections(tokens, { now })` → `RawConnection[]`, each `{ legs: RawLeg[], date, complete }`):
+
+States: `IDLE` → `WANT_TRAIN` → `IN_LEG` → `AFTER_ARRIVAL`; context: `pendingTrain`, `cur` (open leg), `conn`, `date`.
+
+| State | Token | Action → next |
+|---|---|---|
+| any | HEADER / SUMMARY | close `cur` (incomplete if no arrival); push `conn` if it has ≥1 leg; start new conn → IDLE |
+| any | DATE | `date = …` |
+| any | URL | record on conn (used for vbid fallback if nothing else parses) |
+| IDLE / AFTER_ARRIVAL | TRAIN | `pendingTrain = id` |
+| IDLE / AFTER_ARRIVAL | STOP (tag `dep` or untagged) | open leg `{ from, plannedDeparture }`; if `pendingTrain` → `trainId`, → IN_LEG else → WANT_TRAIN. In AFTER_ARRIVAL, if previous leg has no `transferMinutes`, set it to `dep − prevArr` |
+| WANT_TRAIN | TRAIN | `cur.trainId` → IN_LEG |
+| WANT_TRAIN | STOP tagged `arr` | leg without a train: keep `trainId = 'unknown'` (still complete) → close → AFTER_ARRIVAL |
+| IN_LEG | STOP (tag `arr` or untagged) | `cur.to, plannedArrival` (if &lt; departure, +1 day); push leg → AFTER_ARRIVAL |
+| IN_LEG | STOP tagged `dep` | previous leg has no arrival → mark conn `complete=false`; open new leg → IN_LEG/WANT_TRAIN |
+| IN_LEG | TRAIN | intermediate stop list / mismatch: `pendingTrain = id` (do not overwrite `cur.trainId`) |
+| AFTER_ARRIVAL | TRANSFER | `legs.at(-1).transferMinutes = minutes` |
+| end of input | | close as above |
+
+`pickFirstComplete(conns)`: first conn with ≥1 leg where every leg has `trainId, from, to, plannedDeparture, plannedArrival`; for legs 0..n−2 fill `transferMinutes` from times if missing. If none → `null` → 400 `"No complete connection found in text"` with `details: { connectionsSeen, legsSeen }`.
+
+Time → ISO: `berlinIso(date, hh, mm)` builds `YYYY-MM-DDTHH:MM:00±HH:MM` where the offset comes from `new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', timeZoneName: 'longOffset' })` ("GMT+02:00"). Date defaults to `now` (injectable for tests). Journey `id = 'jrn_' + sha1(legs.map(l =&gt; trainId+dep+from.eva).join('|')).slice(0, 10)`, `source: 'db-share'`.
+
+**Stations** (`stations.js`): `normaliseName(s)` → lowercase, `ä→ae ö→oe ü→ue ß→ss`, strip diacritics (`normalize('NFD')`), `hauptbahnhof→hbf`, collapse punctuation/spaces, drop `(main)`/`(breisgau)` only as a last-resort second pass. `createStationResolver({ stations, env, fetchImpl = fetch })` → `resolve(name)`: exact normalised match → prefix/contains match → if `env.DB_CLIENT_ID &amp;&amp; env.DB_API_KEY` call `GET {BASE}/station/{encodeURIComponent(name)}` with `DB-Client-Id`/`DB-Api-Key`/`Accept: application/xml`, parse `/&lt;station[^&gt;]*\bname="([^"]*)"[^&gt;]*\beva="(\d+)"/g`, cache in a `Map`, 4 s timeout → else `{ evaNumber: '', name }` (still a valid `Station`). `stations.json` (~25 entries, `{ name, evaNumber, lat, lon, aliases[] }`): Berlin Hbf 8011160, Berlin Südkreuz 8011113, Hamburg Hbf 8002549, Hannover Hbf 8000152, Leipzig Hbf 8010205, Erfurt Hbf 8010101, Fulda 8000115, Kassel-Wilhelmshöhe 8003200, Frankfurt(Main) Hbf 8000105, Frankfurt(M) Flughafen Fernbf 8070003, Mannheim Hbf 8000244, Karlsruhe Hbf 8000191, Offenburg 8000290, Freiburg(Breisgau) Hbf 8000107, Basel Bad Bf 8000026, Basel SBB 8500010, Zürich HB 8503000, Bern 8507000, Olten 8500218, Stuttgart Hbf 8000096, München Hbf 8000261, Nürnberg Hbf 8000284, Würzburg Hbf 8000260, Köln Hbf 8000207, Düsseldorf Hbf 8000085, Dresden Hbf 8010085. The four demo EVAs are given; spot-check the rest with `python3 scripts/db_timetables.py "&lt;name&gt;"` when creds are present (the API fallback covers misses anyway).
+
+**vbid resolver** (`vbid.js`, only if `env.BAHN_VBID_RESOLVER === '1'`): `GET https://www.bahn.de/web/api/angebote/verbindung/{vbid}` (the endpoint the open-source db-vendo-client uses; unofficial, may be bot-blocked), `Accept: application/json`, 5 s timeout. Map `verbindungen[0].verbindungsAbschnitte[]` where `verkehrsmittel.typ !== 'WALK'` → legs: `abfahrtsOrt/abfahrtsOrtExtId`, `ankunftsOrt/ankunftsOrtExtId`, `abfahrtsZeitpunkt/ankunftsZeitpunkt`, `verkehrsmittel.name`. Anything unexpected → 422 `"Share text only contains a bahn.de link; paste the connection details instead"` with `details: { vbid, resolverEnabled }`. Flag off → 422 immediately.
+
+**Service/route**
+```js
+export function createShareParserService({ env = process.env, stations, fetchImpl = fetch, now = () =&gt; new Date() } = {})
+  → { async parse(text) → Journey /* throws 400 / 422 */ }
+export function registerRoutes(router, ctx) {
+  const svc = ctx.service || createShareParserService(ctx);
+  router.post('/api/journeys/parse', async ({ body }) =&gt; {
+    if (typeof body?.text !== 'string' || !body.text.trim()) throw Object.assign(new Error('Body must be { text: string }'), { status: 400 });
+    return svc.parse(body.text);
+  });
+  return svc;
+}
+```
+
+**Fixtures** (`fixtures/share-texts/`):
+1. `de-multiline.txt` — header `Berlin Hbf → Zürich HB`, `So., 13.09.2026`, then `ab 06:34 Berlin Hbf Gl. 12` / `ICE 1005 Richtung Frankfurt(Main) Hbf` / `an 10:12 Frankfurt(Main) Hbf Gl. 7` / `Umstieg 12 Min` / … / `an 14:28 Zürich HB Gl. 31` / `Dauer 7:54 | 2 Umstiege` / a bahn.de URL. Expect: 3 legs, EVAs 8011160→8000105→8500010→8503000, transfers 12/9, ISO `+02:00`.
+2. `en-multiline.txt` — `dep 06:34 Berlin Hbf platform 12` / `ICE 1005 towards Frankfurt(Main) Hbf` / `arr 10:12 …` / `Change 12 min` … Same expectations.
+3. `two-connections.txt` — `Verbindung 1` with only a departure line and train (incomplete), `---`, `Verbindung 2` complete. Expect the second one is returned; `connectionsSeen: 2`.
+4. `bahn-url.txt` — `Meine Verbindung: https://www.bahn.de/buchung/start?vbid=9f3c2a1e-0000-4000-8000-000000000001`. Expect 422 with flag off; with flag on and a fake `fetchImpl` returning a minimal `verbindungen` JSON → Journey with 2 legs.
+Also test: `{ text: "hello" }` → 400; unknown station → `evaNumber: ''` and the name kept; `Frankfurt (Main) Hauptbahnhof` and `Zuerich HB` normalise to the fixture entries.
+
+## 5. delay-prediction
+
+**`connection.js` — port of connection.py (keep function names recognisable)**
+```js
+export function normalise(probs) {                     // TrainForecast.normalised
+  let total = 0; for (const p of probs) total += p;
+  if (!(total &gt; 0)) throw new Error('delay distribution has no mass');
+  return Float64Array.from(probs, (p) =&gt; p / total);
+}
+// P(A - D &lt;= slack) without building the full convolution:
+// np.convolve(a, d[::-1]) index n ↔ offset n-(|d|-1) = i-j, so
+// Σ_{i-j&lt;=slack} a[i]d[j] = Σ_i a[i] · P(D &gt;= i - slack)
+export function changeProbability(arriving, departing, plannedBuffer, minTransfer) {
+  const a = normalise(arriving.probs), d = normalise(departing.probs);
+  const slack = Math.floor(plannedBuffer - minTransfer);
+  const tailD = new Float64Array(d.length + 1);         // tailD[k] = P(D &gt;= k), tailD[len] = 0
+  for (let k = d.length - 1; k &gt;= 0; k--) tailD[k] = tailD[k + 1] + d[k];
+  let pMade = 0;
+  for (let i = 0; i &lt; a.length; i++) {
+    const k = i - slack;                                 // need D &gt;= i - slack
+    pMade += a[i] * (k &lt;= 0 ? 1 : k &gt;= d.length ? 0 : tailD[k]);
+  }
+  return (1 - (arriving.pCancel ?? 0)) * (1 - (departing.pCancel ?? 0)) * pMade;
+}
+export function journeyProbability(changes, finalArrival = null, arrivalSlack = null) {
+  const perChange = changes.map(([arr, dep, buffer, minT]) =&gt; changeProbability(arr, dep, buffer, minT));
+  let success = perChange.reduce((p, x) =&gt; p * x, 1);
+  if (finalArrival &amp;&amp; arrivalSlack != null) {
+    const pmf = normalise(finalArrival.probs);
+    let onTime = 0; for (let k = 0; k &lt;= Math.floor(arrivalSlack) &amp;&amp; k &lt; pmf.length; k++) onTime += pmf[k];
+    success *= (1 - (finalArrival.pCancel ?? 0)) * onTime;
+  }
+  return { changeProbabilities: perChange, planSuccess: success, planFail: 1 - success };
+}
+export function point(minutes, size = 1000, pCancel = 0) { const probs = new Float64Array(size); probs[minutes] = 1; return { probs, pCancel }; }
+export function quantile(probs, q) { const p = normalise(probs); let c = 0; for (let k = 0; k &lt; p.length; k++) { c += p[k]; if (c &gt;= q) return k; } return p.length - 1; }
+export const LATE_MINUTES = 6;                            // metrics.LATE_MINUTES
+export function onTimeProbability({ probs, pCancel = 0 }) { const p = normalise(probs); let c = 0; for (let k = 0; k &lt; LATE_MINUTES &amp;&amp; k &lt; p.length; k++) c += p[k]; return c * (1 - pCancel); }
+```
+Tests port `test_connection.py` exactly: `(point(5),point(0),8,4)→0`, `(3,0)→1`, `(5,2)→1`, `(4,0)→1`; cancellations `0.9*0.8`; journey chain `[ (1,0,6,3),(2,0,6,3) ]` with final `[0.5,0,0,0.5]`, slack 2 → success 0.5; plus a geometric-vs-brute-force O(n·m) double-sum cross-check (replaces the Monte Carlo test, deterministic).
+
+**Backends.** Common shape a backend returns: `{ modelId, legs: [{ trainId, arrival: { probs, pCancel }, departure?: { probs, pCancel }, reasoning, sources, confidence }] }` (departure optional → arrival is used, as `predict.py` does).
+
+`backends/mock.js` — `createMockBackend({ size = 240 })`. Deterministic, no RNG. Per leg: class from `trainId` prefix, hour from `plannedDeparture`, duration in hours.
+- median by class: ICE 8, IC/EC/ECE 5, IR/IRE/RE/RB/TGV/RJ/NJ 3, S 2; pCancel ICE/IC 0.02, regional 0.03.
+- hour multiplier: 06–09 ×0.9, 15–19 ×1.3, 22–05 ×0.8, else ×1.0; distance: `× (1 + 0.15·durationHours)` (long ICE legs drift more — makes the Berlin leg the story's culprit).
+- pmf: geometric with `q = 0.5 ** (1 / (median + 1))` so the median lands exactly on `median`; `probs[k] = (1−q)·q^k`, k &lt; size, renormalised. Departure distribution = same with median × 0.4.
+- reasoning: `"Mock prior for ICE at 06:00–09:00 on a 3.6 h leg: typical +8 min, likely 1 to 27 min, 41% chance within 5 min."`, `sources: ['mock: train-class × hour prior v1']`, `confidence: 'low'`, `modelId: 'mock-prior-v1'`.
+
+`backends/http.js` — `createHttpBackend({ url, fetchImpl = fetch, timeoutMs = 8000 })`: `POST url` with the Journey as JSON, `signal: AbortSignal.timeout(timeoutMs)`, non-2xx → throw; validate each leg has `arrival.probs` array; `confidence: 'medium'`; `modelId` from response else `'OpenTSLM db-trip-delay (unversioned)'`. This is the contract the Python side implements later (a tiny stdlib `http.server` around `model.predict_distribution`).
+
+**Service**
+```js
+export function createPredictionService({ env = process.env, backend, fetchImpl = fetch } = {}) {
+  const mock = createMockBackend();
+  const chosen = backend ?? ((env.PREDICT_BACKEND || (env.PREDICT_URL ? 'http' : 'mock')) === 'http'
+      ? createHttpBackend({ url: env.PREDICT_URL, fetchImpl, timeoutMs: Number(env.PREDICT_TIMEOUT_MS || 8000) }) : mock);
+  const minTransfer = Number(env.MIN_TRANSFER_MINUTES || 5);
+  return {
+    async forecast(journey) { validate(journey); try { return await chosen.forecast(journey); }
+      catch (e) { const f = await mock.forecast(journey); f.fallbackFrom = e.message; return f; } },   // http → mock fallback, noted in reasoning
+    chain(journey, forecasts) → Prediction,        // pure, reused by recommendation
+    async predict(journey) { return this.chain(journey, await this.forecast(journey)); },
+  };
+}
+```
+`chain`: for `i &lt; legs.length − 1`: `buffer = legs[i].transferMinutes ?? minutesBetween(legs[i].plannedArrival, legs[i+1].plannedDeparture)`; `miss_i = 1 − changeProbability(f[i].arrival, f[i+1].departure ?? f[i+1].arrival, buffer, minTransfer)`; last leg `miss = 0` with reasoning "final leg — nothing to miss". `expectedDelayMinutes.value = quantile(arrival.probs, 0.5)`, reasoning like predict.py's headline (`about +8 min, likely 1 to 27 min, 41% chance of arriving on time`) + backend reasoning. `missProbability.reasoning`: `"12 min planned at Frankfurt(Main) Hbf, 5 min needed to change → 7 min slack; P(ICE 1005 arrival delay − ICE 75 departure delay &gt; 7) = 46%, cancellation 2% + 2%."` `planFailProbability = journeyProbability(changes).planFail` with reasoning `"1 − (1−0.46)(1−0.58) = 0.77; changes treated as independent (optimistic when one disruption hits both trains)"`. `sources` = union of leg sources; `confidence` = backend's (`'low'` for mock). `modelId` from backend. Validation: `legs` non-empty array, each leg has `trainId`, `plannedDeparture`, `plannedArrival` → else 400.
+
+Route: `router.post('/api/predict', ({ body }) =&gt; svc.predict(body))`; `registerRoutes` returns `svc`.
+
+Tests: the connection.py cases; mock on the seed journey → 3 `LegDelay`s, `planFailProbability.value ∈ (0,1)`, `modelId === 'mock-prior-v1'`, byte-identical on a second call; `PREDICT_URL` + fake fetch that rejects → falls back, `sources` mention fallback; fake fetch returning a 1000-length distribution → `modelId` echoed, `confidence 'medium'`; `{}` → 400.
+
+## 6. recommendation
+
+```js
+export function createRecommendationService({ env = process.env, predict, alternatives } = {})
+  → { async recommend({ journey, prediction }) → Recommendation }
+```
+Rules (`GOOD_THRESHOLD = 0.15`, `MAX_BUFFER = 30`, `BUFFER_STEP = 5`):
+1. `pf = prediction.planFailProbability.value`; `pf &lt; 0.15` → `verdict 'good'`.
+2. `weakest = argmax_i legs[i].missProbability.value` over `i &lt; last`. Get forecasts once: `f = await predict.forecast(journey)`. For `b` in 5..30 step 5: `j2 = withTransfer(journey, weakest, +b)` (shift legs `&gt; weakest` later? No — simplest and honest: only bump `transferMinutes[weakest]`, meaning "take the next train at that station"), `pf2 = predict.chain(j2, f).planFailProbability.value`; first `b` with `pf2 &lt; 0.15` → `verdict 'add-buffer'`, `bufferMinutes: b`.
+3. Else `verdict 'take-alternative'`: `alternative = alternatives[routeKey(journey)]` (key `firstFromEva-&gt;lastToEva`, e.g. `8011160-&gt;8503000`) or synthesized: shift legs `0..weakest` earlier by 25 min (`trainId` kept, `source: 'manual'`, `id: journey.id + '-alt'`). Compute its `pf3 = (await predict.predict(alternative)).planFailProbability.value` to quote in the advice.
+4. If `predict` is not injected (tests / degraded), skip step 2's search and use the fixture directly (canned "take-alternative" — the sanctioned mock).
+
+`fixtures/alternatives.json` — the seed route's alternative, `source: 'seed'`, `id: 'seed-ber-zrh-alt'`: ICE 1001 05:44→09:22 Frankfurt (transfer 37), ICE 73 09:59→13:01 Basel (transfer 34), IC 3 13:35→14:28 Zürich — leaves 50 min earlier, arrives at the same time, both transfers +25 min.
+
+Advice (weather-forecast voice, values templated):
+- good: `"Clear skies: about {pf}% chance this plan breaks. Keep it — no umbrella needed."`
+- add-buffer: `"Showers likely at {station}: {arrTrain} tends to arrive ~{median} min late and {buffer} min to change is tight. Take {b} more minutes there (the next connection) and the risk drops from {pf}% to {pf2}%."`
+- take-alternative: `"Storm warning: {pf}% chance you miss a connection, worst at {station} ({miss}%). Leave {Δ} min earlier on {altTrain}: {b1} and {b2} min to change, same arrival {arrTime}, risk {pf3}%. Comfortable, not a sprint with luggage."`
+`advice = { value, reasoning: numbers + rule fired, sources: [...prediction.planFailProbability.sources, 'recommendation-rules v1'], confidence: prediction.planFailProbability.confidence }`.
+
+Route: `router.post('/api/recommend', ({ body }) =&gt; { if (!body?.journey?.legs || !body?.prediction?.legs) throw 400; return svc.recommend(body); })`.
+
+Tests: build `predict = createPredictionService({ env: {} })` (mock), `prediction = await predict.predict(seed)` → verdict is `take-alternative` or `add-buffer` (assert not `good`, and that `alternative` from the fixture has 3 legs when take-alternative); hand-made prediction with `planFail 0.05` → `good`; a journey with generous transfers (60/60) → `good`; missing fields → 400. Stretch (only if time): live alternative via Timetables `plan/{eva}/{yymmdd}/{hh}` at the weakest station, filter `ppth` containing the leg's destination — port `collect()` from `scripts/db_timetables.py` with a regex over `&lt;s ...&gt;&lt;dp pt=".." ppth=".."/&gt;`.
+
+## 7. Env, README, governance
+
+`.env.example` append (all optional, commented):
+```
+# app/backend HTTP server
+PORT=8000
+# CORS_ORIGIN=http://localhost:5173    # dev only when the Vite dev server calls :8000 directly; unset in prod (same origin required for SW + share target)
+# STATIC_DIR=../frontend/dist          # built PWA served by the backend; default app/frontend/dist
+# PREDICT_URL=http://localhost:8100/predict   # Python model server; unset → deterministic mock
+# PREDICT_BACKEND=mock                 # mock | http   (default: http when PREDICT_URL is set)
+# PREDICT_TIMEOUT_MS=8000
+# MIN_TRANSFER_MINUTES=5
+# BAHN_VBID_RESOLVER=0                 # 1 → best-effort resolve of bahn.de ?vbid= share links
+```
+`app/backend/README.md`: add the four features with their endpoints, the env table, and `npm --prefix ../frontend run build &amp;&amp; npm run dev` → open `http://localhost:8000`. Each feature README states the contract endpoint and demo shot it serves (template requirement). `owners.md`: fill the backend rows for the four features (whoever owns backend). `decisions.md`: propose (not self-approve) `Station gains optional lat/lon (additive)`. `smoke.sh`: `SMOKE_HEALTH_URL=http://localhost:8000/api/health`, `SMOKE_EXPECTED_TEXT=ok`.
+
+## 8. Time-boxed order (mocks first)
+
+| Hour | Deliver | Frontend can use |
+|---|---|---|
+| 0–1 | server.js changes (health `ok`, OPTIONS/CORS, static fallback); pwa-shell seed fixture + route + static handler; **stub** `/api/predict` and `/api/recommend` returning canned values for the seed (fixed per-leg delays 8/5/3, canned take-alternative from `alternatives.json`); `/api/journeys/parse` returning the seed for any text containing "Berlin". `npm test` green. | all 4 endpoints, real shapes |
+| 1–2.5 | delay-prediction for real: `connection.js` + ported tests, mock backend, `chain`, `Explained` strings, `modelId`. | real numbers on cards |
+| 2.5–4.5 | share-parser: grammar state machine, `stations.json`, 4 fixtures, tests, 400/422 paths. | share sheet → journey |
+| 4.5–5.5 | recommendation rules, buffer search via `predict.chain`, alternative fixture + synthesized fallback, advice copy, tests. | verdict + alternative |
+| 5.5–6 | http backend + fallback, DB Timetables station fallback, `.env.example`, READMEs, curl pass below. | — |
+| 6–7 | Integrate with the real `dist`: sw.js/manifest headers verified in the browser, share-target POST/GET path (the manifest's `share_target` may need a `GET /?text=` or `POST /share` — confirm with the frontend; if POST, add a route that 303-redirects to `/?text=` so the SPA handles it). smoke.sh configured. | end-to-end demo |
+| 7–10 | Buffer, pitch support, stretch items only if everything above is green. | |
+
+**Cut first if behind (in order):** live Timetables alternative → vbid resolver → DB station API fallback → http backend (keep mock only) → English grammar variants (keep German) → buffer search (fixed `bufferMinutes: 25`) → synthesized alternative (fixture only).
+
+## 9. Verification
+
+```bash
+cd /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend &amp;&amp; npm test          # node --test "src/**/*.test.js", offline
+npm run dev                                                                                        # http://localhost:8000
+B=http://localhost:8000
+curl -s $B/api/health                                   # {"ok":true,"status":"ok",...}
+curl -s $B/api/seed/demo | head -c 400                  # 3 legs, lat/lon present
+J=$(curl -s $B/api/seed/demo)
+P=$(curl -s $B/api/predict -H 'content-type: application/json' -d "$J"); echo "$P" | head -c 600     # modelId mock-prior-v1, planFailProbability
+curl -s $B/api/recommend -H 'content-type: application/json' -d "{\"journey\":$J,\"prediction\":$P}"  # verdict + advice
+F=src/features/share-parser/fixtures/share-texts
+node -e 'process.stdout.write(JSON.stringify({text: require("fs").readFileSync(process.argv[1],"utf8")}))' $F/de-multiline.txt \
+  | curl -s $B/api/journeys/parse -H 'content-type: application/json' -d @-                          # Journey, source db-share
+node -e 'process.stdout.write(JSON.stringify({text: require("fs").readFileSync(process.argv[1],"utf8")}))' $F/two-connections.txt \
+  | curl -s $B/api/journeys/parse -H 'content-type: application/json' -d @- | grep -c '"trainId"'   # 3 (second connection picked)
+curl -s -o /dev/null -w '%{http_code}\n' $B/api/journeys/parse -H 'content-type: application/json' -d '{"text":"hello"}'   # 400
+curl -s -o /dev/null -w '%{http_code}\n' $B/api/journeys/parse -H 'content-type: application/json' -d '{"text":"https://www.bahn.de/buchung/start?vbid=abc-123"}'  # 422
+curl -s -o /dev/null -w '%{http_code}\n' $B/api/predict -H 'content-type: application/json' -d '{}'  # 400
+# static / PWA (after npm --prefix ../frontend run build)
+curl -sI $B/manifest.webmanifest | grep -i content-type    # application/manifest+json
+curl -sI $B/sw.js | grep -i cache-control                  # no-cache
+curl -s  $B/journey/123 | grep -c '&lt;div id="root"'         # SPA fallback → index.html
+curl -s  $B/api/nope                                       # JSON 404, not index.html
+# CORS (dev)
+CORS_ORIGIN=http://localhost:5173 PORT=8001 node src/server.js &amp;   # then:
+curl -si -X OPTIONS http://localhost:8001/api/predict -H 'Origin: http://localhost:5173' | grep -i 'HTTP/1.1 204\|access-control'
+# http backend fallback
+PREDICT_URL=http://127.0.0.1:9/predict PORT=8002 node src/server.js &amp;   # unreachable → mock fallback noted in sources
+```
+
+### Critical Files for Implementation
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/server.js
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/delay-prediction/connection.js (new; port of /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/src/features/db_delay/trip/connection.py)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/share-parser/grammar.js (new)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/pwa-shell/static.js (new) and /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/pwa-shell/fixtures/seed-journey.json (new)
+- /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/training-jobs/routes/training-jobs.js (pattern reference: service factory, `registerRoutes` returning the service, `.status` on errors) and /Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/training-jobs/training-jobs.test.js (test idiom: `Router` + `fetchImpl` injection)</result>
+<usage><subagent_tokens>104397</subagent_tokens><tool_uses>29</tool_uses><duration_ms>434708</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bzmwthoca</task-id>
+<tool-use-id>toolu_01Sron48hoYK6BHV3t4C18kT</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/bzmwthoca.output</output-file>
+<status>completed</status>
+<summary>Background command "Install frontend npm dependencies" completed (exit code 0)</summary>
+</task-notification>
