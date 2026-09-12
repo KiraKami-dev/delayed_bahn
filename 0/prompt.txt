@@ -1,0 +1,517 @@
+is higsfield enabled ?
+
+---
+
+do you have a complete idea on what we are building for this hackathon ?
+
+---
+
+<task-notification>
+<task-id>ac896f289163ff920</task-id>
+<tool-use-id>toolu_01SQQWn95Kmr128QTUpFt534</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/ac896f289163ff920.output</output-file>
+<status>completed</status>
+<summary>Agent "Summarize hackathon project" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>## 1. Product concept
+
+**error404.ai** is building a Deutsche Bahn journey-reliability predictor for the "Temporal AI" hackathon (EHL Zurich, 12–13 Sep 2026; build started 2026-09-12T12:30Z, submission 2026-09-13T10:00Z per `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/event.json`). The problem: DB travellers get raw delay data, not a decision — delays *chain* across a journey (train 1 is 5 min late, you still catch train 2, you're now 15 min late, you miss train 3), so "half an hour of buffer" silently fails. The user is a traveller with a multi-leg DB connection. The demo (`team-setup/state/02-demo-script/demo-script.md`): press **Share** in the DB app, share the raw connection text into the team's PWA, the app parses the journey into per-leg cards, a fine-tuned small time-series LLM predicts **each train's delay separately**, chains them into a headline **"Probability your plan fails: NN%"**, and a separate recommendation algorithm gives weather-forecast-style advice ("not 'it will rain' — 'take an umbrella'"), then a proof shot comparing the fine-tuned model against the track-given baseline (raw data pasted into GPT / Claude Opus).
+
+## 2. Architecture
+
+Reference diagram: `team-setup/state/03-contract-freeze/architecture.mmd`.
+
+- **`app/frontend/`** — PWA (installable web app, web-share-target manifest). **Currently a placeholder**: `app/frontend/package.json` is `_hackos_placeholder: true`, only `src/features/_TEMPLATE/` exists. No stack chosen.
+- **`app/backend/`** — Node ≥22, **zero npm dependencies**, hand-rolled router in `app/backend/src/server.js` (`createApp`, `Router`, `HttpError`, `loadDotenv` via `process.loadEnvFile`). Entry `npm run dev` → port 8000. Only one real feature exists: `app/backend/src/features/training-jobs/` (`cli.js`, `nebius/auth.js`, `nebius/client.js`, `nebius/spec.js`, `routes/training-jobs.js`) exposing `/api/health` and `/api/training/*` (catalog, estimate, whoami, jobs CRUD, dry-run, logs, cancel). None of the contract's product endpoints exist yet.
+- **`app/agents/`** — the real ML work, all Python, under `app/agents/src/features/db_delay/`:
+  - Prototype v1 (station-hour tasks): `extract.py`, `windows.py`, `timef.py`, `timef_bridge.py`, `prepare.py`, `train_minimal.py`, `rescore.py`, `test_db_delay.py`. Retro in `app/agents/src/features/db_delay/HANDOFF.md`.
+  - Current v2 pipeline in `app/agents/src/features/db_delay/trip/`: `build.py` (parquet → leakage-safe examples via DuckDB), `prompts.py`, `model.py` (OpenTSLM-SP wrapper w/ padding fix + minute-aware loss), `train.py`, `metrics.py`, `baselines.py` (persistence / key-history / XGBoost), `report.py`, `connection.py` (transfer + journey success probability), `predict.py` (traveller output), `timef_export.py` + `timenet_connector/` (TimeNet connector `error404/db-trip-delay`), shell drivers `run_overnight.sh`, `run_forward_eval.sh`, `learning_curve.sh`, and `nebius/run_ablations.sh` + `nebius/sync_bucket.sh`.
+  - `app/agents/pyproject.toml` is still the placeholder (empty `dependencies`), so real deps (`duckdb`, `torch`, `transformers`, `peft`, `opentslm`, `xgboost`) are documented in READMEs only.
+- **`app/shared/`** — meant to be generated from the contract; contains only `app/shared/README.md`. Nothing generated.
+- **`scripts/db_timetables.py`** — stdlib-only DB Timetables API smoke CLI (`https://apis.deutschebahn.com/db-api-marketplace/apis/timetables/v1`), reads `DB_CLIENT_ID` / `DB_API_KEY`.
+- **`team-setup/board/`** — separate coordination dashboard (Python stdlib `serve.py` + Vite/React/shadcn in `board/web/`), not product code.
+
+**External services**
+
+| Service | Where | Notes |
+|---|---|---|
+| Deutsche Bahn Timetables API (DB API Marketplace) | `scripts/db_timetables.py`, `.env.example` | 60 req/min per client ID+secret; confirmed working (`team-setup/state/partner-notes.md`) |
+| DB RIS disruption feed / RIS::Stations `connecting-times` | `partner-notes.md`, `DESIGN.md` §10, §13 | mentioned; RIS::Stations approval still an open item |
+| Hugging Face `piebro/deutsche-bahn-data` | `DESIGN.md` §8 | CC BY 4.0, 10 monthly parquet files ~600 MB each, queried in place with DuckDB+httpfs |
+| Nebius Serverless AI jobs (GPU) | `app/backend/src/features/training-jobs/`, root `.env.example` | team default eu-north1, `gpu-l40s-d` / `4gpu-128vcpu-768gb` (4× L40S, ~$7.28/h); verified job `aijob-e00d1m1qwztxqghv8g` |
+| Nebius Object Storage (S3) | `.env.example`, `trip/nebius/sync_bucket.sh` | code/data in, results out |
+| OpenTSLM / TimeNet | `trip/model.py`, `timenet_connector/` | base `unsloth/Llama-3.2-3B`, start checkpoint `OpenTSLM/llama-3.2-3b-m4-sp` |
+| GPT / Claude Opus | `decisions.md`, `DESIGN.md` §15 "Still open" | the given baseline — **not run**, "needs an API key, and none is configured on the build machines" |
+| **Temporal.io** | — | **not used anywhere.** "Temporal AI" is the track name (time-series AI), not the workflow engine. The only regex hit was the word "Temporal" in a sample prompt string at `app/backend/src/features/training-jobs/examples/train.py:40` |
+| Higgsfield | see §7 | not wired into product code |
+
+## 3. Team and ownership
+
+Roster (`team-setup/state/team.json`, team `error404.ai`): Herit (claude-code, entrepreneurship/architecture, *no coding role*, also `coordination_maintainer` in `event.json`), **Akshat** (claude-code; Next.js/TypeScript/Flutter/Firebase/Supabase/ElevenLabs), Jonas (claude-code, Python/LangChain), Gaurav (codex, Java/JS/Python), Yash (codex, Python only).
+
+**`team-setup/state/owners.md` is completely blank** — every cell in the Directory ownership, Feature ownership and Gate roles tables is empty. Same in `team-setup/board/tasks.json`: every one of the 19 tasks has `owner: null` and `sub_owners: []`. So *nobody* is formally assigned to `app/frontend`, `app/backend`, `app/agents`, and no facilitator / contract-freeze lead / integration coordinator / feature-freeze caller / polish-and-pitch lead is named.
+
+For this user: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/.hackos-user` contains literally `unconfirmed` + `claude-code`, i.e. AGENTS.md §1's "identity not matched to the roster is unconfirmed: ask the human, never assume ownership" applies. Inferring from git (`git log`), Akshat Khair `&lt;akshatkhair41@gmail.com&gt;` authored 15 commits, all of them the **Nebius training-jobs backend + env + coordination state** (`19ba15f`, `aadd0fb`, `5875d1b`, `7973d69`, `2db330c`, `bfbd439`, `a7cf62e`, `0da1860`), and `partner-notes.md:36` references "the CLI profile on Akshat's machine". josteng `&lt;jonas@stenglein.dev&gt;` authored the other 14, all of `app/agents/src/features/db_delay/`. So the *de facto* split is Akshat → `app/backend` (training-jobs) + coordination state; Jonas → `app/agents`. Nothing is written down, and by Akshat's background (`team.json`) plus the empty `app/frontend`, the PWA is the most likely unowned gap. Note the session email `priyanshunandan5677@gmail.com` does not match the git author email `akshatkhair41@gmail.com` and appears nowhere in the repo.
+
+## 4. Current pipeline stage
+
+`team-setup/state/pipeline.json`: `current_stage: "demo-script"`, status `in_progress`, started 2026-09-12T18:36:41Z, `completed_at: null`. Done: `reveal-capture`, `challenge-pick`. Pending: `contract-freeze`, `parallel-build`, `integration`, `feature-freeze`, `polish-and-pitch`.
+
+Per `team-setup/prompts/02-scope-to-demo.md` and `team-setup/playbooks/timeline.md:13`, the **demo-script stage occupies 0–3% of the planning window** and means: write the 90-second shot-by-shot demo *before* any feature list ("the script IS the spec"), derive the minimum build list from the shots, write every rejected idea into `not-building.md`, and then **freeze** `demo-script.md` (AGENTS.md rule 5) — exit condition is "demo-script.md frozen + not-building.md written". The demo script is explicitly still `DRAFT`: it freezes only when the storyline route is picked (board task `t-9dfb8c13…`, still `backlog`), and the file is full of `&lt;ROUTE&gt;` placeholders.
+
+## 5. The contract — NOT frozen
+
+`team-setup/state/03-contract-freeze/contract.md` is headed **"Contract — DRAFT, NOT FROZEN"**; it freezes only after the demo script freezes, and "Freezing this contract requires stopping the team and getting sign-off."
+
+Shared TS types: `Station {evaNumber,name}`; `Leg {trainId, from, to, plannedDeparture, plannedArrival, transferMinutes?}`; `Journey {id, legs, source: "db-share"|"manual"|"seed"}`; a generic `Explained&lt;T&gt; {value, reasoning, sources[], confidence: "low"|"medium"|"high"}` wrapper (explicitly advisory, not calibrated); `LegDelay {trainId, expectedDelayMinutes: Explained&lt;number&gt;, missProbability: Explained&lt;number&gt;}`; `Prediction {journeyId, legs, planFailProbability: Explained&lt;number&gt;, modelId}`; `Recommendation {verdict: "good"|"add-buffer"|"take-alternative", advice: Explained&lt;string&gt;, bufferMinutes?, alternative?}`.
+
+API surface (Node backend, `/api`): `GET /api/health`; `POST /api/journeys/parse` (`{text}` → `Journey`, 400 if none found) — share-parser; `POST /api/predict` (`Journey` → `Prediction`) — delay-prediction; `POST /api/recommend` (`{journey, prediction}` → `Recommendation`); `GET /api/seed/demo` → seed `Journey` for offline fallback. Mocks sanctioned until real: `/api/predict` fixed per-leg delays, `/api/recommend` canned "take-alternative".
+
+## 6. Task board status (`team-setup/board/tasks.json`, 19 tasks)
+
+- **demo-ready (done):** API connection (`t-1f7875b1…`); audio transcription of team discussions (`t-8cddf5ed…`); GPU access / training setup (`t-bfb3bec0…` — note: status is `demo-ready` but its note still says "In progress", changed in commit `0da1860`).
+- **building (in progress):** agentic workflow for the data / bonus points (`t-cdd5a82f…`); data Oct 2025→Aug 2026 cut (`t-fa979191…`, target T+20%).
+- **backlog (not started), 14 items:** pick the storyline route (`t-9dfb8c13…`, T+10%, "Blocks data cut, training and the demo script freeze. Pick now."); per-station vs per-train-number decision; training runs (T+45%); GPT/Opus baseline comparison; core per-train chained prediction (T+55%); write the pitch; recommendation algorithm (T+65%); PWA (T+40%); share-text parser (T+45%); extra API client IDs; PWA notifications check; map view (later); next-train delay as input (later); level-3 causes (later).
+
+The board badly lags the code: `app/agents/.../DESIGN.md` §15 documents a *completed* 298,430-example build, completed XGBoost/persistence/key-history baselines on 93,738 test examples (XGBoost 3.462 min median error, CRPS 2.759), a trained OpenTSLM model with soft-target+CRPS loss, an overnight 4×L40S ablation queue, a TimeNet connector, and a September forward test — yet the corresponding tasks are `backlog`.
+
+## 7. Higgsfield outside `.agents/skills` and `.claude/skills`
+
+Only two places:
+1. `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/playbooks/mcp-setup.md:28-32` — "**Higgsfield** — optional image/video-generation tooling for demo assets. It is not vendored, installed by bootstrap, or enabled in `.mcp.json`. Follow the provider's current CLI setup for `@higgsfield/cli`, authenticate individually… Check costs and data handling before using generation features."
+2. `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/skills-lock.json` — 8 lock entries sourced from `higgsfield-ai/skills` (brandkit, generate, marketplace-cards, product-photoshoot, soul-id, video-explainer, websites, youtube-thumbnail). This file is **modified but uncommitted**, and all 8 skill directories under both `.agents/skills/` and `.claude/skills/` are **untracked** — they were installed just now and are not part of the team's committed state. No Higgsfield usage anywhere in `app/`.
+
+## 8. Open questions and inconsistencies
+
+1. **Stage vs. reality.** Pipeline says `demo-script` (0–3% of the window) while `app/agents` already has a trained model, baselines, ablations and a forward test. Three of eight gates are formally pending that have in practice been passed or skipped. Contract-freeze never happened, yet a lot of code exists.
+2. **Timing.** `event.json` submission deadline is 2026-09-13T10:00Z and today is 2026-09-13, but the board shows 14 backlog tasks including every product-surface item.
+3. **Ownership vacuum.** AGENTS.md rule 3 requires checking `owners.md` before editing anything under `app/`, but `owners.md` and all 19 task `owner` fields are empty — the rule is unenforceable as written. `.hackos-user` says `unconfirmed`.
+4. **Route never picked, but training already ran on everything.** `challenge.md` and `demo-script.md` say the model trains on "the one storyline route"; `DESIGN.md` §8 trains on *all ~5,200 stations* with 298k examples stratified by train class. The `&lt;ROUTE&gt;` placeholder blocks the demo-script freeze → contract freeze → the whole gate chain.
+5. **Data window disagreement.** `decisions.md` `d-6725e837…` says "October 2025 to August 2026 (~8 months, 10–20 GB)"; `DESIGN.md` §8 and `HANDOFF.md` say November 2025 → August 2026 (ten months) because October is the coverage-transition month and `not-building.md` cuts "Training data before October 2025".
+6. **Share flow: in or out?** Decision `d-ee495c8d…` and demo shots 0:10–0:20 make the DB Share flow *the* entry point; `DESIGN.md` §2 says "the share flow itself is demo-only and not built here" and §12 explicitly cuts "The DB app share flow". Nothing in `app/frontend` implements it.
+7. **`not-building.md` contains two contradictory lists** stacked in one file (pre- and post-challenge-pick), and says so itself: "where they disagree (e.g. the live Timetables API), the decisions log wins until the team reconciles this file." One list cuts the live DB Timetables API; the team is actively using it.
+8. **Baseline mismatch.** The track-given and team-decided baseline is raw data into GPT / Claude Opus (`d-ee6a60cf…`, demo shot 0:60). `DESIGN.md` §15 "Still open": frontier-LLM baseline "needs an API key, and none is configured on the build machines"; also the text-only, random-encoder and `ecg-sp` ablations are unrun. The proof shot currently has no number.
+9. **Compute story is split.** `DESIGN.md` §11 says the TSLM runs on a team devbox (one RTX 6000 Ada, 48 GB) with Nebius only for baselines/ablations; `partner-notes.md` + `.env.example` + `trip/nebius/run_ablations.sh` put four TSLM runs on the Nebius 4×L40S node. Also `event.json` credits say **$600** while idea `i-ee265cac…` cites a **$1000** Nebius voucher from the deck.
+10. **Contract has no implementation path.** `/api/predict` and `/api/recommend` are specified on a Node backend, but the model is Python in `app/agents` with no serving layer, `app/shared/` is empty, and no mock endpoints were built either. Nothing connects the two halves.
+11. **Model size.** `challenge.md`/decisions say "fine-tuned 0.5B or 3B"; the prototype used Qwen2.5-0.5B, the current design uses Llama-3.2-3B — consistent in spirit, but `d-89d11bd8…` justifies backend inference by "model is ~10 GB", while a 3B LoRA-tuned model is smaller than that.
+12. **Verbatim organiser problem statement is missing** — `challenge.md` ends with "_Not captured yet_", and `team-setup/state/research.json` is `{"research": []}`, so the challenge-pick gate closed without its own stated input.
+13. **Branches.** `main`, local `feat/nebius-training-backend` and an `entire/2db330c-e3b0c4` tracking branch; remotes `origin/db-train-idea`, `origin/db-train-model`, `origin/feat/nebius-training-backend` — the two `db-train-*` branches are already merged into main. Working tree is dirty only with the untracked Higgsfield skills + modified `skills-lock.json`.
+14. **Commit `d6d53f0` deleted `.env.example`, then `7973d69`/`2db330c` re-added it** as the single team env at the root with `app/backend/.env` a symlink; `app/backend/.env` currently exists as a real file on disk, so check whether the symlink convention actually holds on this machine.</result>
+<usage><subagent_tokens>89868</subagent_tokens><tool_uses>23</tool_uses><duration_ms>175062</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>aa43eddcc39be1c0d</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/aa43eddcc39be1c0d.output</output-file>
+<status>completed</status>
+<summary>Agent "Station coordinates and map data" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>## Bottom line
+
+**There is zero geo data in this repo.** No latitude, longitude, `lat`/`lon`, GeoJSON, coordinates, EVA→coordinate mapping, or station list with positions exists anywhere in `app/`, `scripts/`, `team-setup/`, or git history. A repo-wide grep for `latitude|longitude|lat|lon|lng|geojson|coordinate|mapbox|maplibre|globe|cesium|deck.gl|leaflet` across `.py/.md/.json/.ts/.tsx/.js/.css/.html` returned hits only inside vendored Higgsfield skill docs (`.agents/skills/higgsfield-websites/references/wow-maker.md`) — nothing in project code. You will have to source coordinates yourself.
+
+---
+
+### 1. Station data that does exist (names only, no geometry)
+
+**Upstream dataset:** Hugging Face `piebro/deutsche-bahn-data`, CC BY 4.0, monthly processed parquet.
+`/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/src/features/db_delay/extract.py` builds the URL: `https://huggingface.co/datasets/piebro/deutsche-bahn-data/resolve/main/monthly_processed_data/data-{YYYY-MM}.parquet`
+
+**Source parquet columns actually referenced** (from `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/src/features/db_delay/trip/build.py`, `load_stops()`):
+`id`, `station_name`, `train_line_station_num`, `train_type`, `train_number`, `line_number`, `final_destination_station`, `arrival_planned_time`, `arrival_change_time`, `departure_planned_time`, `departure_change_time`, `arrival_is_canceled`, `departure_is_canceled`, `delay_in_min`, `time`.
+**No EVA number and no coordinate column.** Stations are identified by free-text `station_name` only (e.g. `"Hamburg Hbf"`). `DESIGN.md:333` notes all ten monthly files share one schema.
+
+**Built example-set columns** (output of `build.py::assemble`, what a frontend could consume): `example_id, split, run, cls, train_type, train_number, line_number, origin, dest, first_station, j_station, k_station, k_num, j_num, first_num, t0, k_arr_pt, k_arr_delay, k_canc, pre_departure`, plus `via` (list of intermediate station names), `run_delays`, `hist_series`, `station_series`, `network_series`, `current_delay`, `lead_minutes`, `stops_ahead`, `station_late_3h/24h/72h`, etc.
+**`via` is your leg list** — an ordered array of station *names*. `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/src/features/db_delay/trip/prompts.py:103-110` renders it.
+
+Known gap worth flagging for a globe: `DESIGN.md` "Built after the first runs were queued" says **61 target stations and 136 via lists have no name in the scrape** — so some legs will have null endpoints.
+
+**Live route geometry source:** the DB Timetables API `ppth` attribute is the only ordered route in the system. `DESIGN.md:150-153`:
+&gt; `&lt;dp fb="ICE 771" ppth="Neumünster|Hamburg Hbf|…|Stuttgart Hbf"/&gt;` … The processed monthly files drop it. … The live demo reads `ppth` from the API.
+
+This gives you a pipe-separated ordered station-name path per train — exactly the leg sequence for a drawn route, but still names, not points.
+
+**RIS::Stations** is mentioned only for `connecting-times` (transfer minimums), not coordinates, and is **not implemented**: `DESIGN.md` §10 "Source: RIS::Stations `connecting-times` on the DB API Marketplace … DB must approve the application", and §13 Open items: "**RIS::Stations approval** for transfer times; apply early." Note RIS::Stations `/stop-places` does return `position.latitude/longitude` — that would be your coordinate source, but nobody has wired it.
+
+`HANDOFF.md` contains no geo content. `partner-notes.md` documents the DB API (60 req/min, client id + secret, "RIS disruption feed mentioned as an additional source") but no station/geo endpoint.
+
+### 2. Storyline route: NOT PICKED — it is an open blocker task
+
+Every artefact uses the literal placeholder `&lt;ROUTE&gt;`. No candidate city pairs (no Berlin→Munich, no Hamburg→Zurich) are named anywhere, and **no EVA numbers appear in any state file**.
+
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/01-challenge-pick/challenge.md:44-48` — "One route: our biggest trouble with Deutsche Bahn ('too frustrated to come to Zurich'). Training data and the demo are built for that route. **The route itself is still to be picked** — task on the board."
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/tasks.json` — task `t-9dfb8c134dc95bef97906c48911b4c51`, **"Pick the storyline route (biggest DB trouble)"**, status `backlog`, target `T+10%`, stage Pitch/Data, notes: *"Blocks data cut, training and the demo script freeze. Pick now."*
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/02-demo-script/demo-script.md:5-9` — "the route, station names and numbers are placeholders until the 'pick the storyline route' task is done".
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/06-polish-and-pitch/pitch.md:6`, `decisions.md:9,14`, `meetings/2026-09-12-team-discussion.md:74,90` — all same placeholder.
+
+Only geographic anchor in the repo: **Zurich** as the event venue (`team-setup/state/event.json`: `"venue": "EHL Zurich"`) and the emotional hook "too frustrated to come to Zurich" — which strongly implies a **German city → Zurich** route, but it is not committed anywhere.
+
+Station names that do appear are test fixtures only: `"Hamburg Hbf"` / `"Nuernberg Hbf"` / `--eva 8000284` in the `db_timetables.py` docstring; `"Teststadt {i} Hbf"` in `test_db_delay.py`; `"Astadt Hbf"/"Bdorf"/"Cstadt Hbf"` in `trip/test_model.py`.
+
+**Your 3D map idea is already on the board, explicitly deferred:**
+`tasks.json` task `t-7d0e90f029665c83a814f29a64781389` — title **"Map view (later)"**, status `backlog`, `"mvp": "later"`, notes: *"(3D) map from → to, zooms in, shows probability. Not for this demo."* Depends on `t-2c8fd7c2f1385a18a805bcf4a5c30274`.
+Origin idea: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/ideas.md:32` — `[i-4231d348c1d04f20926620f759d200bc] [T+06:06] (3D) map view: type from → to, it visualises and zooms in, then shows the probability of making it; first version just shows delays — team — status: raised`.
+
+Also note `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/02-demo-script/not-building.md:13`: *"Full network coverage — the model is trained on the one storyline route."*
+
+### 3. Station lookup in `scripts/db_timetables.py` — yes
+
+`/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/scripts/db_timetables.py`. There is **no separate subcommand**; station lookup is implicit — pass a name and it resolves to an EVA. Docstring usage:
+
+```
+"""Smoke test for the DB Timetables API: next departures for a station.
+
+Usage:
+    python3 scripts/db_timetables.py "Hamburg Hbf"
+    python3 scripts/db_timetables.py "Nuernberg Hbf" --hours 3 --limit 25
+    python3 scripts/db_timetables.py --eva 8000284
+
+Credentials are read from .env (DB_CLIENT_ID, DB_API_KEY). Stdlib only.
+Timetable times are German local time; the clock here is the system clock.
+"""
+```
+
+argparse surface (lines 118-122):
+```
+parser = argparse.ArgumentParser(description="Next departures from the DB Timetables API.")
+parser.add_argument("station", nargs="?", help="station name, e.g. \"Hamburg Hbf\"")
+parser.add_argument("--eva", help="EVA number, skips the station lookup")
+parser.add_argument("--hours", type=int, default=2, help="hourly slices to fetch (default 2)")
+parser.add_argument("--limit", type=int, default=15, help="rows to print (default 15)")
+```
+
+The name→EVA resolver you want to reuse is `find_station()` (lines 58-66), hitting `GET {BASE}/station/{pattern}` on `https://apis.deutschebahn.com/db-api-marketplace/apis/timetables/v1`:
+```python
+def find_station(pattern, client_id, api_key):
+    root = get(f"station/{urllib.parse.quote(pattern)}", client_id, api_key)
+    stations = root.findall("station")
+    ...
+    return stations[0].get("name"), stations[0].get("eva")
+```
+It reads only `name` and `eva` from the XML — the Timetables `station` endpoint does return `&lt;station p= ... meta= ...&gt;` attributes but **no coordinates**, so this cannot give you globe positions.
+
+Route extraction for legs is in `collect()` (line ~86): `route = departure.get("ppth", "")` then `route.split("|")[-1]` for the destination. The full `ppth` split is already there for you to take the whole leg chain.
+
+### 4. Map / 3D libraries installed: none
+
+- Only one `node_modules` in the whole repo: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/web/node_modules`. Grepping it for `three|globe|map|leaflet|cesium|deck|d3|topojson` matches only `source-map-js`.
+- `team-setup/board/web/package.json` deps: React 19.2.8, radix-ui, lucide-react, tailwind-merge, class-variance-authority, clsx, sonner, react-markdown, remark-gfm, tw-animate-css. Dev: vite 8.2.2, tailwindcss 4.3.3, typescript 7.0.2, @vitejs/plugin-react.
+- `team-setup/board/web/package-lock.json` contains no maplibre/mapbox/cesium/three/globe.gl/deck.gl/leaflet.
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/frontend/package.json` is a **placeholder** — `"_hackos_placeholder": true`, note: *"Stack not chosen yet. Replace this whole file with your real package.json once the team picks a frontend framework on the day."* `app/frontend/src/` holds only `features/_TEMPLATE/components/.gitkeep` and `hooks/.gitkeep`.
+- `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/pyproject.toml` is also a placeholder with `dependencies = []`. **No Python venv exists anywhere** in the repo (find for `.venv`/`venv`/`*.egg-info` returned nothing), despite code importing duckdb/pandas/pyarrow/numpy.
+- `app/backend/package.json` is deliberately zero-dependency (Node built-ins only).
+
+So a globe stack is a greenfield install.
+
+### 5. Design tokens / brand assets
+
+**No Deutsche Bahn brand assets at all** — no DB red (`#EC0016`), no DB logo, no DB Sans/DB Screen fonts, no `design.md`, no `tailwind.config` file (Tailwind v4 is CSS-config only).
+
+The only design system present is the internal team dashboard, which is purple/neutral, not DB-branded:
+
+`/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/web/src/index.css` — Tailwind v4 `@theme inline` block:
+```css
+--color-primary: var(--primary);       /* --primary: #6262cf */
+--color-secondary: #f2f3f7;  --color-secondary-foreground: #343b4d;
+--color-muted: #f5f6f9;      --color-muted-foreground: #737b8c;
+--color-accent: #eef0fc;     --color-accent-foreground: #4f50bf;
+--color-destructive: #d34c59;
+--color-border: #e9ebf1;  --color-input: #e1e4ec;  --color-ring: #7775dd;
+--radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* :root — --background: #fbfcfe; --foreground: #252b3a; --card: #ffffff; --radius: 0.75rem */
+```
+Related: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/web/components.json` (shadcn "new-york", baseColor neutral, lucide icons), `team-setup/board/web/public/favicon.svg`, legacy `team-setup/board/style.css` (mono-font dashboard), and shadcn primitives under `team-setup/board/web/src/components/ui/`.
+
+---
+
+### What this means for the globe (concrete)
+
+1. **You must bring your own coordinates.** Realistic options: DB RIS::Stations `/stop-places` (`position.latitude/longitude`, needs DB Marketplace approval — flagged as an open item and *not* applied for), or an offline join (Wikidata / OpenStreetMap `railway=station` / the community `bahnhof.de` EVA list) keyed on `station_name`, since the dataset has no EVA at all.
+2. **Join key is a free-text German station name**, not an ID. Expect fuzzy-match work (`"Hamburg Hbf"`, umlauts, `Nuernberg` vs `Nürnberg`) plus the known 61 unnamed target stations / 136 unnamed via lists.
+3. **Leg ordering is already available** two ways: offline via the `via` list column in the built examples, and live via `ppth` in `scripts/db_timetables.py::collect`.
+4. **The frontend contract is drafted but not frozen** — `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/state/03-contract-freeze/contract.md` defines `type Station = { evaNumber: string; name: string }` and `type Leg = { trainId; from; to; plannedDeparture; plannedArrival; transferMinutes? }`. **Adding `lat`/`lon` to `Station` is the natural contract change**, and the file says it is "DRAFT, NOT FROZEN … teammates can code against it but must expect field names to move." Note the contract already promises an EVA per station that the training data cannot supply.
+5. **Two blockers before the globe means anything**: the storyline route is unpicked (`t-9dfb8c134dc95bef97906c48911b4c51`, backlog), and the map view is explicitly scoped out of this demo (`t-7d0e90f029665c83a814f29a64781389`, `"mvp": "later"`, *"Not for this demo"*). Worth reconciling with the team before building.</result>
+<usage><subagent_tokens>72479</subagent_tokens><tool_uses>21</tool_uses><duration_ms>151812</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a71ca0f255595a304</task-id>
+<tool-use-id>toolu_013kLaayRNarBXdFKRebBsxy</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/08b27428-84e8-4f05-a359-bfa800d53b0f/tasks/a71ca0f255595a304.output</output-file>
+<status>completed</status>
+<summary>Agent "Backend, contract, model output" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Findings below. Everything is read-only; no files were changed.
+
+---
+
+## 1. Backend: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/server.js`
+
+Zero-dependency Node ≥22 server, ESM, built on `node:http`. Exports: `loadDotenv`, `Router`, `HttpError`, `sendJson`, `createApp`.
+
+**`loadDotenv`** — defaults to `app/backend/.env` (README tells you to symlink it to the repo-root `.env`):
+```js
+export function loadDotenv(file = path.join(__dirname, '..', '.env')) {
+  try { process.loadEnvFile(file); return true; }
+  catch { return false; } // no .env yet -- env vars from the shell still apply
+}
+```
+
+**`Router`** — regex path matching with `:param` segments; only `GET`, `POST`, `DELETE` helpers exist (no `PUT`/`PATCH`/`OPTIONS`):
+```js
+add(method, pattern, handler) {
+  const keys = [];
+  const re = new RegExp('^' + pattern.replace(/:(\w+)/g, (_, k) =&gt; { keys.push(k); return '([^/]+)'; }) + '/?$');
+  this.routes.push({ method, re, keys, handler });
+  return this;
+}
+get(p, h) {...} post(p, h) {...} delete(p, h) {...}
+```
+Trailing slash is tolerated (`/?$`). Params are `decodeURIComponent`-ed.
+
+**Handler signature** — every handler is `async ({ params, query, body, req, res }) =&gt; result`. `query` is a live `URLSearchParams` (not a plain object — existing code does `Object.fromEntries(query)` or `query.get('raw')`). Returning a value ⇒ `200` + JSON; returning nothing ⇒ `{}`. If the handler wrote to `res` itself, the framework backs off (`if (res.writableEnded) return;`).
+
+**JSON body parsing** — automatic for non-GET/DELETE, empty body ⇒ `{}`, bad JSON ⇒ `HttpError(400, 'Body must be valid JSON')`. No size limit, no `Content-Type` check.
+```js
+const body = req.method === 'GET' || req.method === 'DELETE' ? {} : await readJson(req);
+```
+
+**`HttpError`** — `new HttpError(status, message, details)`. The catch block uses `err.status ?? 500`, logs 5xx, and replies `{ error: err.message, details: err.details ?? err.body ?? undefined }`. Note: any thrown object with a `.status` property works (the training service does `const e = new Error(...); e.status = 503;`).
+
+**CORS: none.** No `Access-Control-*` headers, no `OPTIONS` route method, no preflight handling anywhere in `app/backend/src` (verified by grep). A cross-origin PWA dev server (e.g. Vite on :5173) hitting :8000 will fail preflight/blocked reads unless you add CORS or proxy through the dev server.
+
+**Static file serving: none.** No `createReadStream`, no `text/html`, no public dir. Every response is `application/json; charset=utf-8` via `sendJson`. Serving the PWA (manifest, service worker, share-target page) needs new code — and a service worker + web share target must be same-origin, so this matters.
+
+**404 shape:** `{ error: "No route for GET /foo" }`.
+
+**Route registration** — `createApp` builds the router, registers health, then calls each feature's `registerRoutes(router, { env })`:
+```js
+export function createApp({ env = process.env } = {}) {
+  const router = new Router();
+  router.get('/api/health', async () =&gt; ({ status: 'ok', service: 'app-backend', time: new Date().toISOString() }));
+  registerTrainingJobs(router, { env });
+  return http.createServer(async (req, res) =&gt; { ... });
+}
+```
+Caveat for the contract: the existing health route returns `{ status:'ok', service, time }`, while `contract.md` specifies `GET /api/health → { ok: true }`.
+
+**Boot block** (runs only when executed directly), `PORT` default **8000**:
+```js
+if (process.argv[1] &amp;&amp; path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  loadDotenv();
+  const port = Number(process.env.PORT || 8000);
+  createApp().listen(port, () =&gt; { console.log(`app-backend listening on http://localhost:${port}`); ... });
+}
+```
+
+**Feature route pattern** — `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/training-jobs/routes/training-jobs.js`. The pattern to copy: a `createXService({ env, ... })` factory holding logic, plus an exported `registerRoutes(router, ctx)` that is DI-friendly (`ctx.service` lets tests inject a fake):
+```js
+export function registerRoutes(router, ctx = {}) {
+  const svc = ctx.service || createTrainingService(ctx);
+  const wrap = (fn) =&gt; async (req) =&gt; { try { return await fn(req); } catch (e) { ...map error statuses...; throw e; } };
+
+  router.get('/api/training/catalog', wrap(() =&gt; svc.catalog()));
+  router.get('/api/training/estimate', wrap(({ query }) =&gt; svc.estimate(Object.fromEntries(query))));
+  router.post('/api/training/jobs', wrap(({ body }) =&gt; svc.submit(body)));
+  router.get('/api/training/jobs/:id', wrap(({ params, query }) =&gt; svc.get(params.id, { raw: query.get('raw') === '1' })));
+  router.delete('/api/training/jobs/:id', wrap(({ params }) =&gt; svc.remove(params.id)));
+  return svc;
+}
+```
+So four new endpoints would be four new `registerRoutes` imports in `createApp` (or one per feature: `share-parser`, `delay-prediction`, `recommendation`, `pwa-shell`).
+
+**`app/backend/package.json`** — `"type": "module"`, engines `node &gt;= 22`, **zero dependencies**:
+```json
+"scripts": {
+  "dev": "node --watch src/server.js",
+  "start": "node src/server.js",
+  "test": "node --test \"src/**/*.test.js\"",
+  "train": "node src/features/training-jobs/cli.js",
+  "train:doctor": "...doctor", "train:smoke": "...smoke"
+}
+```
+Test convention: co-located `&lt;feature&gt;.test.js` with `node:test` + `node:assert/strict`, offline only — see `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/backend/src/features/training-jobs/training-jobs.test.js`, which imports `Router` from `../../server.js` and drives `registerRoutes` directly.
+
+---
+
+## 2. `team-setup/state/03-contract-freeze/contract.md` — verbatim
+
+Header note: **"Contract — DRAFT, NOT FROZEN"**; "the contract-freeze lead freezes it once the demo script is frozen (route picked). Until then teammates can code against it but must expect field names to move."
+
+```ts
+type Station = { evaNumber: string; name: string };
+
+type Leg = {
+  trainId: string;            // e.g. "ICE 75"
+  from: Station;
+  to: Station;
+  plannedDeparture: string;   // ISO 8601, local time with offset
+  plannedArrival: string;
+  transferMinutes?: number;   // planned transfer to the next leg
+};
+
+type Journey = { id: string; legs: Leg[]; source: "db-share" | "manual" | "seed" };
+
+type Explained&lt;T&gt; = {
+  value: T;
+  reasoning: string;          // one paragraph, human-readable
+  sources: string[];          // data windows, feeds, model id
+  confidence: "low" | "medium" | "high";   // advisory, not calibrated
+};
+
+type LegDelay = {
+  trainId: string;
+  expectedDelayMinutes: Explained&lt;number&gt;;
+  missProbability: Explained&lt;number&gt;;      // 0..1, chance this transfer breaks
+};
+
+type Prediction = {
+  journeyId: string;
+  legs: LegDelay[];
+  planFailProbability: Explained&lt;number&gt;;  // 0..1, chained across legs
+  modelId: string;                          // fine-tuned model version
+};
+
+type Recommendation = {
+  verdict: "good" | "add-buffer" | "take-alternative";
+  advice: Explained&lt;string&gt;;               // "take an umbrella" language
+  bufferMinutes?: number;
+  alternative?: Journey;                   // comfortable connection, if any
+};
+```
+
+API surface (backend, Node, `/api`):
+
+| Method | Path | Body → Response | Feature |
+|---|---|---|---|
+| GET | `/api/health` | → `{ ok: true }` | backend |
+| POST | `/api/journeys/parse` | `{ text: string }` → `Journey` (400 if no connection found) | share-parser |
+| POST | `/api/predict` | `Journey` → `Prediction` | delay-prediction |
+| POST | `/api/recommend` | `{ journey: Journey; prediction: Prediction }` → `Recommendation` | recommendation |
+| GET | `/api/seed/demo` | → `Journey` for the storyline route (offline fallback) | pwa-shell |
+
+Mocks until real:
+- `/api/predict` returns fixed per-leg delays for the seed journey until the fine-tuned model is served.
+- `/api/recommend` returns a canned "take-alternative" for the seed journey until the algorithm exists.
+- "Freezing this contract requires stopping the team and getting sign-off."
+
+`app/shared/README.md`: "This folder is generated from `contract.md`. Do not hand-edit it." (AGENTS.md rule 4 repeats this.)
+
+---
+
+## 3. Demo script, not-building, decisions
+
+**`team-setup/state/02-demo-script/demo-script.md`** — status draft; shots settled, route/station names are placeholders `&lt;ROUTE&gt;` until "pick the storyline route" is done; freezes after that. Format: live pitch.
+
+| Time | Shot | On screen |
+|---|---|---|
+| 0:00–0:10 | The pain | Presenter: "I was too frustrated to come to Zurich." Photo/screenshot of the real DB journey on `&lt;ROUTE&gt;` with its connections. Half an hour of buffer was not enough. |
+| 0:10–0:20 | Share from DB | Phone (mirrored): open the DB app, press **Share** on the connection, pick our PWA from the share sheet. |
+| 0:20–0:30 | Journey extracted | Our app shows the parsed journey: each train as a card (train, from → to, planned times, transfer time). No typing. |
+| 0:30–0:45 | Per-train delay | Each card gets a predicted delay from the fine-tuned model, with the chain shown: train 1 late → transfer shrinks → train 3 missed. Headline: **"Probability your plan fails: NN%"**. |
+| 0:45–0:60 | Recommendation | Plain-language advice: "take the earlier IC, 25 min more buffer, you arrive relaxed" or "this connection is good". Tap → alternative connection with comfortable transfer. |
+| 0:60–0:75 | Proof | Side by side: our model vs the given baseline (raw data into GPT / Claude Opus) on the Oct→Aug held-out data for `&lt;ROUTE&gt;`. One chart, one number. |
+| 0:75–0:90 | Close | Weather-forecast line: "not 'it will rain' — 'take an umbrella'." Installed-PWA icon on the home screen. What's next: causes (level 3). |
+
+Minimum build list (verbatim bullets): PWA registered as a **web share target** manifest, installable (0:10); share-text parser handling **more than one connection** in the text (0:20); backend inference endpoint journey → per-train delay → chained failure probability (0:30); recommendation algorithm + **alternative-connection lookup via the timetable API** (0:45); evaluation script + one chart (0:60); **seed journey for `&lt;ROUTE&gt;` that works offline if the API is down** (all shots).
+
+**`not-building.md`** — two lists (the file itself says where they disagree, the decisions log wins). Frontend-relevant cuts: native Android/iOS (PWA only); one delay for the whole journey; **on-device / in-browser inference — backend only**; own journey planner/ticket exchange; 3D map view; push notifications ("only if the PWA check says they work for free; not a demo shot"); full network coverage; "Anything not on the shot list". Older list also cuts "Serving, auth, persistence, multi-user state in the demo — Single-operator demo run from one machine" and the DB live Timetables API (superseded — decision `d-87f8f…` keeps the working API connection at 60 req/min).
+
+**`decisions.md`** — relevant to frontend/UX/hosting/route (none about hosting; grep for deploy/vercel/netlify/ngrok/cloudflare across meeting notes and ideas returned nothing):
+- `d-c5b0229b…` Frontend is a **PWA (installable web app); no separate Android/iOS builds**.
+- `d-ee495c8d…` Entry point is the **DB app Share flow**: share raw connection text → we extract the journey → return failure probability + recommendation.
+- `d-89d11bd8…` **Inference runs on the backend; the web app calls it. No on-device model** (~10 GB).
+- `d-40e4d3c0…` Per-train delay, chained afterwards — never one journey-level delay.
+- `d-0f4b8420…` Delay estimation is core; **recommendations are a completely separate algorithm** on top, only after the core works.
+- `d-b0ac7d7a…` Build order fixed: core → recommendation → level-3 causes.
+- `d-020b45ff…` Track/problem; one route becomes storyline.
+- `d-6725e837…` Training window Oct 2025 → Aug 2026 on the storyline route.
+- `d-ee6a60cf…` Baseline = raw data into GPT/Claude Opus, not fine-tuned.
+- `d-87f8fa72…` Keep the current API connection; **60 requests/min per client ID/secret**.
+
+Route is still **unpicked**: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/team-setup/board/tasks.json` task `t-9dfb8c13…` "Pick the storyline route" is `backlog`, "Blocks data cut, training and the demo script freeze." PWA task `t-303d5dbd…` (`T+40%`, notes: "Installable web app, share-target manifest, calls the backend for inference"); share-parser `t-db77b7a8…` (`T+45%`, depends on the PWA task, "sometimes with several connections; grammar picks the right one; maybe text → URL"); notifications `t-7e9a7707…` = nice-to-have, "Only check whether they work". **All four tasks have `owner: null`**, and every row in `team-setup/state/owners.md` (directory + feature + gate roles) is blank — AGENTS.md rule 3 requires claiming `pwa-shell` / `share-parser` there before editing.
+
+---
+
+## 4. Agents: prediction I/O and CPU paths
+
+`/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/src/features/db_delay/trip/predict.py`
+
+**Input**: not a journey — it replays *recorded* examples. CLI: `--examples data/trip/examples.parquet` (built by `build.py`), `--checkpoint out/trip/.../checkpoint.pt`, `--start-checkpoint` (default `START_CHECKPOINT` from `model.py`), `--example-ids N [N…]`, `--buffer` (default 8.0 planned minutes), `--min-transfer` (default 5.0), `--device` (**default `"cuda"`**). It looks up rows by `example_id` in the parquet, so it cannot score an arbitrary user-supplied journey today.
+
+**Output JSON** (exact fields, from `summary()`):
+```python
+{
+  "example_id": int, "train": str, "target_stop": str, "planned_arrival": str,
+  "headline": f"about +{median} min, likely {low} to {high} min, {on_time:.0%} chance of arriving on time",
+  "typical_delay_minutes": int,          # p50
+  "likely_range_minutes": [low, high],   # p10, p90
+  "p_on_time": round(...,3),             # P(delay &lt; 6 min) * (1 - p_cancel)
+  "p_cancelled": round(...,3),
+  "rationale": str,                      # prompts.rationale(row), facts read off inputs
+  "actual": str                          # ground truth: minutes or "cancelled"
+}
+```
+Top level is `{"forecasts": [...]}`; with exactly two ids it adds:
+```python
+"change": {"planned_buffer_minutes": float, "min_transfer_minutes": float,
+           "p_change_works": round(p,3), "headline": f"{p:.0%} chance of making the change"}
+```
+Constants: `metrics.LATE_MINUTES = 6` (on-time = delay &lt; 6 min), `LEVELS = 0.05..0.95` step 0.05, `MEDIAN`/`LOW`/`HIGH` = the 0.5 / 0.1 / 0.9 quantile indices.
+
+`connection.py` — pure NumPy, **no torch, no GPU**. `TrainForecast(probs: np.ndarray, p_cancel: float=0.0)`; `change_probability(arriving, departing, planned_buffer, min_transfer) -&gt; float`; `journey_probability(changes: list[(arriving, departing, buffer, min_transfer)], final_arrival=None, arrival_slack=None) -&gt; {"change_probabilities": [...], "plan_success": float, "plan_fail": float}`; and `point(minutes, size=1000, p_cancel=0.0)` — *"A forecast certain of one delay, handy for tests and fixed timetables."* That `point()` + `journey_probability()` pair is your zero-GPU, zero-model path to a real `planFailProbability` from mocked per-leg delays.
+
+**CPU without a GPU:**
+- `predict.py --device cpu` is possible (the flag is just passed to `TripTSLM.from_opentslm_checkpoint`), but it loads a Llama-3.2-3B + LoRA checkpoint and needs a `.pt` checkpoint file — none exists in the repo (`out/` is not committed; there is no `data/` either).
+- Precedent for CPU inference: `trip/learning_curve.sh` runs `CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=16 .venv/bin/python trip/train.py --eval-only --device cpu --resume "$dir/checkpoint.pt" ...` — "on the CPU so the training GPU is untouched".
+- `trip/baselines.py` is **fully CPU** (`xgboost` `tree_method: "hist"`, `n_jobs: 32`, plus `persistence` and `key history`). But it is a *batch training+scoring* script (`python trip/baselines.py --examples … --out out/trip/baselines`) writing `metrics.json` and `&lt;model&gt;_&lt;split&gt;.npz` of 19 quantiles + `p_cancel` + `p_late`. There is **no single-journey CLI, no saved XGBoost model file, and no exported prediction function usable from the backend**. `persistence()` needs a training frame plus per-row features (`current_delay`, `lead_minutes`, `hist_*`, `station_late_*`, `network_late_*`, …); it cannot run from a share text.
+
+Conclusion for your mock endpoints: nothing today turns a `Journey` into a `Prediction` on CPU. The realistic seam is `connection.py` (`point()` / `TrainForecast` / `journey_probability`) fed with canned or XGBoost-derived per-leg distributions.
+
+`DESIGN.md` §2 "Target user and product": *"the primary user is a traveller. They share a trip from the DB app and get how late the train will most likely arrive, how certain that is, and a short explanation. **The share flow itself is demo-only and not built here.**"* — "The output a traveller sees: `about +8 min, likely 3 to 20 min, 72% chance of making your change`, plus one or two sentences of reasoning." §5 output format: exact minutes 0..999 or `cancelled`; hurdle model gives `P(cancelled)` then the delay distribution; readouts = median, p10–p90, P(delay &lt; 6 min), connection probability. §10 "Transfer times and connections": applied **after** the model; source RIS::Stations `connecting-times`, "Fallback: a fixed default per station size"; caveat that independence is optimistic and DB holding trains is not modelled. §12 not-building lists "The DB app share flow — Demo-only mock; the product question is the prediction."
+
+`trip/README.md` describes `predict.py` as "Traveller output for recorded trips and a change" and notes the stack needs `duckdb, pandas, pyarrow, xgboost, torch, transformers, peft, opentslm` plus one 48 GB GPU for training.
+
+---
+
+## 5. Sample journey text / seed fixtures
+
+**None exist.** Grepping for share text, `Verbindung`, `umsteig`, `ICE &lt;number&gt;`, "seed journey", "seed/demo" across the repo returns only *references to the concept*, never an example:
+- `team-setup/state/meetings/2026-09-12-team-discussion.md:58` — "in the DB app you press **Share** → it gives some raw text → share it to our app → we extract the journey and give the probability out of it."
+- `demo-script.md` shot 0:10/0:20 and the build-list line "seed journey for `&lt;ROUTE&gt;` that works offline if the API is down".
+- `contract.md` `GET /api/seed/demo`; `owners.md` "share-parser (frontend: DB share text → journey)".
+
+No JSON fixtures either: the only non-config `.json` files in the tree are `team-setup/board/tasks.json`, `state/event.json`, `state/research.json`, `state/team.json`, `state/pipeline.json`. The only `examples/` dir is `app/backend/src/features/training-jobs/examples/` (Nebius job specs: `nvidia-smi.json`, `custom-image.json`, `finetune-distilgpt2.json`, `train.py`, `requirements.txt`) — unrelated. So you will have to author both the DB share text sample and the seed `Journey` JSON, and pick a route first (that task is still `backlog`).
+
+Adjacent useful asset: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/scripts/db_timetables.py` — stdlib-only DB Timetables API client (`BASE = https://apis.deutschebahn.com/db-api-marketplace/apis/timetables/v1`, headers `DB-Client-Id` / `DB-Api-Key`, XML), with `find_station`, usable for real station names/EVA numbers for the seed journey and for the alternative-connection lookup.
+
+---
+
+## 6. Root `.env.example`
+
+Variables (names only): `DB_CLIENT_ID`, `DB_API_KEY`, `NEBIUS_PROJECT_ID`, `NEBIUS_SUBNET_ID`, `NEBIUS_DEFAULT_PLATFORM`, `NEBIUS_DEFAULT_PRESET`, `NEBIUS_DEFAULT_IMAGE`, `NEBIUS_DEFAULT_TIMEOUT`, `NEBIUS_DEFAULT_DISK_GIB`, `NEBIUS_OUTPUT_VOLUME`, `NEBIUS_S3_ENDPOINT`, `NEBIUS_S3_ACCESS_KEY_ID`, `NEBIUS_S3_SECRET_ACCESS_KEY` (plus a commented-out `# NEBIUS_CLI=`).
+
+**No `FRONTEND_URL`, no `PORT`, no CORS setting.** `PORT` is read only from the shell env with a hardcoded fallback of `8000` in `server.js`. Adding `PORT` / `FRONTEND_URL` / an allowed-origin var to `.env.example` is new work. The file instructs a single team env at the repo root: `ln -s ../../.env app/backend/.env`. `.gitignore` ignores `.env` and `.env.*` but keeps `!.env.example`.
+
+---
+
+## 7. `AGENTS.md` rules relevant to adding a frontend
+
+- **Rule 1 (boot)** — read `event.json` first. This event **is active** (`mode: "active"`, `event_name: "Temporal AI"`, coordination branch `main`, maintainer `Herit`, submission deadline `2026-09-13T10:00:00Z`, `submit_target_offset_hours: -1`). Then read pipeline → decisions → owners → tasks → challenge → demo-script → not-building → contract, and state the stage, ownership, and **whether the contract is frozen** (it is not).
+- **Rule 2 (hackathon mode)** — "Write smoke tests for the demo happy path and coordination data safety. Do not add unit tests for unrelated product code or refactor working code. No speculative abstractions, new dashboards, providers, or services." The Vite/React/Tailwind/shadcn stack constraint applies to `team-setup/board/web/` (the dashboard) only — "its Node dependencies are separate from whichever product stack the team chooses", and `app/frontend/package.json` is an explicit placeholder: *"Stack not chosen yet. Replace this whole file with your real package.json… bootstrap.sh detects real dependencies here and runs npm install automatically."*
+- **Rule 3 (ownership)** — check `owners.md` and the owning task before editing; don't edit another person's files; **"Name owners for shared wiring, manifests and lockfiles too."** Since `app/frontend` and the `pwa-shell` / `share-parser` feature rows are blank, claim them explicitly first.
+- **Rule 4 (contract)** — code against `contract.md` and **mock missing dependencies**; a contract change needs human approval + a recorded decision; `app/shared/` is generated from the contract, never hand-patched. Note the `/api/health` mismatch above is a contract-vs-code discrepancy to raise rather than silently "fix".
+- **Rule 5 (scope)** — product work must support the demo script "including required setup, seed data, deployment, accessibility and failure recovery"; ask before adding anything not on the shot list; maintain `not-building.md`.
+- **Rules 6/7** — ideas go to `ideas.md` as `- [i-&lt;uuid&gt;] [T+HH:MM] … — status: raised`; decisions append-only to `decisions.md` as `- [d-&lt;uuid&gt;] [T+HH:MM] &lt;decision&gt; — &lt;who&gt; — &lt;reason&gt;`, with ` — supersedes [d-…]` / ` — promotes [i-…]`.
+- **Rule 8** — AI assessments are advisory: keep sources + rationale next to answers and **"do not portray model confidence as a calibrated probability"** (this is exactly why `Explained&lt;T&gt;` carries `reasoning` / `sources` / `confidence`, and the contract comments `confidence` as "advisory, not calibrated"). Keep secrets and runtime caches out of Git.
+- **Rule 9 (commits/verification)** — "Small present-tense commits identify the demo step or coordination outcome. **Never commit or push unless requested.**" Coordination checks: `python3 team-setup/board/test_board.py`, `bash -n` over `bootstrap.sh team-setup/hooks/* team-setup/scripts/*.sh`, `node --check team-setup/board/app.js`. **Product checks use `team-setup/scripts/smoke.sh`; "unconfigured is not a pass."** The responsive-check list (320/375/768/1024/1440 px and 844x390 landscape, navigation scrolling, Escape/focus restoration, mobile form access) is written for the dashboard but is the repo's stated UI bar — worth matching for a phone-first PWA.
+
+**Directory conventions** (`app/README.md`, both feature READMEs): one folder per feature under `src/features/&lt;name&gt;/`, **not** a top-level `components/`/`routes/`/`models/` split; copy `src/features/_TEMPLATE/`; **feature names match 1:1 across layers** (`frontend/src/features/&lt;x&gt;/` ↔ `backend/src/features/&lt;x&gt;/`). Frontend template ships `components/` and `hooks/` subfolders ("this feature's, not shared ones"); backend template ships `routes/`. Each feature README must say which contract endpoint or demo shot it serves, and the template states the **only required scaffolding step**: add yourself to the Feature ownership table in `owners.md` ("spec acceptance criterion 35"). Per `contract.md`, the feature names are already fixed as `share-parser`, `delay-prediction`, `recommendation`, `pwa-shell`.</result>
+<usage><subagent_tokens>77289</subagent_tokens><tool_uses>25</tool_uses><duration_ms>196898</duration_ms></usage>
+</task-notification>
