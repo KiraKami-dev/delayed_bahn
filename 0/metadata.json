@@ -1,0 +1,57 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BT9NVR7RJ9A00SV0YGWCJJ",
+  "session_id": "abdb3068-b181-45de-82c2-0cdd5152ab32",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T22:02:38.894074Z",
+  "branch": "db-train-model",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/prompts.py",
+    "app/agents/src/features/db_delay/trip/train.py"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "e14ce139dae4",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 5550,
+    "cache_creation_tokens": 980945,
+    "cache_read_tokens": 127623423,
+    "output_tokens": 562663,
+    "api_call_count": 260
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-12T22:02:38.613703Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 18,
+    "human_modified": 42,
+    "human_removed": 0,
+    "total_committed": 18,
+    "total_lines_changed": 60,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 30,
+      "user_lines_removed": 21,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/prompts.py": 14,
+        "app/agents/src/features/db_delay/trip/train.py": 16
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/prompts.py": 8,
+        "app/agents/src/features/db_delay/trip/train.py": 13
+      }
+    }
+  ]
+}

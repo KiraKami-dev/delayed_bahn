@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BT9NVR7RJ9A00SV0YGWCJJ",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/prompts.py",
+    "app/agents/src/features/db_delay/trip/train.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 5550,
+    "cache_creation_tokens": 980945,
+    "cache_read_tokens": 127623423,
+    "output_tokens": 562663,
+    "api_call_count": 260
+  }
+}
