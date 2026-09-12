@@ -1,0 +1,54 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BNFKFEJFCMGXHCG5AWWCYM",
+  "session_id": "c9b8f163-bf1b-477b-9c75-63d2988ebf63",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T20:38:30.989743Z",
+  "branch": "main",
+  "checkpoints_count": 19,
+  "files_touched": [
+    "app/backend/.env.example",
+    "app/backend/src/features/training-jobs/README.md",
+    "team-setup/state/partner-notes.md"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "5a60c047d7d2",
+  "checkpoint_transcript_start": 794,
+  "transcript_lines_at_start": 794,
+  "compact_transcript_start": 95,
+  "token_usage": {
+    "input_tokens": 952,
+    "cache_creation_tokens": 34688,
+    "cache_read_tokens": 9137524,
+    "output_tokens": 25488,
+    "api_call_count": 49
+  },
+  "session_metrics": {
+    "turn_count": 33
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-12T20:38:30.933657Z",
+    "agent_lines": 27,
+    "agent_removed": 9,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 27,
+    "total_lines_changed": 36,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/scheduled_tasks.lock": 1
+      }
+    }
+  ]
+}
