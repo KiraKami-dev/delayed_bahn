@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BENH3QTK0PZ5BX4006ZEH3",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "team-setup/board/tasks.json",
+    "team-setup/state/01-challenge-pick/challenge.md",
+    "team-setup/state/02-demo-script/demo-script.md",
+    "team-setup/state/02-demo-script/not-building.md",
+    "team-setup/state/03-contract-freeze/architecture.mmd",
+    "team-setup/state/03-contract-freeze/contract.md",
+    "team-setup/state/06-polish-and-pitch/pitch.md",
+    "team-setup/state/decisions.md",
+    "team-setup/state/event.json",
+    "team-setup/state/ideas.md",
+    "team-setup/state/log/bootstrap-auto.log",
+    "team-setup/state/meetings/2026-09-12-team-discussion.md",
+    "team-setup/state/owners.md",
+    "team-setup/state/partner-notes.md",
+    "team-setup/state/pipeline.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 518,
+    "cache_creation_tokens": 70170,
+    "cache_read_tokens": 1252635,
+    "output_tokens": 20920,
+    "api_call_count": 19
+  }
+}
