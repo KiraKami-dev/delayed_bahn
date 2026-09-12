@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://docs.timenet.ai/schemas/dataset-card-v1.schema.json
+# Dataset Card for the error404/db-trip-delay connector: the single source for this dataset's metadata.
+yaml_schema_version: 1
+dataset_id: error404/db-trip-delay
+dataset_version: 0.1.0
+name: German Rail Trip Delay
+description: >-
+  Per-trip arrival delay for German trains, built from the public Deutsche Bahn timetable scrape
+  (piebro/deutsche-bahn-data). Each record is one train run, one target stop and one prediction moment.
+  It carries four series observed before that moment: the run's departure delay at each stop so far,
+  the target stop's daily median arrival delay over the last 30 days for the most specific service key
+  with enough history, and 72 hourly late shares at the target station and for the train class
+  nationwide. Tasks: the arrival delay in whole minutes (with a rationale written from the inputs only)
+  and whether the train is cancelled at the target stop. Records are split by time: train from
+  15 November 2025 to 30 April 2026, validation May 2026, test June to August 2026.
+license: CC-BY-4.0
+domains:
+  - transport
+tags:
+  - rail
+  - delay
+  - forecasting
+  - probabilistic
+  - qa
