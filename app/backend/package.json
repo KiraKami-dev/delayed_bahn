@@ -1,11 +1,18 @@
 {
-  "_hackos_placeholder": true,
-  "_hackos_note": "Stack not chosen yet. If the team picks a Python or Java backend instead, delete this file and add pyproject.toml / pom.xml instead -- bootstrap.sh checks for all three and installs accordingly, it does not assume Node.",
   "name": "app-backend",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "description": "Backend API. Zero runtime dependencies: Node built-ins only (http, fetch, crypto).",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "echo 'no backend stack chosen yet -- fill in package.json (or swap in pyproject.toml/pom.xml) and this script'",
-    "build": "echo 'no backend stack chosen yet -- fill in package.json (or swap in pyproject.toml/pom.xml) and this script'"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test \"src/**/*.test.js\"",
+    "train": "node src/features/training-jobs/cli.js",
+    "train:doctor": "node src/features/training-jobs/cli.js doctor",
+    "train:smoke": "node src/features/training-jobs/cli.js smoke"
   }
 }

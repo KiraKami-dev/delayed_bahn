@@ -22,6 +22,9 @@ __pycache__/
 !.env.example
 .hackos-user
 .hackos-openai-key
+*.pem
+app/backend/secrets/*
+!app/backend/secrets/.gitkeep
 
 # macOS
 .DS_Store

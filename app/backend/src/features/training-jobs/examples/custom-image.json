@@ -1,0 +1,15 @@
+{
+  "_comment": "Bring your own image + command. Datasets/checkpoints live in a bucket mounted as a volume.",
+  "name": "custom-train",
+  "image": "pytorch/pytorch:2.7.1-cuda12.8-cudnn9-runtime",
+  "command": "bash",
+  "args": "-c /data/scripts/run.sh",
+  "env": { "WANDB_MODE": "offline" },
+  "volumes": [
+    { "source": "my-bucket-name-or-id", "containerPath": "/data", "mode": "rw" }
+  ],
+  "platform": "gpu-h100-sxm",
+  "preset": "1gpu-16vcpu-200gb",
+  "timeout": "6h",
+  "preemptible": false
+}
