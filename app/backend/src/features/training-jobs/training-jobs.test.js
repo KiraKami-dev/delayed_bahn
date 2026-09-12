@@ -54,7 +54,7 @@ test('buildJobRequest maps env, volumes (string + object, s3), preemptible', () 
 
 test('buildTrainingJobRequest injects script, requirements and run.sh; args avoid shell quoting', () => {
   const { request } = buildTrainingJobRequest({ name: 'tr', script: 'print("hi")\n', requirements: 'torch\n', scriptArgs: ['--epochs', '2', 'it s'], outputVolume: 'out-bucket' }, ENV);
-  const files = Object.fromEntries(request.spec.injectedFiles.map((f) => [f.containerPath, f.content]));
+  const files = Object.fromEntries(request.spec.injectedFiles.map((f) => [f.containerPath, Buffer.from(f.content, 'base64').toString('utf8')]));
   assert.equal(files['/workspace/train.py'], 'print("hi")\n');
   assert.equal(files['/workspace/requirements.txt'], 'torch\n');
   assert.match(files['/workspace/run.sh'], /pip install --no-cache-dir -q -r requirements\.txt/);
@@ -160,4 +160,51 @@ test('routes map to the service and redact injected files', async () => {
   assert.ok(router.match('GET', '/api/training/jobs/abc/logs'));
   assert.equal(router.match('GET', '/api/training/jobs/abc/logs').params.id, 'abc');
   assert.equal(router.match('GET', '/api/training/catalog').params.id, undefined);
+});
+
+test('a multi-GPU preset launches under torchrun, not plain python', () => {
+  // The whole point of paying for four GPUs: without this the other three idle.
+  const { request } = buildTrainingJobRequest(
+    { name: 'ddp', script: 'print(1)\n', platform: 'gpu-l40s-d', preset: '4gpu-128vcpu-768gb' },
+    ENV,
+  );
+  const files = Object.fromEntries(request.spec.injectedFiles.map((f) => [f.containerPath, Buffer.from(f.content, 'base64').toString('utf8')]));
+  assert.match(files['/workspace/run.sh'], /exec torchrun --standalone --nnodes=1 --nproc_per_node=4 train\.py/);
+});
+
+test('a single-GPU preset still runs plain python', () => {
+  const { request } = buildTrainingJobRequest(
+    { name: 'single', script: 'print(1)\n', platform: 'gpu-l40s-a', preset: '1gpu-8vcpu-32gb' },
+    ENV,
+  );
+  const files = Object.fromEntries(request.spec.injectedFiles.map((f) => [f.containerPath, Buffer.from(f.content, 'base64').toString('utf8')]));
+  assert.match(files['/workspace/run.sh'], /exec python train\.py/);
+  assert.doesNotMatch(files['/workspace/run.sh'], /torchrun/);
+});
+
+test('distributed:false opts a multi-GPU job out of torchrun', () => {
+  const { request } = buildTrainingJobRequest(
+    { name: 'optout', script: 'print(1)\n', platform: 'gpu-l40s-d', preset: '4gpu-128vcpu-768gb', distributed: false },
+    ENV,
+  );
+  const files = Object.fromEntries(request.spec.injectedFiles.map((f) => [f.containerPath, Buffer.from(f.content, 'base64').toString('utf8')]));
+  assert.doesNotMatch(files['/workspace/run.sh'], /torchrun/);
+});
+
+test('injected file content is base64, as the protobuf bytes field requires', () => {
+  // Sending the raw string is rejected live with
+  // `invalid value for bytes field content`, which silently broke every
+  // injected-file submission. The 64 KiB cap is still measured on the decoded
+  // content, since that is what the platform enforces.
+  const { request } = buildTrainingJobRequest({ name: 'b64', script: 'print("hi")\n' }, ENV);
+  const file = request.spec.injectedFiles.find((f) => f.containerPath === '/workspace/train.py');
+  assert.equal(Buffer.from(file.content, 'base64').toString('utf8'), 'print("hi")\n');
+  assert.notEqual(file.content, 'print("hi")\n');
+});
+
+test('the 64 KiB limit applies to decoded bytes, not the base64 expansion', () => {
+  // base64 inflates by 4/3, so a 60 KiB file must still pass.
+  const sixtyKiB = 'x'.repeat(60 * 1024);
+  assert.doesNotThrow(() => buildTrainingJobRequest({ name: 'big', script: sixtyKiB }, ENV));
+  assert.throws(() => buildTrainingJobRequest({ name: 'toobig', script: 'x'.repeat(65 * 1024) }, ENV), /64 KiB/);
 });

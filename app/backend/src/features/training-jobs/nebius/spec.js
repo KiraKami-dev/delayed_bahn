@@ -90,7 +90,12 @@ function toInjectedFiles(files) {
     if (!content) throw new SpecError(`injected file ${f.containerPath} has no content`);
     const bytes = Buffer.byteLength(content, 'utf8');
     if (bytes > MAX_INJECTED_FILE_BYTES) throw new SpecError(`injected file ${f.containerPath} is ${bytes} bytes; limit is 64 KiB. Put big files in a bucket volume instead.`);
-    return { containerPath: f.containerPath, content };
+    // `content` is a protobuf `bytes` field, and protobuf's JSON mapping encodes
+    // bytes as base64. Sending the raw string is rejected at the API with
+    // `invalid value for bytes field content`, which is what every injected-file
+    // submission hit before this. The 64 KiB limit above is measured on the
+    // decoded content, since that is what the platform enforces.
+    return { containerPath: f.containerPath, content: Buffer.from(content, 'utf8').toString('base64') };
   });
 }
 
@@ -169,7 +174,21 @@ export function buildTrainingJobRequest(input = {}, env = process.env) {
   const steps = ['#!/usr/bin/env bash', 'set -euo pipefail', `cd ${workdir}`, 'nvidia-smi || true'];
   if (input.setup) steps.push(input.setup);
   if (requirements) steps.push('pip install --no-cache-dir -q -r requirements.txt');
-  steps.push(`exec python ${scriptName} ${scriptArgs}`.trim());
+
+  // A multi-GPU preset does nothing on its own: `python train.py` binds one
+  // device and the other three idle while you pay for them. torchrun spawns one
+  // rank per GPU and sets RANK / WORLD_SIZE / LOCAL_RANK, which is what a DDP
+  // training script reads. Default to it whenever the preset has more than one
+  // GPU, since paying 4x for 1x throughput is never the intent; `distributed:
+  // false` opts out for a script that genuinely is single-process.
+  const preset = input.preset || env.NEBIUS_DEFAULT_PRESET || DEFAULTS.preset;
+  const gpus = gpusInPreset(preset);
+  const distributed = input.distributed ?? gpus > 1;
+  if (distributed && gpus > 1) {
+    steps.push(`exec torchrun --standalone --nnodes=1 --nproc_per_node=${gpus} ${scriptName} ${scriptArgs}`.trim());
+  } else {
+    steps.push(`exec python ${scriptName} ${scriptArgs}`.trim());
+  }
   injectedFiles.push({ containerPath: `${workdir}/run.sh`, content: steps.join('\n') + '\n' });
 
   const volumes = [...(input.volumes || [])];
