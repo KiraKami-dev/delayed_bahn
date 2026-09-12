@@ -1,0 +1,1 @@
+make cron job to pull the latest changes from all the branches and put it in main branch too after or before pulling

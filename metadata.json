@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2BWVAK9NM4N1FWRYMEMT697",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 6,
+  "checkpoints_count": 7,
   "files_touched": [
     "app/backend/src/features/recommendation/fixtures/alternatives.json",
     "app/backend/src/features/recommendation/fixtures/reroute.json",
@@ -30,13 +30,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": ""
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1728,
-    "cache_creation_tokens": 212621,
-    "cache_read_tokens": 10495676,
-    "output_tokens": 88800,
-    "api_call_count": 65
+    "input_tokens": 1730,
+    "cache_creation_tokens": 212989,
+    "cache_read_tokens": 10580000,
+    "output_tokens": 89335,
+    "api_call_count": 66
   }
 }

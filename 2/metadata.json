@@ -1,0 +1,89 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BWVAK9NM4N1FWRYMEMT697",
+  "session_id": "cd860853-789b-4793-89dd-f90596af0281",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T22:47:16.408058Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "01f02e043467",
+  "checkpoint_transcript_start": 136,
+  "transcript_lines_at_start": 136,
+  "compact_transcript_start": 19,
+  "token_usage": {
+    "input_tokens": 2,
+    "cache_creation_tokens": 368,
+    "cache_read_tokens": 84324,
+    "output_tokens": 535,
+    "api_call_count": 1
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_01RNNkaPbEgNDYYSERQDXpm2",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "schedule"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "be11cda5d70f",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 84,
+        "end": 85,
+        "entry_ids": [
+          "28b4e832-950e-4bd0-ac9e-8a32b7f213bb"
+        ],
+        "tool_use_id": "toolu_01RNNkaPbEgNDYYSERQDXpm2"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_01RNNkaPbEgNDYYSERQDXpm2"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: schedule",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 223,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/backend/src/features/recommendation/fixtures/alternatives.json": 24,
+        "app/backend/src/features/recommendation/fixtures/reroute.json": 40,
+        "app/backend/src/features/share-parser/fixtures/share-texts/german-sample.txt": 7,
+        "app/backend/src/features/share-parser/fixtures/share-texts/real-sample-en.txt": 7,
+        "app/backend/src/features/share-parser/fixtures/share-texts/two-connections.txt": 14,
+        "app/backend/src/features/share-parser/fixtures/share-texts/two-legs-en.txt": 11,
+        "app/backend/src/features/share-parser/fixtures/share-texts/url-only.txt": 1,
+        "app/frontend/public/proof.json": 15,
+        "app/frontend/public/seed/causes.json": 30,
+        "app/frontend/public/seed/reroute.json": 74
+      }
+    }
+  ]
+}
