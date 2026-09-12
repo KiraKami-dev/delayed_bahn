@@ -189,6 +189,23 @@ def attach_sequences(con: duckdb.DuckDBPyConnection, cfg: Config) -> None:
     )
     con.execute(
         """
+        CREATE OR REPLACE TABLE ex_prev AS
+        WITH cand AS (
+            -- Trains of the same type towards the same destination that were due at the target
+            -- stop in the six hours before ours and had actually arrived by the prediction moment.
+            SELECT e.example_id, s.arr_delay, date_diff('minute', s.arr_pt, e.k_arr_pt) AS gap,
+                   row_number() OVER (PARTITION BY e.example_id ORDER BY s.arr_pt DESC) AS rn
+            FROM ex e JOIN stops s ON s.station = e.k_station AND s.train_type = e.train_type
+                 AND coalesce(s.dest, '') = coalesce(e.dest, '') AND s.run <> e.run
+            WHERE s.arr_pt < e.k_arr_pt AND s.arr_pt >= e.k_arr_pt - INTERVAL 6 HOUR
+                  AND s.arr_ct IS NOT NULL AND s.arr_ct <= e.t0 AND NOT s.arr_canc AND s.arr_delay IS NOT NULL
+        )
+        SELECT example_id, list(arr_delay ORDER BY gap DESC) AS prev_arr_delays, list(gap ORDER BY gap DESC) AS prev_gaps
+        FROM cand WHERE rn <= 5 GROUP BY example_id
+        """
+    )
+    con.execute(
+        """
         CREATE OR REPLACE TABLE ex_via AS
         SELECT e.example_id, list(s.station ORDER BY s.num) AS via
         FROM ex e JOIN stops s ON s.run = e.run
@@ -288,12 +305,13 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
     )
     table = con.execute(
         f"""
-        SELECT {select}, r.run_delays, v.via, {level_cols},
+        SELECT {select}, r.run_delays, v.via, p.prev_arr_delays, p.prev_gaps, {level_cols},
                st.late AS st_late, st.n AS st_n, nw.late AS nw_late, nw.n AS nw_n
         FROM ex e
         LEFT JOIN ex_run r USING (example_id) LEFT JOIN ex_via v USING (example_id)
         {' '.join(f'JOIN ex_h_{lv} h_{lv} USING (example_id)' for lv in HISTORY_LEVELS)}
         JOIN ex_st st USING (example_id) JOIN ex_nw nw USING (example_id)
+        LEFT JOIN ex_prev p USING (example_id)
         ORDER BY example_id
         """
     ).to_arrow_table()
@@ -314,10 +332,17 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
         level[ok] = lv
         n_obs[ok] = n[ok]
         n_canc[ok] = c[ok]
+    # The 30-day statistics keep their meaning when the history window is longer; the longer
+    # window and the last week are separate columns, so the prompt can speak of several scales.
+    recent = chosen[:, -min(30, cfg.history_days):]
     with np.errstate(all="ignore"):
-        hist_median = np.nan_to_num(np.nanmedian(chosen, axis=1))
-        hist_p90 = np.nan_to_num(np.nanpercentile(chosen, 90, axis=1))
-        hist_mean = np.nan_to_num(np.nanmean(chosen, axis=1))
+        hist_median = np.nan_to_num(np.nanmedian(recent, axis=1))
+        hist_p90 = np.nan_to_num(np.nanpercentile(recent, 90, axis=1))
+        hist_mean = np.nan_to_num(np.nanmean(recent, axis=1))
+        hist_median_long = np.nan_to_num(np.nanmedian(chosen, axis=1))
+        hist_p90_long = np.nan_to_num(np.nanpercentile(chosen, 90, axis=1))
+        hist_median_7 = np.nanmedian(chosen[:, -7:], axis=1)
+    hist_median_7 = np.where(np.isnan(hist_median_7), hist_median, hist_median_7)
     hist_days = np.isfinite(chosen).sum(axis=1)
     filled = pd.DataFrame(chosen).ffill(axis=1).to_numpy()
     filled = np.where(np.isnan(filled), hist_median[:, None], filled)
@@ -327,7 +352,27 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
     nw_late = fixed(table, "nw_late", cfg.series_hours)[:, ::-1]
     nw_n = fixed(table, "nw_n", cfg.series_hours)[:, ::-1]
 
+    def same_hour_share(late: np.ndarray, n: np.ndarray) -> np.ndarray:
+        """Share of late stops at the planned arrival's hour of day, over the whole hourly window.
+
+        The series ends with the hour before the prediction moment, so the column of hour h sits
+        at offsets (t0 hour - h) mod 24 from the end, and every 24 hours before that."""
+        t0_hour = pd.to_datetime(table["t0"].to_pandas()).dt.hour.to_numpy()
+        arr_hour = pd.to_datetime(table["k_arr_pt"].to_pandas()).dt.hour.to_numpy()
+        hours = late.shape[1]
+        offsets = (t0_hour - 1 - arr_hour) % 24  # index from the end of the series
+        idx = np.arange(hours)[None, :]
+        mask = ((hours - 1 - idx) % 24) == offsets[:, None]
+        weights = np.where(mask & np.isfinite(late), n, 0.0)
+        return np.where(weights.sum(axis=1) > 0, np.nansum(late * weights, axis=1) / np.maximum(weights.sum(axis=1), 1), 0.0)
+
     run_delays = table["run_delays"].to_pylist()
+    prev = [list(d) if d else [] for d in table["prev_arr_delays"].to_pylist()]
+    prev_gaps = [list(d) if d else [] for d in table["prev_gaps"].to_pylist()]
+    prev_n = np.array([len(d) for d in prev], dtype=np.float64)
+    prev_last = np.array([d[-1] if d else 0.0 for d in prev], dtype=np.float64)
+    prev_mean = np.array([float(np.mean(d)) if d else 0.0 for d in prev], dtype=np.float64)
+    prev_gap_last = np.array([g[-1] if g else 0.0 for g in prev_gaps], dtype=np.float64)
     current = np.array([d[-1] if d else 0 for d in run_delays], dtype=np.float64)
     max_so_far = np.array([max(d) if d else 0 for d in run_delays], dtype=np.float64)
     change3 = np.array([d[-1] - d[max(0, len(d) - 4)] if d else 0 for d in run_delays], dtype=np.float64)
@@ -345,6 +390,12 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
 
     out |= {
         "run_delays": pa.array([[float(x) for x in d] if d else [] for d in run_delays], type=pa.list_(pa.float32())),
+        "prev_arr_delays": pa.array([[float(x) for x in d] for d in prev], type=pa.list_(pa.float32())),
+        "prev_gaps": pa.array([[float(x) for x in g] for g in prev_gaps], type=pa.list_(pa.float32())),
+        "prev_n": pa.array(prev_n),
+        "prev_last": pa.array(prev_last),
+        "prev_mean": pa.array(prev_mean),
+        "prev_gap_last": pa.array(prev_gap_last),
         "via": table["via"],
         "hist_series": pa.FixedSizeListArray.from_arrays(pa.array(filled.astype(np.float32).ravel()), cfg.history_days),
         "station_series": pa.FixedSizeListArray.from_arrays(pa.array(np.nan_to_num(st_late).astype(np.float32).ravel()), cfg.series_hours),
@@ -354,6 +405,12 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
         "hist_cancel_share": pa.array(np.where(n_obs + n_canc > 0, n_canc / np.maximum(n_obs + n_canc, 1), 0.0)),
         "hist_median": pa.array(hist_median),
         "hist_p90": pa.array(hist_p90),
+        "hist_median_long": pa.array(hist_median_long),
+        "hist_p90_long": pa.array(hist_p90_long),
+        "hist_median_7": pa.array(hist_median_7),
+        "hist_window_days": pa.array(np.full(rows, cfg.history_days)),
+        "station_late_same_hour": pa.array(same_hour_share(st_late, st_n)),
+        "network_late_same_hour": pa.array(same_hour_share(nw_late, nw_n)),
         "hist_mean": pa.array(hist_mean),
         "hist_days": pa.array(hist_days.astype(np.float64)),
         "current_delay": pa.array(current),
@@ -409,11 +466,17 @@ def main() -> None:
     parser.add_argument("--val-start")
     parser.add_argument("--test-start")
     parser.add_argument("--label-cutoff", help="drop targets planned at or after this local time")
+    parser.add_argument("--series-hours", type=int, help="length of the hourly station and network series (default 72)")
+    parser.add_argument("--history-days", type=int, help="length of the daily route history (default 30)")
     args = parser.parse_args()
     files = tuple(str(Path(args.raw) / f"data-{m}.parquet") for m in args.months)
     base = Config(files=files)
     overrides = {key: value for key, value in {"train_start": args.train_start, "val_start": args.val_start,
                  "test_start": args.test_start, "label_cutoff": args.label_cutoff}.items() if value}
+    if args.series_hours:
+        overrides["series_hours"] = args.series_hours
+    if args.history_days:
+        overrides["history_days"] = args.history_days
     cfg = replace(base, examples_per_class={k: int(v * args.scale) for k, v in base.examples_per_class.items()},
                   **overrides)
     build(cfg, Path(args.out))

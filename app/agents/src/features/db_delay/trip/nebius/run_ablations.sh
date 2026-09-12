@@ -9,7 +9,8 @@
 set -uo pipefail
 
 DATA=/data
-for required in code/trip.tar.gz code/requirements.txt data/examples.parquet; do
+EXAMPLES=${EXAMPLES:-data/examples.parquet}  # e.g. data/examples_720h.parquet for the long-series build
+for required in code/trip.tar.gz code/requirements.txt "$EXAMPLES"; do
   # Fail in seconds, not after the package install, when the bucket is not filled yet.
   [ -f "$DATA/$required" ] || { echo "missing $DATA/$required in the bucket"; exit 1; }
 done
@@ -47,7 +48,7 @@ uv pip install --python .venv/bin/python -r "$DATA/code/requirements.txt"
 
 tar -xzf "$DATA/code/trip.tar.gz"
 mkdir -p data/trip
-cp "$DATA/data/examples.parquet" data/trip/examples.parquet
+cp "$DATA/$EXAMPLES" data/trip/examples.parquet
 
 # Download the base model and both checkpoints once, before four processes race for them.
 .venv/bin/python - <<'PY'
