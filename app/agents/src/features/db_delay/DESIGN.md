@@ -451,6 +451,77 @@ converged. TSLM results go here once the overnight runs finish.
 - **Text-only LLM baseline and the random-encoder and `ecg-sp` ablations** (§9); only the
   plain cross-entropy ablation runs.
 
+## 16. Iteration on H100 (night of 12 to 13 September)
+
+### Setup
+
+- **Nebius serverless jobs, one H100 per run.** `trip/nebius/run_ablations.sh` reads code, requirements
+  and examples from a bucket, trains and evaluates on local disk, streams progress to the job log and
+  copies results to the bucket once at exit (bucket mounts may not allow overwrite or append).
+  `RUNS` selects named runs (`main`, `plain_ce`, `plain_ce_lr2x`, `text_only`, `ecg_sp_start`,
+  `random_encoder`) or `custom` with `CUSTOM_ARGS` for anything else.
+- **Speed:** job setup takes about 4 minutes; an H100 trains at 0.31 s/step against 0.88 to 1.0 s/step
+  on the devbox (RTX 6000 Ada). The text-only baseline runs at 0.73 s/step (longer prompts plus
+  gradient checkpointing). A 2,000-step run with 3k validation and 5k test finishes in about 20 minutes.
+- **Lessons:** the CUDA runtime image needs `build-essential` (Triton compiles kernels at runtime);
+  an 8x H100 VM could not be created (not enough resources); injected job files must be base64; see
+  the memory notes for the IAM steps that allow uploads.
+- **Quick checks next to long runs:** `eval_checkpoint.sh` scores a saved checkpoint on the GPU beside
+  training; `learning_curve.sh` scores checkpoints on 300 validation examples on the CPU.
+
+### Results so far
+
+Learning curve of the main run (soft targets plus CRPS), 300 validation examples:
+
+| Model | Median error | CRPS | 10 to 90% coverage |
+|---|---|---|---|
+| XGBoost | 2.023 | 1.631 | 0.862 |
+| Step 1,000 | 2.100 | 1.701 | 0.948 |
+| Step 2,000 | 2.163 | 1.722 | 0.938 |
+| Step 4,000 | 2.059 | 1.671 | 0.952 |
+
+Test, the same 5,000 seeded examples for every model:
+
+| Model | Steps | Median error | CRPS | 10 to 90% coverage | Brier late | Cancel log loss |
+|---|---|---|---|---|---|---|
+| Persistence | | 3.990 | 3.316 | 0.827 | 0.103 | 0.210 |
+| Key history | | 5.873 | 4.999 | 0.628 | 0.158 | 0.189 |
+| XGBoost | | 3.698 | 2.971 | 0.822 | 0.087 | 0.140 |
+| Main (soft targets plus CRPS) | 5,000 | 3.722 | 2.974 | 0.913 | 0.089 | 0.179 |
+| Plain cross-entropy | 2,000 | 3.702 | 2.954 | 0.899 | 0.089 | 0.155 |
+| `ecg-sp` starting checkpoint | 2,000 | 3.711 | 2.994 | 0.912 | 0.088 | 0.165 |
+| Random encoder | 2,000 | 3.727 | 3.006 | 0.912 | 0.089 | 0.166 |
+| Blend: 0.6 main quantiles + 0.4 XGBoost | 5,000 | 3.691 | 2.951 | 0.856 | 0.087 | 0.140 |
+| Blend: 0.8 plain quantiles + 0.2 XGBoost | 2,000 | 3.687 | 2.943 | 0.835 | 0.088 | 0.140 |
+
+- **No difference is significant yet.** Paired bootstrap on the 4,729 test examples that ran (95%
+  intervals of the CRPS difference): main minus XGBoost +0.003 (-0.059 to +0.054); plain minus
+  XGBoost -0.018 (-0.080 to +0.034); plain minus main -0.021 (-0.050 to +0.010); plain blend minus
+  XGBoost -0.029 (-0.084 to +0.014). The finalists need the full test set.
+- **The TSLM is strongest close to arrival.** Within 15 minutes, plain cross-entropy reaches median
+  error 1.109 and CRPS 0.898 against XGBoost's 1.222 and 0.983 (1,941 examples, not bootstrapped yet).
+  XGBoost stays better 30 to 60 minutes out.
+- **Temperature calibration does not help:** the best temperature on validation is exactly 1.0. The
+  high coverage is partly an artefact of whole-minute targets scored with inclusive intervals.
+- **Platt scaling of P(cancelled)** helps the main model a little (0.179 to 0.170) but not the plain
+  model; blending takes P(cancelled) mostly from XGBoost.
+- **Free generation works:** 16 of 16 generated answers parse, with a median error of about 2 minutes.
+
+### Pending at the time of writing
+
+- The main configuration at 2,000 steps (the fair reference for the ablations) and the text-only
+  baseline (does the time-series encoder beat numbers in the prompt?).
+- Plain cross-entropy at 5,000 steps and with doubled learning rates.
+- The plain 2,000-step checkpoint on the full 93,738-example test set.
+- The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
+  forward test.
+
+### Still open
+
+- **TimeF export is quadratic in TimeNet's in-memory conversion** (16k records take 57 s; all 298k
+  would take hours). Export in chunks.
+- **Team backend bug:** injected job files are sent as plain text instead of base64.
+
 ## Sources
 
 - Challenge deck: Aionic Labs, "Temporal AI Challenge" (hackathon handout).
