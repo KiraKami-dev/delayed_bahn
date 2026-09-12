@@ -1,0 +1,90 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BY90VFW78M9SXS0S024CY8",
+  "session_id": "abdb3068-b181-45de-82c2-0cdd5152ab32",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T23:12:11.835883Z",
+  "branch": "db-train-model",
+  "checkpoints_count": 3,
+  "save_step_count": 1,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/model.py"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "6ec0ba4e5594",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 6920,
+    "cache_creation_tokens": 1250490,
+    "cache_read_tokens": 154289864,
+    "output_tokens": 697448,
+    "api_call_count": 354
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_01JbfWq4VYNGTEDNoEuHy7Go",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "artifact-design"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "06ef08617cb5",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 4851,
+        "end": 4852,
+        "entry_ids": [
+          "e636dc6c-3ce5-4ff7-ad8c-083efa9b64af"
+        ],
+        "tool_use_id": "toolu_01JbfWq4VYNGTEDNoEuHy7Go"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_01JbfWq4VYNGTEDNoEuHy7Go"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: artifact-design",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 31
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-12T23:12:11.393484Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 10,
+    "human_modified": 17,
+    "human_removed": 0,
+    "total_committed": 10,
+    "total_lines_changed": 28,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 14,
+      "user_lines_removed": 9,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 13,
+        "app/agents/src/features/db_delay/trip/train.py": 1
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 8,
+        "app/agents/src/features/db_delay/trip/train.py": 1
+      }
+    }
+  ]
+}
