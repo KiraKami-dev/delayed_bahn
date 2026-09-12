@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2BWQ822MHAM8ZDC732MAEG6",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 6,
+  "checkpoints_count": 7,
   "files_touched": [
     ".env.example",
     "app/agents/.python-version",
@@ -49,14 +49,21 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1474,
-    "cache_creation_tokens": 217974,
-    "cache_read_tokens": 8043719,
-    "output_tokens": 81046,
-    "api_call_count": 58,
+    "input_tokens": 1492,
+    "cache_creation_tokens": 251229,
+    "cache_read_tokens": 8659002,
+    "output_tokens": 88308,
+    "api_call_count": 67,
     "subagent_tokens": {
       "input_tokens": 112,
       "cache_creation_tokens": 303459,
