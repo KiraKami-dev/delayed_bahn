@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2B0NJPWSKPNJS4R1PZ237XM",
+  "strategy": "manual-commit",
+  "branch": "db-train-idea",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "team-setup/state/02-demo-script/not-building.md",
+    "team-setup/state/ideas.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 110254,
+    "cache_read_tokens": 3103088,
+    "output_tokens": 35961,
+    "api_call_count": 33
+  }
+}

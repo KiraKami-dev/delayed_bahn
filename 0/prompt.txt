@@ -1,0 +1,67 @@
+Can you access this Claude chat? cse_01Xgxso2frjrsJHaEQsBo4LB
+
+---
+
+Is there a tool for that?
+
+---
+
+Ok, I'll just paste the ideation we had: "Of these two challenges, which one do you think fits us as a group (same as in Zürich better)? Just some first ideas, context, background, and recommendation.
+
+Read 3 memories
+Good context to work with here, given how the Munich stop actually went for you and the team.
+Quick read on the two options: the BMW routing challenge is a personalization/data-product problem — GPS tracks, motorcycle sensor data (speed, G-force, lean angle), rider profiles, and an open invitation to bolt on weather, traffic, or scenic-viewpoint data. The scoring is subjective ("you define fun, we evaluate"), which means it rewards a working, well-demoed prototype more than methodological rigor. The Temporal AI Challenge is a different animal: source/validate a dataset (possibly via an agentic pipeline), build or use a TimeNet connector, then actually train or fine-tune a time-series language model and benchmark it against a baseline on held-out data with proper leakage controls across time/subjects/devices. That's a research deliverable, not a hack.
+Given what worked for your team in Munich, I'd lean toward the BMW challenge. Your QuantCo run was won on exactly the BMW challenge's terms: ship something rough but working early, lean on an LLM-first architecture with a knowledge base to cover sparse data, iterate fast, and you clearly have the pitching chops (finalist stage, co-presenting) to make a subjectively-judged "most exciting solution" metric work in your favor. The BMW brief practically invites that playbook again: creative enrichment layers (weather, scenic routing) are cheap wins for a flashy demo, and there's a nice map visualization angle built in.
+The Temporal Challenge is the one that's actually closer to your own expertise, worth naming honestly: dataset sourcing pipelines, avoiding leakage across time/subjects, comparing against baselines on held-out data is more or less what you do on HANCAS day to day (you literally caught and fixed a leakage-adjacent bug in your thesis pipeline a few weeks back). If you specifically wanted a hackathon that doubles as thesis-adjacent practice or you have someone on the team who can move fast on fine-tuning with compute already lined up, it's a legitimate pull. But in a 24h window I'd flag it as the higher-variance choice: training and properly evaluating a TSLM in a day, without pre-arranged compute, is ambitious, and the risk is you end up with an unfinished pipeline and nothing compelling to demo, whereas your team's Munich edge came specifically from always having a working, positive submission on the board.
+So: BMW route challenge as the safer, form-matching pick given how your team actually won last time; Temporal AI Challenge only if someone's itching for the research angle and you're confident about compute/time budget for the training step.
+for the temporal one: It is also about getting a dataset etc. Do you have ideas? Maybe also medical angle? HANCOCK would not qualify, would it?
+
+Read 4 pages, searched the web, loaded tools
+Confirmed: HANCOCK wouldn't be a natural fit here, and not because of access (it's fully open, CC BY 4.0, downloadable via TCIA). The blood work and clinical labs are single pre-operative snapshots, not repeated measurements, so there's no per-patient longitudinal signal to feed a time-series model. Survival/recurrence is a time-to-event outcome (one number per patient, right-censored), not a time series either. It's a strong multimodal dataset (WSIs, TMAs, tabular clinical/lab data, surgery reports) but it's static-plus-imaging, not the "signal stream + text reasoning over it" shape the challenge's own "Ideal Data Profile" slide calls for.
+Worth noting: that slide's "as in OpenTSLM paper" line points to a real, very recent paper (Oct 2025, Stanford/ETH group, ICML 2026), and it names exactly the kind of datasets that would qualify. It introduces three text+time-series benchmarks: HAR-CoT (wearable activity sensors), Sleep-CoT (PSG/sleep staging), and ECG-QA-CoT (ECG + clinical QA with chain-of-thought reasoning). That's basically the organizers showing you their reference implementation.
+For a medical angle with realistic 24h feasibility, I'd rank it like this:
+ECG-QA on PTB-XL is probably your best shot. PTB-XL is a large, genuinely open (no credentialing wall) 12-lead ECG dataset with diagnostic labels, and ECG-QA is an existing open repo of QA pairs built on top of it, with code already on GitHub. Using one of the organizers' own reference datasets means you're not burning hackathon hours on data wrangling, you can spend the time on the actual connector + fine-tuning + eval loop, and you could still differentiate by picking a specific target user (e.g. a rural GP without cardiology backup, or post-op monitoring) and a held-out split that stresses generalization across devices or patients, which directly hits their "avoiding leakage" evaluation criterion.
+Sleep-CoT-style data is a second option if someone on the team wants to frame around sleep/recovery, but the go-to source (SHHS via the National Sleep Research Resource) usually needs a data use agreement, which is friction you don't want mid-hackathon.
+Wearable HAR/vitals data (PAMAP2, WISDM, or WESAD for stress/physiological signals) is a third lane if you want to frame it around rehab, elderly fall-risk, or stress monitoring rather than strictly clinical diagnostics. These are unrestricted downloads and pair naturally with a "target user" story (physiotherapist, caregiver), though you'd have to write the text-pairing/QA layer yourself since it doesn't exist off the shelf like ECG-QA does.
+Given the 24h budget, I'd steer toward ECG-QA/PTB-XL specifically because it removes the biggest risk (data sourcing and QA-pairing eating half your time) and lets you spend the hackathon on the part that actually differentiates you: the TimeNet connector, the fine-tune, and a clean baseline comparison.
+Sources:
+A multimodal dataset for precision oncology in head and neck cancer | Nature Communications
+HANCOCK - The Cancer Imaging Archive (TCIA)
+OpenTSLM: Time-Series Language Models for Reasoning over Multivariate Medical Text- and Time-Series Data (arXiv)
+PTB-XL, a large publicly available electrocardiography dataset (PhysioNet)
+ECG-QA GitHub repository
+
+Read memory
+Reading it as: more candidate datasets, checked against the full ts_gym list, that aren't SHL/SisFall/DB delay either — a bigger bench of options rather than just those three. Here's what's genuinely clear on both counts:
+Wearables/HAR — GeoLife (Microsoft Research Asia GPS trajectories with labeled transport modes: walk, bike, bus, car, train) is close in spirit to SHL but a different modality (raw GPS vs. accelerometer) and not on the loader. OPPORTUNITY (kitchen-scenario multi-sensor activity recognition) and Extrasensory (in-the-wild phone+watch activity/context labels) are both absent too. UCI HAR is also absent from the list, but it's the single most famous HAR benchmark there is, so treat it as high risk of independent duplication even without a shared loader.
+Rail/transit-adjacent infrastructure, to sit next to DB delay data — OpenSky Network (ADS-B flight trajectories) is a genuinely different mobility domain, more distant than AIS ships. DWD (Deutscher Wetterdienst) station data is the German analogue of the MeteoSwiss idea, absent from the list the same way.
+Industrial/machines — IMS Bearing (Cincinnati run-to-failure) is a clean alternative to CWRU/C-MAPSS, not on the loader. SECOM (UCI semiconductor manufacturing, anomaly/yield) is also absent.
+Clinical — MIMIC-IV waveform and PhysioNet Challenge 2020 12-lead ECG are both absent from the list, but they're canonical enough in the clinical-ML world that other teams could land on them without needing a loader either, so weaker differentiation than the industrial/rail options above.
+Astronomy — Kepler/TESS transit light curves are a different task (planet detection vs. variable-star classification) from the ASAS-SN/ZTF entries already on the list, and absent themselves.
+Everything above I checked line-by-line against the 79-line ts_gym corpus list already in hand — none of these appear on it, and none overlap with SHL, SisFall, or DB delay data. Want these folded into the "Off the Loader" page as a reserve-options section, or kept as a working list for now?
+And seeing all of that, how is the train one?
+
+Loaded tools, searched the web, read a page
+Confirmed the differentiation held (no rail dataset anywhere on the ts_gym list, closest is ship AIS), and checked how it'd actually get built, which changes the risk picture.
+There's a ready-made Hugging Face dataset for exactly this: piebro/deutsche-bahn-data, scraped historical DB operations data — 16-column monthly parquet with station, train type/number, line, delay in minutes, planned vs. actual times, and cancellation flags per stop, at 100M–1B records, CC BY 4.0, loadable straight through datasets.load_dataset (or Dask/Polars). That's the same shape as capture24 on the provided list, which is also pulled from a local HF mirror rather than scraped live — so a DB loader would be no harder to write than the ones everyone else gets handed, it just isn't handed to them. A few Kaggle mirrors (nokkyu, santiagoravotti, ravisingh0399) exist as backup or cross-check. The official live Timetables API (DBOpenData/openbahn) is real too, but needs a key from DB's developer portal — not worth the registration lag inside a 24-hour build, so the static parquet dump is the pragmatic path, not the live feed.
+On fit with the architecture: this reshapes naturally into a signal rather than staying tabular — per train run, delay-in-minutes across its ordered stops is a short sequence, structurally the same as LUDB or MIT-BIH being a sequence across time, so it patch-encodes the same way. The catch is that, unlike ECG-QA or HAR-CoT, nobody hands you the question/answer pairs — you'd design the CoT prompts yourselves ("where did the delay grow fastest," "did it recover before the terminus"). That's real work under time pressure, but it's also exactly the "data prep" dimension the rubric names outright, so it argues for the pick rather than against it, at the cost of being the one dataset on your list with no free QA layer.
+Net: still clear, and now lower-risk than it looked before you had a concrete source — the sourcing problem is solved, what's left is shaping and labeling, which is scoped, not open-ended.
+Sources:
+piebro/deutsche-bahn-data (Hugging Face)
+piebro/deutsche-bahn-data (GitHub)
+Deutsche Bahn (DB) delays (Kaggle)
+Trains and Delays Deutsche Bahn (Kaggle)
+DBOpenData (GitHub)
+" what do you think of this?
+
+---
+
+What would be a MVP we could ship of the train data?
+
+---
+
+Let's do this. Also: Is there a way to only get a subset of the dataset to download first? Or do we have to download everything?
+
+---
+
+Btw it should / must be compatible to https://github.com/OpenTSLM (also see: /Users/jonasstenglein/Downloads/Aionic_Temporal_AI_Hackathon.pdf ). And before you start: What is the most recent data? And also: Is that not off: T+00:00 shouldn't it be the day there?
