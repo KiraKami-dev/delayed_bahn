@@ -1,0 +1,64 @@
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-eval-plain-full: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-plain-lr2x | 2026-09-12T21:51:07Z plain_ce_lr2x starting on GPU 0</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-plain-5k | 2026-09-12T21:51:23Z plain_ce starting on GPU 0</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-eval-plain-full | 2026-09-12T21:52:26Z custom starting on GPU 0</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+Is there anything else we should test or do while this runs?
+
+---
+
+<task-notification>
+<task-id>bnmfu8xq1</task-id>
+<summary>Monitor event: "overnight TSLM queue on the devbox: progress every 500 steps, eval results, crashes"</summary>
+<event>step 7000/12000 {'loss': 2.6564, 'token_ce': 0.1055, 'soft_ce': 2.2419, 'crps': 3.0904} 6952s (0.99s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-main-12k | [main] step 1000/12000 {'loss': 2.6189, 'token_ce': 0.149, 'soft_ce': 2.2383, 'crps': 2.3157} 315s (0.32s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-main-2k | [main] step 1000/2000 {'loss': 2.6115, 'token_ce': 0.1451, 'soft_ce': 2.2362, 'crps': 2.3018} 311s (0.31s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
