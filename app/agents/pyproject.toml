@@ -1,0 +1,10 @@
+# _hackos_placeholder: stack not chosen yet. Fill in [project.dependencies]
+# once the team picks its agent/pipeline libraries on the day, and delete
+# this comment line. bootstrap.sh checks for this marker and skips
+# install until it's gone -- it does not assume LangChain, LangGraph, or
+# anything else.
+[project]
+name = "app-agents"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = []

@@ -1,0 +1,110 @@
+{
+  "_comment": "The machine-readable spine. window_start_pct/window_end_pct are fractions (0-100) of the planning window (submit_target - build_starts) from event.json, resolved to real clock times at read time by board/app.js and board/serve.py. null pct means pre-build (runs before build_starts). owner is a ROLE, the actual name is looked up in state/owners.md's Gate roles table, never hardcoded here.",
+  "current_stage": "reveal-capture",
+  "stages": [
+    {
+      "id": "reveal-capture",
+      "name": "Capture every challenge reveal",
+      "window_start_pct": null,
+      "window_end_pct": null,
+      "pre_build": true,
+      "owner": "all — one scout per track, per owners.md",
+      "exit_condition": "one filled reveal file per track + rubric.md captured verbatim",
+      "outputs": ["state/00-reveal-capture/reveals/*.md", "state/00-reveal-capture/rubric.md"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "challenge-pick",
+      "name": "Pick the track",
+      "window_start_pct": null,
+      "window_end_pct": null,
+      "pre_build": true,
+      "owner": "facilitator named in owners.md, whole team votes",
+      "exit_condition": "challenge.md written, decision locked, no reopening",
+      "outputs": ["state/01-challenge-pick/challenge.md"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "demo-script",
+      "name": "Write the 90-second demo",
+      "window_start_pct": 0,
+      "window_end_pct": 3,
+      "pre_build": false,
+      "owner": "whole team",
+      "exit_condition": "demo-script.md frozen + not-building.md written",
+      "outputs": ["state/02-demo-script/demo-script.md", "state/02-demo-script/not-building.md"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "contract-freeze",
+      "name": "Freeze the contract",
+      "window_start_pct": 3,
+      "window_end_pct": 7,
+      "pre_build": false,
+      "owner": "contract-freeze lead named in owners.md",
+      "exit_condition": "contract.md frozen + architecture.mmd generated",
+      "outputs": ["state/03-contract-freeze/contract.md", "state/03-contract-freeze/architecture.mmd"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "parallel-build",
+      "name": "Build in parallel",
+      "window_start_pct": 7,
+      "window_end_pct": 55,
+      "pre_build": false,
+      "owner": "all teammates, own directories per owners.md",
+      "exit_condition": "demo happy path works end to end",
+      "outputs": ["app/frontend", "app/backend", "app/agents"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "integration",
+      "name": "Integrate",
+      "window_start_pct": 55,
+      "window_end_pct": 65,
+      "pre_build": false,
+      "owner": "integration coordinator named in owners.md",
+      "exit_condition": "all branches merged to main, smoke passes",
+      "outputs": ["state/04-integration/"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "feature-freeze",
+      "name": "Feature freeze",
+      "window_start_pct": 65,
+      "window_end_pct": 65,
+      "pre_build": false,
+      "owner": "feature-freeze caller named in owners.md",
+      "exit_condition": "no new features, polish only from here",
+      "outputs": ["state/05-feature-freeze/"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "polish-and-pitch",
+      "name": "Polish and pitch",
+      "window_start_pct": 65,
+      "window_end_pct": 90,
+      "pre_build": false,
+      "owner": "polish-and-pitch lead named in owners.md, all support",
+      "exit_condition": "deck done, backup video recorded, demo doctor passes",
+      "outputs": ["state/06-polish-and-pitch/"],
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}

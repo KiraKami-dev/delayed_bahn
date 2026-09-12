@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hack-os board</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="hero">
+    <div class="hero-label" id="hero-label">SUBMIT TARGET IN</div>
+    <div class="hero-countdown" id="hero-countdown">--:--:--</div>
+    <div class="hero-sub" id="hero-sub">real deadline: --</div>
+    <div class="stage-strip" id="stage-strip"></div>
+  </div>
+  <div class="mode-toggle" role="group" aria-label="view mode">
+    <button id="btn-technical" aria-pressed="true">Technical</button>
+    <button id="btn-pm" aria-pressed="false">PM</button>
+  </div>
+</header>
+
+<section class="panel" aria-label="State freshness">
+  <div id="freshness" role="status">Loading local state; remote freshness unknown.</div>
+  <pre id="local-changes"></pre>
+  <div id="save-status" role="status" aria-live="polite"></div>
+  <details id="draft-recovery" hidden>
+    <summary>Retained failed write — copy or review before retrying</summary>
+    <textarea id="failed-draft" rows="6" readonly aria-label="Retained failed write"></textarea>
+    <button id="review-drafts">Refresh state for review; keep form input</button>
+  </details>
+</section>
+
+<main id="empty-banner" hidden>
+  <div class="panel">
+    <h2>No event configured yet</h2>
+    <p>Fictional examples are inactive and are not product requirements.
+    Run <code>team-setup/scripts/new-event.sh</code> to archive existing records
+    and initialize a real event after explicit confirmation. Editing a date alone
+    does not turn example documents into real decisions.</p>
+  </div>
+</main>
+
+<!-- ============================= TECHNICAL VIEW ============================= -->
+<main id="view-technical">
+  <div class="grid">
+
+    <section class="panel">
+      <h2>Current stage</h2>
+      <div id="tech-stage"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Contract drift</h2>
+      <div id="tech-drift"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Sleep rota</h2>
+      <div id="tech-sleep"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Smoke + snapshot</h2>
+      <div id="tech-smoke"></div>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Commit timeline (by person)</h2>
+      <div id="tech-commits"></div>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Files in commits, last hour</h2>
+      <div id="tech-files-hour"></div>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Recent committed activity</h2>
+      <p>Local Git history, not inferred current work. No prompts are collected for this view.</p>
+      <div id="tech-focus"></div>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Gate documents</h2>
+      <div id="tech-docs"></div>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Architecture</h2>
+      <div id="tech-architecture"></div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ============================= PM VIEW ============================= -->
+<main id="view-pm" hidden>
+  <div class="grid">
+
+    <section class="panel">
+      <h2>Milestones</h2>
+      <div id="pm-milestones"></div>
+    </section>
+
+    <section class="panel">
+      <h2>MVP progress</h2>
+      <div id="pm-mvp"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Ownership map</h2>
+      <div id="pm-owners"></div>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Task board</h2>
+      <div id="pm-tasks"></div>
+      <button id="pm-task-add-btn">+ add task</button>
+      <form class="inline-form" id="pm-task-form" hidden>
+        <input name="title" placeholder="title" required>
+        <input name="owner" placeholder="owner">
+        <input name="sub_owners" placeholder="sub-owners, comma separated">
+        <input name="target_time" placeholder="target time, e.g. T+40%">
+        <input name="mvp" placeholder="mvp tag, e.g. mvp1">
+        <input name="depends_on" placeholder="depends on task ids, comma separated">
+        <div class="actions">
+          <button type="submit">save</button>
+          <button type="button" id="pm-task-cancel">cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Ideas board</h2>
+      <div id="pm-ideas"></div>
+      <form class="inline-form" id="pm-idea-form">
+        <input name="idea" placeholder="new idea" required>
+        <input name="who" placeholder="raised by" required>
+        <div class="actions"><button type="submit">raise idea</button></div>
+      </form>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Research</h2>
+      <div id="pm-research"></div>
+      <form class="inline-form" id="pm-research-form">
+        <input name="logged_by" placeholder="logged by (optional)">
+        <textarea name="summary" placeholder="what did you find out?" rows="3" required></textarea>
+        <label><input type="checkbox" name="assess"> Optional AI assessment: send this finding to OpenAI; not verified evidence</label>
+        <div class="actions"><button type="submit">log finding</button></div>
+      </form>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Decision pipeline</h2>
+      <div id="pm-decisions"></div>
+      <form class="inline-form" id="pm-decision-form">
+        <input name="decision" placeholder="what was decided" required>
+        <input name="who" placeholder="who decided" required>
+        <input name="reason" placeholder="one-line reason" required>
+        <input name="supersedes" placeholder="supersedes decision ID (optional), d-...">
+        <div class="actions"><button type="submit">log decision</button></div>
+      </form>
+    </section>
+
+    <section class="panel span-2">
+      <h2>Meeting notes intake</h2>
+      <textarea id="pm-notes-text" rows="5" placeholder="paste or type meeting notes here"></textarea>
+      <div class="actions" style="margin-top:6px;">
+        <label><input type="checkbox" id="notes-ai"> Optional AI preview: send notes to OpenAI</label>
+        <button id="pm-notes-submit">save notes / preview</button>
+      </div>
+      <div id="pm-notes-preview"></div>
+    </section>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

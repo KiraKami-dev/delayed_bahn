@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# hack-os git hook: pre-push
+# CHAINED: runs the hack-os build warnings first (always advisory), then
+# hands off to the Entire CLI, which pushes session logs. Entire runs LAST
+# so its exit code becomes the hook's and it can still block a bad push.
+# Detects the product's build command and runs it as a WARNING only.
+# Purpose is awareness, never obstruction (spec Part 2 rule 1) — the
+# hack-os checks never fail the push, regardless of the build result.
+set -u
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [ -z "$ROOT" ]; then
+  exit 0
+fi
+cd "$ROOT" || exit 0
+
+run_and_warn() {
+  local label="$1"
+  shift
+  local output
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "hack-os pre-push: Python unavailable; bounded check skipped. Push continues." >&2
+    return
+  fi
+  if output="$(python3 - "$@" <<'PYEOF'
+import subprocess, sys
+try:
+    result = subprocess.run(sys.argv[1:], timeout=30, capture_output=True, text=True)
+    print("\n".join((result.stdout + result.stderr).splitlines()[-20:]))
+    raise SystemExit(result.returncode)
+except (OSError, subprocess.TimeoutExpired):
+    print("Check unavailable or exceeded 30 seconds")
+    raise SystemExit(1)
+PYEOF
+  )"; then
+    echo "hack-os pre-push: $label passed" >&2
+  else
+    echo "hack-os pre-push: WARNING — $label failed. Push continues anyway." >&2
+    echo "$output" | tail -n 20 >&2
+  fi
+}
+
+if [ -f "app/frontend/package.json" ] && command -v npm >/dev/null 2>&1; then
+  if grep -q '"build"' app/frontend/package.json 2>/dev/null; then
+    (cd app/frontend && run_and_warn "frontend build" npm run build)
+  fi
+fi
+
+if [ -f "app/backend/package.json" ] && command -v npm >/dev/null 2>&1; then
+  if grep -q '"build"' app/backend/package.json 2>/dev/null; then
+    (cd app/backend && run_and_warn "backend build" npm run build)
+  fi
+fi
+
+if [ -f "app/backend/pyproject.toml" ] && command -v python3 >/dev/null 2>&1; then
+  run_and_warn "backend syntax check" python3 -c \
+    "import ast,glob; [ast.parse(open(f).read(), f) for f in glob.glob('app/backend/**/*.py', recursive=True)]"
+fi
+
+if [ -f "app/agents/pyproject.toml" ] && command -v python3 >/dev/null 2>&1; then
+  run_and_warn "agents syntax check" python3 -c \
+    "import ast,glob; [ast.parse(open(f).read(), f) for f in glob.glob('app/agents/**/*.py', recursive=True)]"
+fi
+
+if [ -f "Makefile" ] && command -v make >/dev/null 2>&1; then
+  run_and_warn "make build" make build
+fi
+
+# --- chained: Entire CLI session-log push ---------------------------------
+# Runs last on purpose: unlike the hack-os checks above (advisory, always
+# exit 0 per AGENTS.md rule 8), Entire is allowed to block the push.
+if command -v entire >/dev/null 2>&1; then
+  entire hooks git pre-push "${1:-origin}"
+  exit $?
+fi
+
+exit 0

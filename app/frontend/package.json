@@ -1,0 +1,11 @@
+{
+  "_hackos_placeholder": true,
+  "_hackos_note": "Stack not chosen yet. Replace this whole file with your real package.json once the team picks a frontend framework on the day. bootstrap.sh detects real dependencies here and runs npm install automatically -- it does not assume Next.js, Vite, or anything else.",
+  "name": "app-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'no frontend stack chosen yet -- fill in package.json and this script'",
+    "build": "echo 'no frontend stack chosen yet -- fill in package.json and this script'"
+  }
+}

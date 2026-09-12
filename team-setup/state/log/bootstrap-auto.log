@@ -1,0 +1,78 @@
+hack-os bootstrap — starting
+
+1/10 checking prerequisites
+  [ok]   git — git version 2.50.1 (Apple Git-155)
+  [ok]   python3 — Python 3.14.7
+
+2/10 installing git hooks
+hack-os hooks: installed post-commit
+hack-os hooks: installed pre-push
+hack-os hooks: claude-session-start.sh ready
+hack-os hooks: claude-prompt-submit.sh ready
+hack-os hooks: codex-prompt-submit.sh ready
+hack-os hooks: install complete
+  [ok]   git hooks — post-commit + pre-push installed to .git/hooks
+
+3/10 entire.io CLI (agent session <-> commit linking)
+  [ok]   entire CLI — Entire CLI 0.10.6
+
+4/10 detecting product stack in app/
+  [warn] frontend stack — stack not chosen yet (package.json is still the placeholder) — nothing to install
+  [warn] backend stack — stack not chosen yet (package.json is still the placeholder) — nothing to install
+  [warn] agents stack — stack not chosen yet (pyproject.toml is still the placeholder) — nothing to install
+
+5/10 identifying you
+  auto-detected name: Akshat Khair (from git config user.name; team.json unreadable or empty roster falls back to the raw git name)
+  [ok]   identity — you are Akshat Khair (.hackos-user written, auto-detected — re-run './bootstrap.sh' yourself to fix interactively if wrong)
+
+6/10 confirming your harness
+  auto-detected harness: claude-code (auto-detected from Claude Code's own env vars)
+  [ok]   harness — claude-code auto-detected for Akshat Khair — re-run './bootstrap.sh' yourself to confirm interactively
+
+7/10 harness-specific next steps
+  [ok]   claude CLI — found on PATH
+  -> run: /plugin install superpowers@claude-plugins-official
+  -> confirm .claude/settings.json hooks (SessionStart, UserPromptSubmit, Agent Teams flag) load on next launch
+  -> approve the project MCP servers when Claude Code prompts on first launch in this repo
+
+8/10 MCP authentication reminder
+  MCP connections are per-person OAuth and are NOT inherited from cloning
+  this repo. Each teammate authenticates individually. Do this the day
+  before the event, not on the day. Servers configured in .mcp.json:
+   - context7
+   - github
+   - serena
+   - playwright
+  [ok]   MCP config — .mcp.json present, see servers listed above
+
+9/10 dashboard
+  -> run: python3 team-setup/board/serve.py
+  Both the technical view and the PM view are the same server, toggled
+  on the page — no separate command for either.
+  [ok]   dashboard — python3 available, dashboard can run
+
+10/10 summary
+-----------------------------------------------------------------
+CHECK            STATUS DETAIL
+git              PASS   git version 2.50.1 (Apple Git-155)
+python3          PASS   Python 3.14.7
+git hooks        PASS   post-commit + pre-push installed to .git/hooks
+entire CLI       PASS   Entire CLI 0.10.6
+frontend stack   WARN   stack not chosen yet (package.json is still the placeholder) — nothing to install
+backend stack    WARN   stack not chosen yet (package.json is still the placeholder) — nothing to install
+agents stack     WARN   stack not chosen yet (pyproject.toml is still the placeholder) — nothing to install
+identity         PASS   you are Akshat Khair (.hackos-user written, auto-detected — re-run './bootstrap.sh' yourself to fix interactively if wrong)
+harness          PASS   claude-code auto-detected for Akshat Khair — re-run './bootstrap.sh' yourself to confirm interactively
+claude CLI       PASS   found on PATH
+MCP config       PASS   .mcp.json present, see servers listed above
+dashboard        PASS   python3 available, dashboard can run
+-----------------------------------------------------------------
+Current stage: reveal-capture (all — one scout per track, per owners.md)
+
+hack-os bootstrap — done (ran in auto mode: identity/harness were
+inferred, not confirmed by a human). Two things still need you
+directly, no agent can do these: approve/authenticate each MCP
+server your harness prompts for, and set your own personal API
+keys — see team-setup/playbooks/mcp-setup.md. Re-run
+'./bootstrap.sh' yourself in a real terminal anytime to confirm or
+fix identity interactively.

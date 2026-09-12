@@ -1,0 +1,11 @@
+{
+  "_hackos_placeholder": true,
+  "_hackos_note": "Stack not chosen yet. If the team picks a Python or Java backend instead, delete this file and add pyproject.toml / pom.xml instead -- bootstrap.sh checks for all three and installs accordingly, it does not assume Node.",
+  "name": "app-backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'no backend stack chosen yet -- fill in package.json (or swap in pyproject.toml/pom.xml) and this script'",
+    "build": "echo 'no backend stack chosen yet -- fill in package.json (or swap in pyproject.toml/pom.xml) and this script'"
+  }
+}

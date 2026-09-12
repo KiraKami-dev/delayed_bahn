@@ -1,0 +1,11 @@
+{
+  "_comment": "The roster. Config, not code. Edit this file to change lineup, headcount, or harness split -- nothing else in the repo needs to change. No role/owns field here on purpose: see state/owners.md and board/tasks.json for who owns what at a given event.",
+  "team_name": "error404.ai",
+  "members": [
+    { "name": "Herit", "harness": "claude-code", "background": "Entrepreneurship + architecture. No coding role." },
+    { "name": "Akshat", "harness": "claude-code", "background": "Next.js, TypeScript, Flutter, Firebase/Supabase, ElevenLabs, Fish Audio Pro" },
+    { "name": "Jonas", "harness": "claude-code", "background": "Python-first, LangChain/LangGraph" },
+    { "name": "Gaurav", "harness": "codex", "background": "Java, JS, Python" },
+    { "name": "Yash", "harness": "codex", "background": "Python only" }
+  ]
+}

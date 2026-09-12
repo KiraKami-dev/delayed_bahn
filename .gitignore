@@ -1,0 +1,34 @@
+# Node dependencies — reinstall with `npm ci` from the committed lockfile
+node_modules/
+
+# Build output — serve.py falls back to the legacy dashboard when absent.
+# Rebuild with: npm --prefix team-setup/board/web run build
+team-setup/board/web/dist/
+
+# Node caches and crash logs
+*.tsbuildinfo
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+.hackos-user
+.hackos-openai-key
+
+# macOS
+.DS_Store
+
+# Deliberately NOT ignored:
+#   package.json / package-lock.json / tsconfig.json / vite.config.ts
+#                     — manifests and lockfiles are owned artifacts (AGENTS.md rule 3)
+#   team-setup/board/web/src/  — this IS the dashboard, not a build artifact
+#   .entire/          — self-managed via .entire/.gitignore; settings.json is shared team config
+#   .agents/ .claude/ — vendored skills + agent hooks, shared with the team

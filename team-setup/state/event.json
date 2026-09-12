@@ -1,0 +1,22 @@
+{
+  "mode": "active",
+  "coordination_branch": "main",
+  "coordination_maintainer": "",
+  "event_name": "",
+  "venue": "",
+  "build_starts": "",
+  "submission_deadline": "",
+  "submit_target_offset_hours": -2,
+  "tracks": [],
+  "tracks_known_in_advance": false,
+  "reveal_window": "",
+  "team_formation_deadline": "",
+  "submission_format": "unknown",
+  "pitch_length_minutes": null,
+  "partners": [],
+  "credits": { "provider": "", "amount": "" },
+  "sleep_rota": [
+    { "shift": "A", "people": [], "window": "" },
+    { "shift": "B", "people": [], "window": "" }
+  ]
+}

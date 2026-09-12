@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# hack-os git hook: post-commit
+# CHAINED: delegates to the Entire CLI first, then writes the hack-os
+# change log. Git allows only one post-commit file, so both live here.
+# The Entire block is a no-op when the CLI is absent (teammates without it).
+# Appends one JSON line to local Git metadata for every commit, from
+# every teammate, regardless of harness (git hooks work for everyone — see
+# AGENTS.md rule 3 / spec Part 2 rule 3). Never fails, never blocks, always
+# exits 0. Never amends the commit or creates a new one.
+set -u
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [ -z "$ROOT" ]; then
+  exit 0
+fi
+
+# --- chained: Entire CLI session condensation (never blocks) -------------
+if command -v entire >/dev/null 2>&1; then
+  entire hooks git post-commit 2>/dev/null || true
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "hack-os post-commit: python3 not found, skipping change log" >&2
+  exit 0
+fi
+
+SHA="$(git rev-parse HEAD 2>/dev/null)"
+AUTHOR="$(git log -1 --format='%an' 2>/dev/null)"
+MESSAGE="$(git log -1 --format='%s' 2>/dev/null)"
+FILES="$(git diff-tree --root --no-commit-id --name-only -r HEAD 2>/dev/null)"
+LOG_PATH="$(git rev-parse --git-path hackos-changes.jsonl 2>/dev/null)"
+[ -n "$LOG_PATH" ] || exit 0
+
+HACKOS_SHA="$SHA" HACKOS_AUTHOR="$AUTHOR" HACKOS_MESSAGE="$MESSAGE" \
+HACKOS_FILES="$FILES" HACKOS_ROOT="$ROOT" HACKOS_LOG_PATH="$LOG_PATH" \
+python3 - <<'PYEOF' 2>/dev/null
+import json, os
+from datetime import datetime
+
+root = os.environ.get("HACKOS_ROOT", ".")
+state_dir = os.path.join(root, "team-setup", "state")
+
+
+def t_plus(build_starts):
+    if not build_starts:
+        return None
+    try:
+        start = datetime.fromisoformat(build_starts)
+    except Exception:
+        return None
+    delta = datetime.now(start.tzinfo) - start
+    total_minutes = int(delta.total_seconds() // 60)
+    sign = "-" if total_minutes < 0 else "+"
+    total_minutes = abs(total_minutes)
+    return "T{}{:02d}:{:02d}".format(sign, total_minutes // 60, total_minutes % 60)
+
+
+event = {}
+try:
+    with open(os.path.join(state_dir, "event.json")) as f:
+        event = json.load(f)
+except Exception:
+    pass
+
+stage = None
+try:
+    with open(os.path.join(state_dir, "pipeline.json")) as f:
+        stage = json.load(f).get("current_stage")
+except Exception:
+    pass
+
+entry = {
+    "timestamp": datetime.now().isoformat(timespec="seconds"),
+    "t_offset": t_plus(event.get("build_starts")),
+    "author": os.environ.get("HACKOS_AUTHOR", ""),
+    "sha": os.environ.get("HACKOS_SHA", ""),
+    "message": os.environ.get("HACKOS_MESSAGE", ""),
+    "files": [f for f in os.environ.get("HACKOS_FILES", "").splitlines() if f],
+    "stage": stage,
+}
+
+try:
+    log_path = os.path.join(root, os.environ["HACKOS_LOG_PATH"])
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    with open(log_path, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+except Exception:
+    pass
+PYEOF
+
+exit 0
