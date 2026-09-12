@@ -1,0 +1,30 @@
+{
+  "station": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+  "attributionRate": 0.3,
+  "families": {
+    "works": 0.09,
+    "weather": 0.03,
+    "technical": 0.07,
+    "knock_on": 0.08,
+    "staff": 0.02,
+    "external": 0.01,
+    "unattributed": 0.7
+  },
+  "top": [
+    { "code": 43, "text": "Verspätung eines vorausfahrenden Zuges", "share": 0.08 },
+    { "code": 31, "text": "Bauarbeiten", "share": 0.07 },
+    { "code": 36, "text": "Technische Störung am Zug", "share": 0.05 },
+    { "code": 4, "text": "Kurzfristiger Personalausfall", "share": 0.02 },
+    { "code": 18, "text": "Unwetter", "share": 0.02 }
+  ],
+  "sparkline7d": [
+    { "date": "2026-09-06", "meanDelayMin": 4.1 },
+    { "date": "2026-09-07", "meanDelayMin": 5.3 },
+    { "date": "2026-09-08", "meanDelayMin": 6.8 },
+    { "date": "2026-09-09", "meanDelayMin": 5.9 },
+    { "date": "2026-09-10", "meanDelayMin": 7.4 },
+    { "date": "2026-09-11", "meanDelayMin": 8.2 },
+    { "date": "2026-09-12", "meanDelayMin": 6.1 }
+  ],
+  "source": "piebro/deutsche-bahn-data (DB IRIS cause codes), Munich region — illustrative until the db_route pipeline output lands"
+}

@@ -1,0 +1,11 @@
+Nürnberg Hbf → München Flughafen Terminal
+Sun 13.09.2026
+RB16 (59143)
+To München Hbf
+From 04:34 Nürnberg Hbf, Platform 5 C-F
+To 07:25 München Hbf, Platform 21
+S8 (6815)
+To München Flughafen Terminal
+From 07:41 München Hbf, Platform 2
+To 08:22 München Flughafen Terminal, Platform 1
+View journey: https://int.bahn.de/en/buchung/start?vbid=0f3a6c1e-1111-4222-8333-444455556666

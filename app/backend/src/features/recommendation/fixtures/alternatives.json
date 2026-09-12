@@ -1,0 +1,24 @@
+{
+  "8000284->8004167": {
+    "id": "seed-nue-muc-airport-alt",
+    "source": "seed",
+    "legs": [
+      {
+        "trainId": "RB 16",
+        "trainNumber": "59141",
+        "from": { "evaNumber": "8000284", "name": "Nürnberg Hbf", "lat": 49.4456, "lon": 11.0823 },
+        "to": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+        "plannedDeparture": "2026-09-13T03:34:00+02:00",
+        "plannedArrival": "2026-09-13T06:25:00+02:00",
+        "transferMinutes": 16
+      },
+      {
+        "trainId": "S 8",
+        "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+        "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+        "plannedDeparture": "2026-09-13T06:41:00+02:00",
+        "plannedArrival": "2026-09-13T07:22:00+02:00"
+      }
+    ]
+  }
+}

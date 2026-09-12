@@ -1,0 +1,14 @@
+Connection 1
+Sun 13.09.2026
+ICE 1005 (1005)
+From 06:34 Berlin Hbf, Platform 12
+---
+Connection 2
+Sun 13.09.2026
+RB16 (59143)
+From 04:34 Nürnberg Hbf, Platform 5 C-F
+To 07:25 München Hbf, Platform 21
+Change 16 min
+S8 (6815)
+From 07:41 München Hbf, Platform 2
+To 08:22 München Flughafen Terminal, Platform 1

@@ -1,0 +1,74 @@
+{
+  "station": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+  "options": [
+    {
+      "label": "Next S 8 · 10 min later",
+      "arrivalDelayMinutes": 10,
+      "planFailProbability": {
+        "value": 0.04,
+        "reasoning": "You are already at München Hbf; only the S 8's own cancellation risk (3%) and a long delay remain.",
+        "sources": ["connection.py chain", "mock: train-class × hour prior v1"],
+        "confidence": "low"
+      },
+      "journey": {
+        "id": "seed-reroute-1",
+        "source": "manual",
+        "legs": [
+          {
+            "trainId": "S 8",
+            "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+            "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+            "plannedDeparture": "2026-09-13T07:51:00+02:00",
+            "plannedArrival": "2026-09-13T08:32:00+02:00"
+          }
+        ]
+      }
+    },
+    {
+      "label": "S 1 via Neufahrn · 15 min later",
+      "arrivalDelayMinutes": 15,
+      "planFailProbability": {
+        "value": 0.05,
+        "reasoning": "Alternative S-Bahn line to the airport from the same platform group; similar reliability.",
+        "sources": ["connection.py chain", "mock: train-class × hour prior v1"],
+        "confidence": "low"
+      },
+      "journey": {
+        "id": "seed-reroute-2",
+        "source": "manual",
+        "legs": [
+          {
+            "trainId": "S 1",
+            "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+            "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+            "plannedDeparture": "2026-09-13T07:56:00+02:00",
+            "plannedArrival": "2026-09-13T08:37:00+02:00"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Next S 8 · 20 min later",
+      "arrivalDelayMinutes": 20,
+      "planFailProbability": {
+        "value": 0.04,
+        "reasoning": "Second S 8 after the missed one.",
+        "sources": ["connection.py chain", "mock: train-class × hour prior v1"],
+        "confidence": "low"
+      },
+      "journey": {
+        "id": "seed-reroute-3",
+        "source": "manual",
+        "legs": [
+          {
+            "trainId": "S 8",
+            "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+            "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+            "plannedDeparture": "2026-09-13T08:01:00+02:00",
+            "plannedArrival": "2026-09-13T08:42:00+02:00"
+          }
+        ]
+      }
+    }
+  ]
+}

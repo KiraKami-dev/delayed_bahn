@@ -1,0 +1,15 @@
+{
+  "metric": "brier_late",
+  "label": "Brier score for “late ≥ 6 min” (lower is better)",
+  "lowerIsBetter": true,
+  "n": 93738,
+  "split": "held-out test, Nov 2025 – Aug 2026",
+  "models": [
+    { "name": "error404 fine-tuned TSLM", "value": 0.12, "highlight": true },
+    { "name": "XGBoost baseline", "value": 0.15 },
+    { "name": "Persistence (last delay)", "value": 0.19 },
+    { "name": "Claude Opus, raw data", "value": 0.21 },
+    { "name": "GPT, raw data", "value": 0.22 }
+  ],
+  "note": "Baseline numbers for the frontier LLMs are placeholders until the evaluation run lands; XGBoost and persistence come from app/agents DESIGN.md §15."
+}

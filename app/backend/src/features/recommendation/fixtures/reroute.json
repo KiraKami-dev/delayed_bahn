@@ -1,0 +1,40 @@
+{
+  "8000261->8004167": [
+    {
+      "label": "Next S 8, 10 min later",
+      "legs": [
+        {
+          "trainId": "S 8",
+          "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+          "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+          "plannedDeparture": "2026-09-13T07:51:00+02:00",
+          "plannedArrival": "2026-09-13T08:32:00+02:00"
+        }
+      ]
+    },
+    {
+      "label": "S 1 via Neufahrn, 20 min later",
+      "legs": [
+        {
+          "trainId": "S 1",
+          "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+          "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+          "plannedDeparture": "2026-09-13T08:01:00+02:00",
+          "plannedArrival": "2026-09-13T08:45:00+02:00"
+        }
+      ]
+    },
+    {
+      "label": "S 8, 30 min later",
+      "legs": [
+        {
+          "trainId": "S 8",
+          "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+          "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+          "plannedDeparture": "2026-09-13T08:11:00+02:00",
+          "plannedArrival": "2026-09-13T08:52:00+02:00"
+        }
+      ]
+    }
+  ]
+}
