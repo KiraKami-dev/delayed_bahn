@@ -1,0 +1,25 @@
+Is entire correctly set up?
+
+---
+
+Are the Entire skills installed?
+
+---
+
+And what are Entire plugins?
+
+---
+
+"- graph. A deterministic local code graph for symbol search, relationship tracing, and change-impact analysis." what does this do?
+
+---
+
+Can you set this up?
+
+---
+
+Can you check what they recommend, how to do it?
+
+---
+
+I think we just leave it? Cause I feel like another entire graph brings that back, right?
