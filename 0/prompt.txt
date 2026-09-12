@@ -606,3 +606,11 @@ nope, too slow, start a faster one, do whatever on nebius, i need it to run on n
 <status>completed</status>
 <summary>Background command "Wait seven minutes then check progress" completed (exit code 0)</summary>
 </task-notification>
+
+---
+
+commit and push the code and everything but obviously on a different branch
+
+---
+
+commit and push the code and everything but obviously on a different branch, before that pull latest obviously

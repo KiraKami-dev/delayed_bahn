@@ -4,9 +4,7 @@
   "strategy": "manual-commit",
   "branch": "feat/db-route-multiscale",
   "checkpoints_count": 32,
-  "files_touched": [
-    "app/agents/src/features/db_route/remote_extract.py"
-  ],
+  "files_touched": null,
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -17,17 +15,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 512,
-    "cache_creation_tokens": 235368,
-    "cache_read_tokens": 202120937,
-    "output_tokens": 167685,
-    "api_call_count": 256,
-    "subagent_tokens": {
-      "input_tokens": 82,
-      "cache_creation_tokens": 65091,
-      "cache_read_tokens": 8922445,
-      "output_tokens": 40811,
-      "api_call_count": 41
-    }
+    "input_tokens": 896,
+    "cache_creation_tokens": 858594,
+    "cache_read_tokens": 281906460,
+    "output_tokens": 454680,
+    "api_call_count": 448
   }
 }
