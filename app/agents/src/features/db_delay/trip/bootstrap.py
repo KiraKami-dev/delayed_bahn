@@ -36,14 +36,22 @@ def main() -> None:
     parser.add_argument("--b", required=True, help="name=path.npz of the reference")
     parser.add_argument("--examples", default="data/trip/examples.parquet")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--lead-min", type=float, default=None,
+                        help="keep examples with at least this many minutes to planned arrival")
+    parser.add_argument("--lead-max", type=float, default=None,
+                        help="keep examples with at most this many minutes to planned arrival")
     args = parser.parse_args()
 
     name_a, ids_a, q_a = load(args.a)
     name_b, ids_b, q_b = load(args.b)
     shared = ids_a.merge(ids_b, on="example_id", suffixes=("_a", "_b"))
-    examples = pd.read_parquet(args.examples, columns=["example_id", "target_minutes", "cancelled"])
-    shared = shared.merge(examples, on="example_id")
+    columns = ["example_id", "target_minutes", "cancelled", "lead_minutes"]
+    shared = shared.merge(pd.read_parquet(args.examples, columns=columns), on="example_id")
     shared = shared[~shared["cancelled"]]
+    if args.lead_min is not None:
+        shared = shared[shared["lead_minutes"] >= args.lead_min]
+    if args.lead_max is not None:
+        shared = shared[shared["lead_minutes"] <= args.lead_max]
     y = shared["target_minutes"].to_numpy(dtype=np.float64)
     qa, qb = q_a[shared["row_a"].to_numpy()], q_b[shared["row_b"].to_numpy()]
 
@@ -53,7 +61,9 @@ def main() -> None:
     }
     rng = np.random.default_rng(args.seed)
     draws = rng.integers(0, len(y), size=(RESAMPLES, len(y)))
-    print(f"{name_a} minus {name_b} on {len(y)} shared examples that ran ({RESAMPLES} resamples):")
+    lead = "" if args.lead_min is None and args.lead_max is None else \
+        f", lead {args.lead_min or 0:g} to {args.lead_max if args.lead_max is not None else 'inf'} min"
+    print(f"{name_a} minus {name_b} on {len(y)} shared examples that ran{lead} ({RESAMPLES} resamples):")
     for metric, d in diffs.items():
         means = d[draws].mean(axis=1)
         low, high = np.percentile(means, [2.5, 97.5])
