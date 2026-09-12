@@ -561,8 +561,11 @@ Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against X
 
 ### Still open
 
-- **TimeF export is quadratic in TimeNet's in-memory conversion** (16k records take 57 s; all 298k
-  would take hours). Export in chunks.
+- **TimeF export, resolved:** `add_tasks` re-collected every task and record id per call, so the
+  export was quadratic (16k records in 57 s). Tasks now go through TimeNet's `set_task_stream`,
+  and the exporter skips TimeNet's per-task record-id scan for task types without record
+  references. The full dataset (298,430 records, 582,059 tasks, 88 MB) converts in 93 s and
+  writes in 287 s, and TimeNet's `verify()` passes on the result.
 - **Team backend bug:** injected job files are sent as plain text instead of base64.
 
 ## Sources
