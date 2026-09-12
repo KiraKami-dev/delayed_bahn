@@ -5,69 +5,66 @@ hack-os bootstrap — starting
   [ok]   python3 — Python 3.14.7
 
 2/10 installing git hooks
-hack-os hooks: installed post-commit
-hack-os hooks: installed pre-push
+hack-os hooks: post-commit already current
+hack-os hooks: pre-push already current
 hack-os hooks: claude-session-start.sh ready
 hack-os hooks: claude-prompt-submit.sh ready
 hack-os hooks: codex-prompt-submit.sh ready
-hack-os hooks: install complete
-  [ok]   git hooks — post-commit + pre-push installed to .git/hooks
+hack-os hooks: install finished; prompt capture remains disabled unless explicitly opted in
+  [ok]   git hooks — local hooks installed or already current
 
-3/10 entire.io CLI (agent session <-> commit linking)
-  [ok]   entire CLI — Entire CLI 0.10.6
+3/10 optional session tools
+  [ok]   session tools — not required; no downloads, prompt capture, or external telemetry installed
 
 4/10 detecting product stack in app/
-  [warn] frontend stack — stack not chosen yet (package.json is still the placeholder) — nothing to install
-  [warn] backend stack — stack not chosen yet (package.json is still the placeholder) — nothing to install
-  [warn] agents stack — stack not chosen yet (pyproject.toml is still the placeholder) — nothing to install
+  -> found app/backend/package.json (may be a placeholder; no dependencies installed)
+  -> found app/frontend/package.json (may be a placeholder; no dependencies installed)
+  -> found app/agents/pyproject.toml (may be a placeholder; no dependencies installed)
+  [ok]   product setup — separate from coordination bootstrap; follow the chosen stack's README after ownership is assigned
 
 5/10 identifying you
-  auto-detected name: Akshat Khair (from git config user.name; team.json unreadable or empty roster falls back to the raw git name)
-  [ok]   identity — you are Akshat Khair (.hackos-user written, auto-detected — re-run './bootstrap.sh' yourself to fix interactively if wrong)
+  [warn] identity — unconfirmed is not a unique roster match; no ownership inferred. Run ./bootstrap.sh interactively.
 
 6/10 confirming your harness
   auto-detected harness: claude-code (auto-detected from Claude Code's own env vars)
-  [ok]   harness — claude-code auto-detected for Akshat Khair — re-run './bootstrap.sh' yourself to confirm interactively
+  [ok]   harness — claude-code auto-detected for unconfirmed — re-run './bootstrap.sh' yourself to confirm interactively
 
 7/10 harness-specific next steps
   [ok]   claude CLI — found on PATH
-  -> run: /plugin install superpowers@claude-plugins-official
-  -> confirm .claude/settings.json hooks (SessionStart, UserPromptSubmit, Agent Teams flag) load on next launch
-  -> approve the project MCP servers when Claude Code prompts on first launch in this repo
+  -> AGENTS.md is the shared procedure; SessionStart is optional
+  -> prompt capture and agent teams are off by default
+  -> approve/authenticate only optional MCP servers you actually need
 
 8/10 MCP authentication reminder
   MCP connections are per-person OAuth and are NOT inherited from cloning
   this repo. Each teammate authenticates individually. Do this the day
-  before the event, not on the day. Servers configured in .mcp.json:
-   - context7
-   - github
-   - serena
-   - playwright
-  [ok]   MCP config — .mcp.json present, see servers listed above
+  before the event if needed. Optional servers, not onboarding requirements:
+  Servers configured in .mcp.json:
+  [warn] MCP config — .mcp.json missing or python3 unavailable to list it
 
 9/10 dashboard
-  -> run: python3 team-setup/board/serve.py
-  Both the technical view and the PM view are the same server, toggled
-  on the page — no separate command for either.
-  [ok]   dashboard — python3 available, dashboard can run
+  -> new UI: npm --prefix team-setup/board/web ci (once), then npm --prefix team-setup/board/web run dev
+  -> built UI or no-install fallback: python3 team-setup/board/serve.py
+  The API and UI use the same repository state; no product dependencies are installed here.
+  [ok]   dashboard API — Python runtime available; start the server to verify readiness
+  [ok]   dashboard UI — built frontend available for the Python server
 
 10/10 summary
 -----------------------------------------------------------------
 CHECK            STATUS DETAIL
 git              PASS   git version 2.50.1 (Apple Git-155)
 python3          PASS   Python 3.14.7
-git hooks        PASS   post-commit + pre-push installed to .git/hooks
-entire CLI       PASS   Entire CLI 0.10.6
-frontend stack   WARN   stack not chosen yet (package.json is still the placeholder) — nothing to install
-backend stack    WARN   stack not chosen yet (package.json is still the placeholder) — nothing to install
-agents stack     WARN   stack not chosen yet (pyproject.toml is still the placeholder) — nothing to install
-identity         PASS   you are Akshat Khair (.hackos-user written, auto-detected — re-run './bootstrap.sh' yourself to fix interactively if wrong)
-harness          PASS   claude-code auto-detected for Akshat Khair — re-run './bootstrap.sh' yourself to confirm interactively
+git hooks        PASS   local hooks installed or already current
+session tools    PASS   not required; no downloads, prompt capture, or external telemetry installed
+product setup    PASS   separate from coordination bootstrap; follow the chosen stack's README after ownership is assigned
+identity         WARN   unconfirmed is not a unique roster match; no ownership inferred. Run ./bootstrap.sh interactively.
+harness          PASS   claude-code auto-detected for unconfirmed — re-run './bootstrap.sh' yourself to confirm interactively
 claude CLI       PASS   found on PATH
-MCP config       PASS   .mcp.json present, see servers listed above
-dashboard        PASS   python3 available, dashboard can run
+MCP config       WARN   .mcp.json missing or python3 unavailable to list it
+dashboard API    PASS   Python runtime available; start the server to verify readiness
+dashboard UI     PASS   built frontend available for the Python server
 -----------------------------------------------------------------
-Current stage: reveal-capture (all — one scout per track, per owners.md)
+No active event; fictional examples are inactive. Initialize only after approval.
 
 hack-os bootstrap — done (ran in auto mode: identity/harness were
 inferred, not confirmed by a human). Two things still need you

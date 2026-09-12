@@ -1,0 +1,9 @@
+{
+  "name": "nvidia-smi-check",
+  "image": "nvidia/cuda:13.1.1-runtime-ubuntu24.04",
+  "command": "bash",
+  "args": "-c nvidia-smi",
+  "platform": "gpu-l40s-a",
+  "preset": "1gpu-8vcpu-32gb",
+  "timeout": "1h"
+}

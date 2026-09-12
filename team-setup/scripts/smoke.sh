@@ -8,7 +8,7 @@
 # Fill this in once the team picks a stack on the day. Leave commands blank
 # to skip that check. Examples are commented out below.
 SMOKE_HEALTH_URL="${SMOKE_HEALTH_URL:-}"            # e.g. "http://localhost:3000/api/health"
-SMOKE_COMMAND="${SMOKE_COMMAND:-}"                # e.g. "cd app/backend && npm run smoke"
+SMOKE_COMMAND="${SMOKE_COMMAND:-npm --prefix app/backend test --silent}"   # offline backend tests
 SMOKE_EXPECTED_TEXT="${SMOKE_EXPECTED_TEXT:-}"          # optional: text that must appear in the health response
 # Example filled-in config for a Next.js + FastAPI stack:
 #   SMOKE_HEALTH_URL="http://localhost:8000/health"

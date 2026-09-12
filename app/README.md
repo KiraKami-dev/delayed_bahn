@@ -22,11 +22,17 @@ Who owns which folder is decided fresh per event and lives only in
 
 ## Running everything together
 
-Stack isn't chosen yet in this template, so there's no single command
-until the team picks one. Once `frontend/package.json`,
-`backend/package.json` (or `pyproject.toml`/`pom.xml`), and
-`agents/pyproject.toml` have real dependencies filled in, add the actual
-run command here — e.g.:
+Backend is Node ≥ 22 with zero dependencies; frontend and agents stacks are
+still placeholders. Current run commands:
+
+```bash
+(cd app/backend && npm run dev) &        # http://localhost:8000/api/health
+cd app/backend && npm run train -- doctor   # Nebius GPU training setup check
+```
+
+GPU training runs on Nebius Serverless AI jobs via
+`backend/src/features/training-jobs/` (see its README). Once the other
+folders have real dependencies filled in, extend this — e.g.:
 
 ```bash
 # example once a Next.js + FastAPI + Python-agents stack is chosen:
