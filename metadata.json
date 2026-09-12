@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M2BSGJ7XBRKXQHAETSQ34BPD",
+  "strategy": "manual-commit",
+  "branch": "feat/db-route-multiscale",
+  "checkpoints_count": 19,
+  "files_touched": [
+    "app/agents/src/features/db_route/anchors.py",
+    "app/agents/src/features/db_route/entities.py",
+    "app/agents/src/features/db_route/facts.py",
+    "app/agents/src/features/db_route/tests/test_bridge.py",
+    "app/backend/.env.example",
+    "app/backend/src/features/training-jobs/nebius/spec.js",
+    "app/backend/src/features/training-jobs/training-jobs.test.js"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 342,
+    "cache_creation_tokens": 178623,
+    "cache_read_tokens": 127917661,
+    "output_tokens": 127161,
+    "api_call_count": 171,
+    "subagent_tokens": {
+      "input_tokens": 82,
+      "cache_creation_tokens": 65091,
+      "cache_read_tokens": 8922445,
+      "output_tokens": 40811,
+      "api_call_count": 41
+    }
+  }
+}
