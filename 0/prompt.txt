@@ -1,0 +1,27 @@
+How would we get an API key for DB? And is there any review it has to go through or can we get that instantly for a hackathon?
+
+---
+
+How would I fell out this though? I sem to need it: "Anwendung erstellen
+
+Titel Title is limited to 255 characters, remaining: 255
+Zertifikat
+
+Fügen Sie den Inhalt des x509-Zertifikats Ihrer Anwendung ein.
+Beschreibung
+Description is limited to 65535 characters, remaining: 65535
+OAuth-Umleitungs-URL(s) der Anwendung
+
+"
+
+---
+
+Let's do something serious if they review it
+
+---
+
+Just a title though
+
+---
+
+Ok, now I got a client id and client secret (api key). Can you just do a super minimal cli to test it? Lik eenter a train station and show e.g. the next departures. And for the secrets you can do a .env and a .env.example and I add the stuff. Just to check if the API is working
