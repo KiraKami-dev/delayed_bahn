@@ -511,6 +511,24 @@ Test, the same 5,000 seeded examples for every model:
 - **The plain loss beats the soft targets on CRPS** at equal steps: -0.041 (-0.069 to -0.011), with
   no difference in median error.
 
+Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against XGBoost:
+
+| Model | Median error | CRPS | 10 to 90% coverage | Brier late | Cancel log loss |
+|---|---|---|---|---|---|
+| XGBoost | 3.462 | 2.759 | 0.825 | 0.087 | 0.143 |
+| TSLM, plain cross-entropy | 3.477 | 2.774 | 0.905 | 0.089 | 0.158 |
+| Blend, one weight | 3.461 | 2.757 | 0.839 | 0.088 | 0.142 |
+| Blend by lead time | 3.427 | 2.731 | 0.835 | 0.087 | 0.142 |
+
+- **Confirmed on the full test set** (88,479 examples that ran, paired bootstrap): the lead-time
+  blend beats XGBoost, CRPS -0.028 (-0.039 to -0.019) and median error -0.035 (-0.047 to -0.024).
+  The TSLM alone beats XGBoost within 15 minutes of arrival (36,556 examples: CRPS -0.055, -0.081 to
+  -0.034; median error -0.081, -0.112 to -0.056; 0.991 against 1.072 minutes) and loses beyond it
+  (15 to 30 minutes +0.026, 30 minutes and more +0.076 CRPS), so overall alone it is slightly worse
+  (+0.015, +0.002 to +0.027). The weights fitted on validation put 0.95 on the TSLM within 15
+  minutes and 0.1 to 0.3 further out. Free text is not the bottleneck either: every generated
+  answer parsed.
+
 - **Single models do not differ significantly.** Paired bootstrap on the 4,729 test examples that
   ran (95% intervals of the CRPS difference): main minus XGBoost +0.003 (-0.059 to +0.054); plain
   minus XGBoost -0.018 (-0.080 to +0.034); plain minus main -0.021 (-0.050 to +0.010); plain global
