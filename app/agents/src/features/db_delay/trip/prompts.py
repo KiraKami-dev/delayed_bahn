@@ -76,6 +76,13 @@ def rationale(row: pd.Series) -> str:
                      f"minutes (90th percentile {row['hist_p90']:.0f}) and {pct(row['hist_cancel_share'])} cancelled.")
     else:
         parts.append(f"There is too little recent history at {stop} to lean on.")
+    if subject and "hist_median_long" in row and int(row["hist_window_days"]) > 30:
+        # Longer and shorter scales of the same history, so the model can weigh trend against base rate.
+        parts.append(f"Over {int(row['hist_window_days'])} days the median was {row['hist_median_long']:.0f} minutes "
+                     f"(90th percentile {row['hist_p90_long']:.0f}); over the last 7 days it was {row['hist_median_7']:.0f}.")
+    if "station_late_same_hour" in row and len(row["station_series"]) >= 168:
+        parts.append(f"At this time of day, {pct(row['station_late_same_hour'])} of stops at {stop} ran late over the "
+                     f"last {len(row['station_series']) // 24} days, {pct(row['network_late_same_hour'])} nationwide.")
     parts.append(f"At {stop}, {pct(row['station_late_3h'])} of stops ran at least 6 minutes late in the last "
                  f"3 hours, against {pct(row['station_late_72h'])} over 3 days.")
     parts.append(f"Nationwide, {pct(row['network_late_3h'])} of {row['cls']} stops were late in the last 3 hours, "
@@ -95,6 +102,7 @@ def as_text(values: np.ndarray) -> str:
 
 MODES = ("series", "text", "both")
 TEXT_HOURS = 72  # the prompt never carries more than this many hourly values; the encoder gets them all
+TEXT_DAYS = 30  # likewise for the daily route history
 
 
 def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dict:
@@ -122,7 +130,7 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dic
     run = as_list(row["run_delays"])
     raw = [
         ("Departure delay at each stop so far" if run else "No departures yet", run or [0.0], "minutes"),
-        (f"Daily median arrival delay at {stop}, last 30 days", row["hist_series"], "minutes"),
+        (f"Daily median arrival delay at {stop}, last {len(row['hist_series'])} days", row["hist_series"], "minutes"),
         (f"Hourly share of late stops at {stop}, last {len(row['station_series'])} hours", row["station_series"], "share"),
         (f"Hourly share of late {row['cls']} stops nationwide, last {len(row['network_series'])} hours",
          row["network_series"], "share"),
@@ -135,6 +143,9 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series") -> dic
             if unit == "share" and len(values) > TEXT_HOURS:  # long hourly series: the text gets the recent end
                 values = values[-TEXT_HOURS:]
                 label = label.rsplit(", last ", 1)[0] + f", last {TEXT_HOURS} hours"
+            elif "Daily median" in label and len(values) > TEXT_DAYS:
+                values = values[-TEXT_DAYS:]
+                label = label.rsplit(", last ", 1)[0] + f", last {TEXT_DAYS} days"
             lines.append(f"{label}, in {'percent' if unit == 'share' else unit}: "
                          f"{as_text(values * (100 if unit == 'share' else 1))}")
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)

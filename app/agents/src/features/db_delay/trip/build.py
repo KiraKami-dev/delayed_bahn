@@ -314,10 +314,17 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
         level[ok] = lv
         n_obs[ok] = n[ok]
         n_canc[ok] = c[ok]
+    # The 30-day statistics keep their meaning when the history window is longer; the longer
+    # window and the last week are separate columns, so the prompt can speak of several scales.
+    recent = chosen[:, -min(30, cfg.history_days):]
     with np.errstate(all="ignore"):
-        hist_median = np.nan_to_num(np.nanmedian(chosen, axis=1))
-        hist_p90 = np.nan_to_num(np.nanpercentile(chosen, 90, axis=1))
-        hist_mean = np.nan_to_num(np.nanmean(chosen, axis=1))
+        hist_median = np.nan_to_num(np.nanmedian(recent, axis=1))
+        hist_p90 = np.nan_to_num(np.nanpercentile(recent, 90, axis=1))
+        hist_mean = np.nan_to_num(np.nanmean(recent, axis=1))
+        hist_median_long = np.nan_to_num(np.nanmedian(chosen, axis=1))
+        hist_p90_long = np.nan_to_num(np.nanpercentile(chosen, 90, axis=1))
+        hist_median_7 = np.nanmedian(chosen[:, -7:], axis=1)
+    hist_median_7 = np.where(np.isnan(hist_median_7), hist_median, hist_median_7)
     hist_days = np.isfinite(chosen).sum(axis=1)
     filled = pd.DataFrame(chosen).ffill(axis=1).to_numpy()
     filled = np.where(np.isnan(filled), hist_median[:, None], filled)
@@ -326,6 +333,20 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
     st_n = fixed(table, "st_n", cfg.series_hours)[:, ::-1]
     nw_late = fixed(table, "nw_late", cfg.series_hours)[:, ::-1]
     nw_n = fixed(table, "nw_n", cfg.series_hours)[:, ::-1]
+
+    def same_hour_share(late: np.ndarray, n: np.ndarray) -> np.ndarray:
+        """Share of late stops at the planned arrival's hour of day, over the whole hourly window.
+
+        The series ends with the hour before the prediction moment, so the column of hour h sits
+        at offsets (t0 hour - h) mod 24 from the end, and every 24 hours before that."""
+        t0_hour = pd.to_datetime(table["t0"].to_pandas()).dt.hour.to_numpy()
+        arr_hour = pd.to_datetime(table["k_arr_pt"].to_pandas()).dt.hour.to_numpy()
+        hours = late.shape[1]
+        offsets = (t0_hour - 1 - arr_hour) % 24  # index from the end of the series
+        idx = np.arange(hours)[None, :]
+        mask = ((hours - 1 - idx) % 24) == offsets[:, None]
+        weights = np.where(mask & np.isfinite(late), n, 0.0)
+        return np.where(weights.sum(axis=1) > 0, np.nansum(late * weights, axis=1) / np.maximum(weights.sum(axis=1), 1), 0.0)
 
     run_delays = table["run_delays"].to_pylist()
     current = np.array([d[-1] if d else 0 for d in run_delays], dtype=np.float64)
@@ -354,6 +375,12 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
         "hist_cancel_share": pa.array(np.where(n_obs + n_canc > 0, n_canc / np.maximum(n_obs + n_canc, 1), 0.0)),
         "hist_median": pa.array(hist_median),
         "hist_p90": pa.array(hist_p90),
+        "hist_median_long": pa.array(hist_median_long),
+        "hist_p90_long": pa.array(hist_p90_long),
+        "hist_median_7": pa.array(hist_median_7),
+        "hist_window_days": pa.array(np.full(rows, cfg.history_days)),
+        "station_late_same_hour": pa.array(same_hour_share(st_late, st_n)),
+        "network_late_same_hour": pa.array(same_hour_share(nw_late, nw_n)),
         "hist_mean": pa.array(hist_mean),
         "hist_days": pa.array(hist_days.astype(np.float64)),
         "current_delay": pa.array(current),
@@ -410,6 +437,7 @@ def main() -> None:
     parser.add_argument("--test-start")
     parser.add_argument("--label-cutoff", help="drop targets planned at or after this local time")
     parser.add_argument("--series-hours", type=int, help="length of the hourly station and network series (default 72)")
+    parser.add_argument("--history-days", type=int, help="length of the daily route history (default 30)")
     args = parser.parse_args()
     files = tuple(str(Path(args.raw) / f"data-{m}.parquet") for m in args.months)
     base = Config(files=files)
@@ -417,6 +445,8 @@ def main() -> None:
                  "test_start": args.test_start, "label_cutoff": args.label_cutoff}.items() if value}
     if args.series_hours:
         overrides["series_hours"] = args.series_hours
+    if args.history_days:
+        overrides["history_days"] = args.history_days
     cfg = replace(base, examples_per_class={k: int(v * args.scale) for k, v in base.examples_per_class.items()},
                   **overrides)
     build(cfg, Path(args.out))
