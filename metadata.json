@@ -129,15 +129,15 @@
       "transcript": "/2/full.jsonl",
       "compact_transcript": "/2/transcript.jsonl",
       "content_hash": "/2/content_hash.txt",
-      "prompt": "/2/prompt.txt"
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 362,
-    "cache_creation_tokens": 39519,
-    "cache_read_tokens": 1201403,
-    "output_tokens": 7499,
-    "api_call_count": 16
+    "input_tokens": 356,
+    "cache_creation_tokens": 34403,
+    "cache_read_tokens": 954818,
+    "output_tokens": 6539,
+    "api_call_count": 13
   },
   "combined_attribution": {
     "calculated_at": "2026-09-12T22:46:18.942085Z",
