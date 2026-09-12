@@ -282,3 +282,52 @@ def test_the_profile_ladder_stays_inside_the_encoder_cap():
             assert layer.n_steps <= bridge.MAX_SERIES_SAMPLES
             assert layer.n_steps % 4 == 0
     assert TINY.n_series == 2
+
+
+# --- the two ablations that catch a model ignoring the charts ---------------
+# Splits catch a model memorising examples. Neither of these does -- they catch a
+# model that never read the series at all, which a split cannot distinguish from
+# genuine skill. A test that only asserts the flags exist would miss the failure
+# mode where a flag is wired but ablates nothing, so each of these compares the
+# ablated input against the honest one.
+
+
+def test_caption_only_removes_the_shape_but_keeps_the_scale(dataset):
+    """The ablation must zero the numbers and change nothing else.
+
+    Captions carry the pre-normalization mean and std, so they still tell the
+    model the absolute level. If a caption-only run scores near the full one, the
+    model was reading those two summary statistics and never the shape -- which
+    is the thing the whole time-series encoder exists to do.
+    """
+    record = dataset.records[0]
+    honest_captions, honest = captioned_series(record)
+    ablated_captions, ablated = captioned_series(record, caption_only=True)
+
+    assert ablated_captions == honest_captions, "captions must survive verbatim"
+    assert any(np.any(a != 0) for a in honest), "fixture must have a non-zero series"
+    assert all(np.all(a == 0) for a in ablated), "every series must be zeroed"
+    assert [a.shape for a in ablated] == [a.shape for a in honest]
+    assert any("mean" in c and "std" in c for c in ablated_captions), (
+        "the scale must still reach the model, or this ablation tests the wrong thing"
+    )
+
+
+def test_the_text_baseline_carries_no_series_array(dataset):
+    """The no-connector baseline: same numbers, serialised as words.
+
+    This is what proves the connector earns its place. If the TSLM only matches
+    it, the encoder, the projector and the whole TimeNet path bought nothing.
+    """
+    record = dataset.records[0]
+    _, honest = captioned_series(record)
+    assert honest and honest[0].size > 0
+
+    sample = build_sample(BridgeRow(record, dataset.tasks_for(record)[0]))
+    assert set(sample) == {"pre_prompt", "time_series_text", "time_series", "post_prompt", "answer"}
+    assert len(sample["time_series"]) == len(sample["time_series_text"]), (
+        "captions and arrays are positionally aligned; a mismatch silently "
+        "mislabels every series"
+    )
+    for array in sample["time_series"]:
+        assert np.asarray(array).ndim == 1, "OpenTSLM rejects anything but 1-D"

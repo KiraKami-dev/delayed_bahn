@@ -101,6 +101,15 @@ DEFAULT_SPLITS: tuple[float, float, float] = (0.70, 0.15, 0.15)
 # contains. Pass `purge_days=prof.context_days` to buy that if it matters.
 PURGE_DAYS = HORIZON_DAYS
 
+# Fraction of entities held out in "both" mode, kept separate from `splits`.
+#
+# The two axes multiply: holding out 15% of dates and 15% of entities leaves 2.2%
+# of the corpus in the both-disjoint cell, which measured at 294 anchors -- fine
+# for an MAE (standard error ~0.35 min at sd 6) but only ~82 late events, and
+# calibration wants several hundred. Widening the entity axis alone buys the cell
+# back without touching the date boundary or the purge.
+ENTITY_HOLDOUT = 0.30
+
 SPLITS: tuple[str, ...] = ("train", "val", "test")
 EVAL_SPLITS: frozenset[str] = frozenset({"val", "test"})
 
@@ -254,6 +263,7 @@ def plan_anchors(
     reference: dt.date | None = None,
     splits: tuple[float, float, float] = DEFAULT_SPLITS,
     split_mode: str = "temporal",
+    entity_holdout: float = ENTITY_HOLDOUT,
     purge_days: int = PURGE_DAYS,
     half_life_days: float = RECENCY_HALF_LIFE_DAYS,
     repeat_max: int = REPEAT_MAX,
@@ -282,10 +292,12 @@ def plan_anchors(
     the training period it does what it is for -- tilting training toward the
     network as it most recently ran.
     """
-    if split_mode not in ("temporal", "entity"):
+    if split_mode not in ("temporal", "entity", "both"):
         raise ValueError(f"unknown split_mode {split_mode!r}")
     if abs(sum(splits) - 1.0) > 1e-9:
         raise ValueError(f"splits must sum to 1.0, got {splits}")
+    if not 0.0 < entity_holdout < 1.0:
+        raise ValueError(f"entity_holdout must be in (0, 1), got {entity_holdout}")
 
     ids = [e.entity_id if isinstance(e, Entity) else str(e) for e in entities]
     ids = sorted(set(ids))
@@ -309,6 +321,45 @@ def plan_anchors(
             horizon_end = date + dt.timedelta(days=horizon_days)
             cut = val_cut if split == "train" else (test_cut if split == "val" else None)
             return cut is not None and horizon_end + dt.timedelta(days=purge_days) >= cut
+    elif split_mode == "both":
+        # The 2x2 that separates the three ways this model can overfit.
+        #
+        # A date holdout alone catches a model that memorised the calendar. It
+        # does NOT catch one that memorised the trains: a service's base delay is
+        # stable across a time boundary, so "the 07:42 is four minutes down at
+        # Pasing" scores just as well next month as last. That model looks
+        # excellent on a temporal split and collapses in deployment.
+        #
+        # So hold out both axes and report four cells. `test` is the honest one
+        # (unseen train AND later date); the gap between `test_seen_entity` and
+        # `test` is the memorisation estimate, and publishing it is what makes
+        # the headline number believable.
+        val_cut, test_cut = _quantile_cuts([d for _, _, d in placed], splits)
+        n = len(ids)
+        held_at = int(round((1.0 - entity_holdout) * n))
+        rank = {eid: i for i, eid in enumerate(sorted(ids, key=stable_digest))}
+        entity_held = {eid for eid, i in rank.items() if i >= held_at}
+
+        def split_of(eid: str, date: dt.date) -> str:
+            late = date >= test_cut
+            unseen = eid in entity_held
+            if not late and not unseen:
+                return "train" if date < val_cut else "val"
+            if late and not unseen:
+                return "test_seen_entity"  # cell A: temporal generalisation
+            if not late and unseen:
+                return "test_seen_time"  # cell B: route generalisation
+            return "test"  # cell C: both held out -- the production number
+
+        def purged(eid: str, date: dt.date, split: str) -> bool:
+            # Only the training cells need purging: a held-out entity shares no
+            # label with training whatever its date, so the date boundary is the
+            # only place a horizon can leak across.
+            if split not in ("train", "val"):
+                return False
+            horizon_end = date + dt.timedelta(days=horizon_days)
+            cut = val_cut if split == "train" else test_cut
+            return horizon_end + dt.timedelta(days=purge_days) >= cut
     else:
         n = len(ids)
         val_at = int(round(splits[0] * n))

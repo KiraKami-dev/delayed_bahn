@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as futures
 import datetime as dt
+import hashlib
 import json
 import sys
 import time
@@ -35,6 +36,7 @@ import urllib.error
 import urllib.request
 from collections import defaultdict
 from pathlib import Path
+from typing import Sequence
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -111,51 +113,145 @@ def _sql_list(urls: list[str]) -> str:
     return "[" + ",".join(f"'{u}'" for u in urls) + "]"
 
 
-def build_catchment(month: str, out: Path) -> list[str]:
-    """The Munich commuter catchment, as EVA numbers.
+# Named commuter regions. A region is a seed pattern matched against station
+# names, plus a one-hop expansion along local operators only -- see
+# build_catchment for why both halves are needed.
+#
+# Operators differ by region: BRB and ag are Bavarian, NWB and ERB run in NRW,
+# ODEG around Berlin. Listing them per region keeps the hop local instead of
+# following a national operator across the country.
+REGIONS: dict[str, dict[str, object]] = {
+    "munich": {
+        "seed": "%münchen%",
+        "operators": ("S", "RB", "RE", "M", "BRB", "ag", "DPN", "ALX"),
+    },
+    "berlin": {
+        "seed": "%berlin%",
+        "operators": ("S", "RB", "RE", "ODEG", "NEB", "DPN"),
+    },
+    "hamburg": {
+        "seed": "%hamburg%",
+        "operators": ("S", "RB", "RE", "AKN", "erx", "DPN"),
+    },
+    "cologne": {
+        "seed": "%köln%",
+        "operators": ("S", "RB", "RE", "NWB", "ERB", "VIA", "DPN"),
+    },
+    "frankfurt": {
+        "seed": "%frankfurt%",
+        "operators": ("S", "RB", "RE", "HLB", "VIA", "DPN"),
+    },
+    "stuttgart": {
+        "seed": "%stuttgart%",
+        "operators": ("S", "RB", "RE", "GAB", "AVG", "DPN"),
+    },
+}
 
-    Name-matching "München" finds 49 stations and misses the S-Bahn branches --
-    the S7 runs through Pullach, Baierbrunn and Wolfratshausen, none of which
-    carry the city name. Expanding one network hop from any München station
-    overshoots the other way, following ICE services to Hamburg.
 
-    So: one hop, but only along S-Bahn and regional operators. That is the
-    commuter network rather than everywhere a long-distance train from Munich
-    happens to go. Measured on 2026-08: 552 stations, 1.79M stop events/month,
-    23.4% at or over 5 minutes late, and 3,683 (service, station) pairs seen on
-    20+ days -- against a target of ~3,000 entities.
+def build_catchment(
+    month: str,
+    out: Path,
+    *,
+    regions: Sequence[str] = ("munich",),
+    source: str | None = None,
+) -> list[str]:
+    """A commuter catchment, as EVA numbers, for one or more named regions.
+
+    Getting the boundary right takes both halves. Name-matching "München" alone
+    finds 49 stations and misses the S-Bahn branches -- the S7 runs through
+    Pullach, Baierbrunn and Wolfratshausen, none of which carry the city name.
+    Expanding one network hop from any München station overshoots the other way,
+    following ICE services all the way to Hamburg. So: one hop, but only along
+    S-Bahn and regional operators, which is the commuter network rather than
+    everywhere a long-distance train from the city happens to go.
+
+    Measured for Munich on 2026-08: 552 stations, 1.79M stop events/month, 23.4%
+    at or over 5 minutes late, and 3,683 (service, station) pairs seen on 20+
+    days -- against a target of ~3,000 entities.
+
+    Passing several regions unions their catchments and deduplicates, which is
+    how the corpus grows without touching anything downstream: every stage after
+    this reads a station list and does not care how it was drawn.
     """
+    unknown = [r for r in regions if r not in REGIONS]
+    if unknown:
+        raise ValueError(f"unknown region(s) {unknown}; known: {sorted(REGIONS)}")
+
+    events = source or f"read_parquet('{month_url(month)}')"
     con = connect(threads=4)
     try:
         con.execute("SET enable_progress_bar=false;")
-        con.execute(
-            f"CREATE VIEW m AS SELECT *, {SERVICE_GROUP_SQL} AS sg "
-            f"FROM read_parquet('{month_url(month)}')"
-        )
-        con.execute("CREATE VIEW muc AS SELECT DISTINCT station_name FROM m "
-                    "WHERE station_name ILIKE '%münchen%'")
-        con.execute(
-            "CREATE VIEW sg_local AS SELECT DISTINCT sg FROM m JOIN muc USING (station_name) "
-            f"WHERE train_type IN {LOCAL_TRAIN_TYPES}"
-        )
-        rows = con.execute(
-            "WITH region AS (SELECT DISTINCT station_name FROM m JOIN sg_local USING (sg)) "
-            "SELECT DISTINCT e.eva, e.station_name FROM m e JOIN region r "
-            "ON r.station_name = e.station_name WHERE e.eva IS NOT NULL ORDER BY 1"
-        ).fetchall()
+        con.execute(f"CREATE VIEW m AS SELECT *, {SERVICE_GROUP_SQL} AS sg FROM {events}")
+        per_region: dict[str, list[str]] = {}
+        rows: list[tuple[str, str]] = []
+        for region in regions:
+            cfg = REGIONS[region]
+            operators = "(" + ",".join(f"'{o}'" for o in cfg["operators"]) + ")"
+            found = con.execute(
+                f"""
+                WITH seeded AS (
+                  SELECT DISTINCT station_name FROM m WHERE station_name ILIKE '{cfg["seed"]}'
+                ),
+                local_services AS (
+                  SELECT DISTINCT sg FROM m JOIN seeded USING (station_name)
+                  WHERE train_type IN {operators}
+                ),
+                region AS (SELECT DISTINCT station_name FROM m JOIN local_services USING (sg))
+                SELECT DISTINCT e.eva, e.station_name
+                FROM m e JOIN region r ON r.station_name = e.station_name
+                WHERE e.eva IS NOT NULL
+                ORDER BY 1
+                """
+            ).fetchall()
+            per_region[region] = sorted({name for _, name in found})
+            rows.extend(found)
+            print(f"  {region}: {len({e for e, _ in found})} EVAs, "
+                  f"{len(per_region[region])} stations", flush=True)
     finally:
         con.close()
-    evas = [eva for eva, _ in rows]
+
+    evas = sorted({eva for eva, _ in rows})
+    stations = sorted({name for _, name in rows})
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({
-        "rule": "one network hop from a Munchen station, via S-Bahn and regional operators only",
-        "reference_month": month,
-        "n_evas": len(evas),
-        "evas": evas,
-        "stations": sorted({name for _, name in rows}),
-    }, indent=2, ensure_ascii=False))
-    print(f"catchment: {len(evas)} EVAs -> {out}", flush=True)
+    out.write_text(
+        json.dumps(
+            {
+                "rule": "one network hop from a seed station, via local operators only",
+                "regions": list(regions),
+                "reference_month": month,
+                "n_evas": len(evas),
+                "n_stations": len(stations),
+                "per_region_stations": {r: len(v) for r, v in per_region.items()},
+                "evas": evas,
+                "stations": stations,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
+    print(f"catchment: {len(evas)} EVAs over {len(stations)} stations "
+          f"({', '.join(regions)}) -> {out}", flush=True)
     return evas
+
+
+def catchment_fingerprint(evas: Sequence[str] | None) -> str:
+    """Short hash of the EVA set a cause shard was extracted for.
+
+    Shards are cached per day, and a day already extracted is skipped. That is
+    what makes a long run resumable -- and it is also a trap: widening the
+    catchment leaves the old, narrower shards in place, so five sixths of the
+    corpus would silently carry no causes at all. Keying the directory on the
+    EVA set means a different catchment simply misses the cache instead.
+    """
+    if not evas:
+        return "all"
+    digest = hashlib.sha256(",".join(sorted(evas)).encode()).hexdigest()
+    return f"{len(evas)}-{digest[:8]}"
+
+
+def shard_dirs(cache_dir: Path, evas: Sequence[str] | None) -> tuple[Path, Path]:
+    fp = catchment_fingerprint(evas)
+    return cache_dir / "causes" / fp, cache_dir / "notices" / fp
 
 
 def extract_day_causes(
@@ -172,8 +268,9 @@ def extract_day_causes(
     catchment is a tenth of that. Nationwide the run takes 3.6 hours, filtered
     it takes minutes.
     """
-    causes_path = cache_dir / "causes" / f"{day.isoformat()}.parquet"
-    notices_path = cache_dir / "notices" / f"{day.isoformat()}.parquet"
+    causes_dir, notices_dir = shard_dirs(cache_dir, evas)
+    causes_path = causes_dir / f"{day.isoformat()}.parquet"
+    notices_path = notices_dir / f"{day.isoformat()}.parquet"
     if causes_path.exists() and notices_path.exists() and not force:
         return {"day": day.isoformat(), "status": "cached"}
 
@@ -274,13 +371,15 @@ def extract_range(
     workers needs no coordination, and an interrupted run resumes where it left off.
     """
     days = [start + dt.timedelta(days=i) for i in range((end - start).days + 1)]
+    causes_dir, notices_dir = shard_dirs(cache_dir, evas)
+    print(f"shards -> {causes_dir}", flush=True)
     todo = [
         d
         for d in days
         if force
         or not (
-            (cache_dir / "causes" / f"{d.isoformat()}.parquet").exists()
-            and (cache_dir / "notices" / f"{d.isoformat()}.parquet").exists()
+            (causes_dir / f"{d.isoformat()}.parquet").exists()
+            and (notices_dir / f"{d.isoformat()}.parquet").exists()
         )
     ]
     print(
@@ -389,8 +488,50 @@ GROUP BY ALL
 """
 
 
+def available_months(months: list[str]) -> list[str]:
+    """Drop months piebro has not published yet.
+
+    The monthly files appear after the month closes, so a range ending in the
+    current month 404s. Checking is one HEAD request each and turns a crash
+    fourteen minutes into the join into a line of output.
+    """
+    listing = _http_json(f"{HF_TREE_API}/monthly_processed_data")
+    published = {
+        entry["path"].rsplit("data-", 1)[-1].removesuffix(".parquet")
+        for entry in listing
+        if entry.get("type") == "file"
+    }
+    keep = [m for m in months if m in published]
+    missing = [m for m in months if m not in published]
+    if missing:
+        print(f"  not published yet, skipping: {', '.join(missing)}", flush=True)
+    return keep
+
+
+def month_sources(months: list[str], cache_dir: Path) -> list[str]:
+    """Local monthly files where they exist, remote URLs otherwise.
+
+    The fact join reads most columns of most rows, so streaming buys nothing
+    over a one-time download -- and the repeated range requests earned an HTTP
+    429 from the Hub. `getmonths` mirrors the files under `monthly/`; anything
+    missing falls back to the URL so a partial mirror still builds.
+    """
+    local_dir = cache_dir / "monthly"
+    out = []
+    for month in months:
+        local = local_dir / f"data-{month}.parquet"
+        out.append(str(local) if local.exists() and local.stat().st_size > 1_000_000
+                   else month_url(month))
+    n_local = sum(1 for u in out if not u.startswith("http"))
+    print(f"months: {n_local} local, {len(out) - n_local} remote", flush=True)
+    return out
+
+
 def build_facts(months: list[str], universe: list[str], cache_dir: Path) -> None:
     """Join events to causes and write the three hourly fact tables."""
+    months = available_months(months)
+    if not months:
+        raise SystemExit("no published months in the requested range")
     con = connect(memory_limit="8GB")
     try:
         con.execute(
@@ -398,26 +539,27 @@ def build_facts(months: list[str], universe: list[str], cache_dir: Path) -> None
         )
         con.executemany("INSERT INTO universe VALUES (?)", [(s,) for s in universe])
 
-        cause_files = sorted((cache_dir / "causes").glob("*.parquet"))
+        cause_files = sorted((cache_dir / "causes").rglob("*.parquet"))
         if not cause_files:
             raise SystemExit(
                 f"no cause shards in {cache_dir / 'causes'} -- run `facts.py causes` first"
             )
+        # DuckDB refuses a prepared parameter inside CREATE VIEW, so the file
+        # lists are inlined rather than bound.
         con.execute(
-            "CREATE TEMP VIEW causes AS SELECT * FROM read_parquet(?)",
-            [[str(p) for p in cause_files]],
+            f"CREATE TEMP VIEW causes AS SELECT * FROM read_parquet("
+            f"{_sql_list([str(p) for p in cause_files])})"
         )
         print(f"causes: {len(cause_files)} day shards", flush=True)
 
-        urls = [month_url(m) for m in months]
+        urls = month_sources(months, cache_dir)
         con.execute(
             f"""
             CREATE TEMP VIEW events AS
             SELECT e.*, {SERVICE_GROUP_SQL} AS service_group, {SERVICE_DATE_SQL} AS service_date
-            FROM read_parquet(?) e
+            FROM read_parquet({_sql_list(urls)}) e
             SEMI JOIN universe u ON u.station_name = e.station_name
-            """,
-            [urls],
+            """
         )
 
         for name, keys in (
@@ -445,6 +587,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cache", default="data/facts", type=Path)
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--top-n", type=int, default=400)
+    parser.add_argument("--regions", default="munich",
+                        help="comma-separated: " + ",".join(sorted(REGIONS)))
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args(argv)
 
@@ -462,7 +606,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.stage in ("catchment", "all") or (
         args.stage == "causes" and not catchment_path.exists()
     ):
-        build_catchment(months[-1], catchment_path)
+        build_catchment(months[-1], catchment_path, regions=tuple(args.regions.split(',')))
     if args.stage in ("causes", "all"):
         evas = json.loads(catchment_path.read_text())["evas"]
         extract_range(

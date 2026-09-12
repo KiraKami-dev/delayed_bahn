@@ -116,7 +116,16 @@ def stable_digest(text: str) -> int:
     return int.from_bytes(hashlib.blake2s(text.encode("utf-8"), digest_size=8).digest(), "big")
 
 
-def _slug(text: str, limit: int) -> str:
+def _slug(text: str | None, limit: int) -> str:
+    """Fold to ASCII. ``None`` is not a station name -- say so rather than crash.
+
+    Real months carry rows with a null ``station_name`` or a null destination,
+    which no synthetic fixture produced. They are filtered out upstream; this
+    guard exists so a future caller gets a readable failure instead of a
+    TypeError from deep inside unicodedata.
+    """
+    if text is None:
+        raise ValueError("entity_id needs a station and a service group; got None")
     folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii").lower()
     cleaned = "".join(ch if ch.isalnum() else "-" for ch in folded)
     return "-".join(part for part in cleaned.split("-") if part)[:limit].strip("-")
@@ -304,7 +313,12 @@ def enumerate_entities(
     universe, and recording only the first would make the log's counts depend on
     the order the checks happen to run in.
     """
-    where = [region_sql]
+    # Real months carry rows with a null station or a null final destination --
+    # no synthetic fixture produced one, and entity_id cannot be formed from it.
+    # Excluded in SQL rather than skipped in Python: a row with no station is not
+    # a rejected entity, it is not an entity at all, and putting it in the
+    # rejection log would misreport what the log counts.
+    where = [region_sql, "station_name IS NOT NULL", "final_destination_station IS NOT NULL"]
     if window is not None:
         start, end = window
         where.append(f"{SERVICE_DATE_SQL} >= DATE '{start.isoformat()}'")

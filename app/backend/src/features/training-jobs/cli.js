@@ -18,7 +18,7 @@ import { isTerminal } from './nebius/client.js';
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 function parseArgs(argv) {
-  const out = { _: [], env: [], volume: [], scriptArgs: [] };
+  const out = { _: [], env: [], volume: [], inject: [], scriptArgs: [] };
   let i = 0;
   while (i < argv.length) {
     const a = argv[i];
@@ -28,7 +28,7 @@ function parseArgs(argv) {
       const next = argv[i + 1];
       const isFlag = next === undefined || next.startsWith('--');
       const val = isFlag ? true : next;
-      if (key === 'env' || key === 'volume') out[key].push(val); else out[key] = val;
+      if (key === 'env' || key === 'volume' || key === 'inject') out[key].push(val); else out[key] = val;
       i += isFlag ? 1 : 2;
     } else { out._.push(a); i++; }
   }
@@ -72,6 +72,15 @@ async function main() {
       const body = {
         name: args.name || `train-${path.basename(args.script, '.py')}-${Date.now().toString(36)}`,
         scriptPath: args.script, requirementsPath: args.requirements,
+        // --inject local.py[:/container/path] , repeatable. A script that imports
+        // sibling modules needs them alongside it; without this the only routes
+        // are a bucket round-trip or pasting everything into one file.
+        injectedFiles: (args.inject || []).map((spec) => {
+          const sep = spec.lastIndexOf(':');
+          const local = sep > 1 ? spec.slice(0, sep) : spec;
+          const dest = sep > 1 ? spec.slice(sep + 1) : `/workspace/${path.basename(local)}`;
+          return { containerPath: dest, content: readFileSync(local, 'utf8') };
+        }),
         scriptArgs: args.scriptArgs, env: args.env, volumes: args.volume,
         platform: args.platform, preset: args.preset, image: args.image, timeout: args.timeout,
         diskGiB: args['disk-gib'], preemptible: !!args.preemptible, outputVolume: args.output, setup: args.setup,
