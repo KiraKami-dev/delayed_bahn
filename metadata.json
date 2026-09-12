@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2ATK5NM3H51KDDEJ3GQHT4D",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "agent/skills/address-findings/SKILL.md",
+    "agent/skills/explain/SKILL.md",
+    "agent/skills/recall/SKILL.md",
+    "agent/skills/replay/SKILL.md",
+    "agent/skills/review/SKILL.md",
+    "agent/skills/review/references/review-rules.md",
+    "agent/skills/session-crosslink/SKILL.md",
+    "agent/skills/session-handoff/SKILL.md",
+    "agent/skills/session-to-skill/SKILL.md",
+    "agent/skills/teach/SKILL.md",
+    "agent/skills/using-entire/SKILL.md",
+    "agent/skills/what-happened/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 130,
+    "cache_creation_tokens": 113536,
+    "cache_read_tokens": 6642888,
+    "output_tokens": 43096,
+    "api_call_count": 65
+  }
+}
