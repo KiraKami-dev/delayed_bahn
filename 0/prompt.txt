@@ -1,0 +1,123 @@
+No. Not push anything. What would be next to see if this works? If we do loads of stuff with you, can we trim time to start training the one month model with temporal data in like an hour or so? Maybe for selected stations etc. Can you research this? Also what input do you need?
+
+---
+
+Not just fast but also good. I guess we need the connector first, and then some first training
+
+---
+
+It is not about trying Nebius bit more of data etc. We could also use a workstation I have for testing. So more of getting it ready and tested
+
+---
+
+It is not about trying Nebius bit more of data etc. We could also use a workstation I have for testing. So more of getting it ready and tested. e.g. if the conversion to time series data etc. even works, maybe then also with a smaller gpu
+
+---
+
+Can you gather data, do a minimal training on a model and put it on a folder under devbox (within my Jonas folder) (e.g. ssh devbox)
+
+---
+
+How is the training running?
+
+---
+
+<task-notification>
+<task-id>bsspkwr0x</task-id>
+<tool-use-id>toolu_01XyBEsNCKyhUtK9RuAKxGna</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/51710a92-7af1-465a-90b2-9dad8809f6a6/tasks/bsspkwr0x.output</output-file>
+<status>completed</status>
+<summary>Background command "Add LoRA support and launch a stronger run" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>beyz1g0nf</task-id>
+<tool-use-id>toolu_01V6ZjhyHHhZgnX2hoebDsQa</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/51710a92-7af1-465a-90b2-9dad8809f6a6/tasks/beyz1g0nf.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for training run to finish" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bgcbfqhw0</task-id>
+<tool-use-id>toolu_01ARZgYZMAPLYBbpbLQM3zPn</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/51710a92-7af1-465a-90b2-9dad8809f6a6/tasks/bgcbfqhw0.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for all evaluation cells to finish" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b215arg9s</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/51710a92-7af1-465a-90b2-9dad8809f6a6/tasks/b215arg9s.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for completion and print metrics" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>brw37lz4g</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/51710a92-7af1-465a-90b2-9dad8809f6a6/tasks/brw37lz4g.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for completion then rescore all cells" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+Can you give an example of what you annotated and like how it works. "One click still pending on your side: the stored token can read Gemma's metadata but not download weights, so the licence has not been accepted. That would let the next run use the 270M model the deck points at." what do I have to do there and what would it chagne?
+
+---
+
+"three channels, 168 points each, each z-normalized" what is this concretely with channels, points, z-normalized?
+
+---
+
+Ok, can you create an artifact or so to show the team what this does / how it works / how we extend and if worth pursueing (what would we do) for the hackathon
+
+---
+
+Does it include a nice description what the channels are? How it is encoded etc.
+
+---
+
+"Plain definitions of channel" yeah but a description of these three channels. What are the channels / why these / how done. And it is way too long. You can keep it. But I want just a bit of overview / graphics for a 2min pitch
+
+---
+
+What is that showing even? Super ununderstandable and I don't get the idea from that. Neither what you built now. Nor what we would do for the next 10h+
+
+---
+
+Is that in the artifact to share now?
+
+---
+
+Ok and also (maybe add): Why is that better than existing methods (or is it not)? Does stuff like that exist? And also maybe a quick section of the current performance (and the small test you built)
+
+---
+
+Is there a reason given for the delays in the dataset?
+
+---
+
+Does it even make sense to pool per station? Cause normally different routes have different issues
+
+---
+
+But like from analyis platforms aren't there often train routes that take longer. Like some routes are still worse. Aren't trains like catgorized by routes / number like RE 1 or so?
+
+---
+
+Maybe also for my understanding: What would we put in the model for predictions? Just the text or could we put up to date embeddings then in the predcition as well (or is that done)
+
+---
+
+Before we continue: Can you commit the changes we currently have: But do it on the correct (and not the current I guess) state of this chat for entire? Or just use the current one before continueing?
