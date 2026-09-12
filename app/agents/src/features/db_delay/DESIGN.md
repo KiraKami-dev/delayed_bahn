@@ -493,14 +493,25 @@ Test, the same 5,000 seeded examples for every model:
 | Random encoder | 2,000 | 3.727 | 3.006 | 0.912 | 0.089 | 0.166 |
 | Blend: 0.6 main quantiles + 0.4 XGBoost | 5,000 | 3.691 | 2.951 | 0.856 | 0.087 | 0.140 |
 | Blend: 0.8 plain quantiles + 0.2 XGBoost | 2,000 | 3.687 | 2.943 | 0.835 | 0.088 | 0.140 |
+| Blend by lead time: plain and XGBoost | 2,000 | 3.646 | 2.924 | 0.831 | 0.086 | 0.140 |
+| Blend by lead time: main and XGBoost | 5,000 | 3.671 | 2.950 | 0.856 | 0.087 | 0.140 |
 
-- **No difference is significant yet.** Paired bootstrap on the 4,729 test examples that ran (95%
-  intervals of the CRPS difference): main minus XGBoost +0.003 (-0.059 to +0.054); plain minus
-  XGBoost -0.018 (-0.080 to +0.034); plain minus main -0.021 (-0.050 to +0.010); plain blend minus
-  XGBoost -0.029 (-0.084 to +0.014). The finalists need the full test set.
-- **The TSLM is strongest close to arrival.** Within 15 minutes, plain cross-entropy reaches median
-  error 1.109 and CRPS 0.898 against XGBoost's 1.222 and 0.983 (1,941 examples, not bootstrapped yet).
-  XGBoost stays better 30 to 60 minutes out.
+- **Single models do not differ significantly.** Paired bootstrap on the 4,729 test examples that
+  ran (95% intervals of the CRPS difference): main minus XGBoost +0.003 (-0.059 to +0.054); plain
+  minus XGBoost -0.018 (-0.080 to +0.034); plain minus main -0.021 (-0.050 to +0.010); plain global
+  blend minus XGBoost -0.029 (-0.084 to +0.014). The finalists need the full test set.
+- **The TSLM is significantly better close to arrival, and worse 15 to 30 minutes out.** Bootstrap
+  within lead-time buckets, plain cross-entropy minus XGBoost: within 15 minutes (1,927 examples)
+  CRPS -0.085 (-0.211 to -0.001) and median error -0.113 (-0.263 to -0.011); 15 to 30 minutes (744)
+  CRPS +0.044 (+0.014 to +0.074); 30 to 60 minutes (747) +0.048 (-0.007 to +0.102). The soft-target
+  model shows the same shape with smaller margins.
+- **A blend with one weight per lead-time bucket beats XGBoost overall.** Fitted on validation, the
+  plain model gets weight 0.9 within 15 minutes of arrival and 0.1 to 0.3 further out. On the test
+  examples it wins significantly: CRPS -0.047 (-0.101 to -0.013), median error -0.052 (-0.115 to
+  -0.012). It also removes the 15 to 30 minute loss (CRPS 1.683 against XGBoost's 1.681). The same
+  blend of the soft-target model is not significant (CRPS -0.021, -0.070 to +0.009). This is the
+  product story: the TSLM reads the live signal in the last quarter hour, the tabular model carries
+  the longer horizons.
 - **Temperature calibration does not help:** the best temperature on validation is exactly 1.0. The
   high coverage is partly an artefact of whole-minute targets scored with inclusive intervals.
 - **Platt scaling of P(cancelled)** helps the main model a little (0.179 to 0.170) but not the plain
