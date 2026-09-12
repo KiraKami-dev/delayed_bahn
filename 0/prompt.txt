@@ -1,0 +1,51 @@
+<task-notification>
+<task-id>bnmfu8xq1</task-id>
+<summary>Monitor event: "overnight TSLM queue on the devbox: progress every 500 steps, eval results, crashes"</summary>
+<event>step 6000/12000 {'loss': 2.6805, 'token_ce': 0.1099, 'soft_ce': 2.3321, 'crps': 2.3851} 6074s (1.01s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+"- ~01:50: the main run's full 30k test results, then blend and bootstrap with tighter intervals." where is this running? On nebius or locally?
+
+---
+
+Wouldn't it be faster on nebius? And haven't we changed so much stuff it is maybe worth another try? Also, what are these results "TSLM ties XGBoost overall at step 5,000" or is that just the in-between one of the one finishing at 1:20?
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 plain-ce | [plain_ce] step 2000/2000 {'loss': 0.109, 'token_ce': 0.109} 604s (0.30s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 ecg-sp-start | [ecg_sp_start] step 2000/2000 {'loss': 2.401, 'token_ce': 0.1261, 'soft_ce': 2.1047, 'crps': 1.7012} 602s (0.30s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 random-encoder | [random_encoder] step 2000/2000 {'loss': 2.4138, 'token_ce': 0.14, 'soft_ce': 2.103, 'crps': 1.7071} 607s (0.30s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bzjbcs480</task-id>
+<tool-use-id>toolu_01NjzGuLbu3VSFDALDPhe2e7</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/abdb3068-b181-45de-82c2-0cdd5152ab32/tasks/bzjbcs480.output</output-file>
+<status>failed</status>
+<summary>Monitor "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes" script failed (exit 1)</summary>
+</task-notification>

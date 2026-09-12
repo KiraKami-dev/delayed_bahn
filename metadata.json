@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BS7MH3T5AGA891PESJ22C6",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/nebius/compare_ablations.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 10561,
+    "cache_read_tokens": 4201216,
+    "output_tokens": 8139,
+    "api_call_count": 5
+  }
+}

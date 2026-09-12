@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BS7MH3T5AGA891PESJ22C6",
+  "session_id": "abdb3068-b181-45de-82c2-0cdd5152ab32",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T21:44:04.550079Z",
+  "branch": "db-train-model",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/nebius/compare_ablations.sh"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "6c44d518bed4",
+  "checkpoint_transcript_start": 3355,
+  "transcript_lines_at_start": 3355,
+  "compact_transcript_start": 400,
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 10561,
+    "cache_read_tokens": 4201216,
+    "output_tokens": 8139,
+    "api_call_count": 5
+  },
+  "session_metrics": {
+    "turn_count": 33
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-12T21:44:04.297947Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "total_lines_changed": 0,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 5,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/nebius/compare_ablations.sh": 4,
+        "app/agents/src/features/db_delay/trip/nebius/run_ablations.sh": 1
+      }
+    }
+  ]
+}
