@@ -44,3 +44,23 @@ bash trip/run_overnight.sh                            # full runs and out/trip/r
 
 Needs `duckdb`, `pandas`, `pyarrow`, `xgboost`, `torch`, `transformers`, `peft` and
 `opentslm`, plus one 48 GB GPU for training at batch 8.
+
+## Demo: a traveller's connection
+
+`predict.py` turns a trained checkpoint into the traveller view for recorded trips. With two
+example ids it reads the first as the arriving train, the second as the connecting train at the
+same station, and adds the chance of making the change from the two delay distributions and
+the transfer times (`connection.py`). `demo/goettingen_connection.json` is the output for two
+ICE trains meeting at Göttingen on the morning of 12 September 2026, forecast 14 and 29 minutes
+before their planned arrivals from the September forward set (data the model never trained on):
+
+```bash
+python trip/predict.py --examples data/trip/forward.parquet \
+    --checkpoint out/trip/ablations/plain_ce/plain_ce/checkpoint.pt \
+    --example-ids 1117 45787 --buffer 19 --min-transfer 5
+```
+
+Each forecast carries a headline ("about +1 min, likely 0 to 5 min, 92% chance of arriving on
+time"), the typical delay, the 10 to 90% range, P(on time), P(cancelled), the rationale built
+from the inputs and, for recorded trips, what actually happened. Inference for a pair takes a
+few seconds on one GPU once the model is loaded.

@@ -1,0 +1,42 @@
+{
+  "forecasts": [
+    {
+      "example_id": 1117,
+      "train": "ICE 78",
+      "target_stop": "Göttingen",
+      "planned_arrival": "2026-09-12 07:31:00",
+      "headline": "about +1 min, likely 0 to 5 min, 92% chance of arriving on time",
+      "typical_delay_minutes": 1,
+      "likely_range_minutes": [
+        0,
+        5
+      ],
+      "p_on_time": 0.92,
+      "p_cancelled": 0.014,
+      "rationale": "The train left Kassel-Wilhelmshöhe 4 minutes late; Göttingen is 1 stops ahead, planned to arrive in 14 minutes. Over the last stops the delay has grown, from 1 to 4 minutes; the most so far was 4. In the last 30 days trains on this route reached Göttingen with a median delay of 0 minutes (90th percentile 4) and 0% cancelled. At Göttingen, 12% of stops ran at least 6 minutes late in the last 3 hours, against 32% over 3 days. Nationwide, 20% of long-distance stops were late in the last 3 hours, against 53% over 3 days.",
+      "actual": "2"
+    },
+    {
+      "example_id": 45787,
+      "train": "ICE 793",
+      "target_stop": "Göttingen",
+      "planned_arrival": "2026-09-12 07:50:00",
+      "headline": "about +1 min, likely 0 to 7 min, 85% chance of arriving on time",
+      "typical_delay_minutes": 1,
+      "likely_range_minutes": [
+        0,
+        7
+      ],
+      "p_on_time": 0.849,
+      "p_cancelled": 0.023,
+      "rationale": "The train left Hildesheim Hbf 0 minutes late; Göttingen is 1 stops ahead, planned to arrive in 29 minutes. Over the last stops the delay has shrunk, from 3 to 0 minutes; the most so far was 3. In the last 30 days trains on this route reached Göttingen with a median delay of 7 minutes (90th percentile 22) and 15% cancelled. At Göttingen, 12% of stops ran at least 6 minutes late in the last 3 hours, against 32% over 3 days. Nationwide, 20% of long-distance stops were late in the last 3 hours, against 53% over 3 days.",
+      "actual": "0"
+    }
+  ],
+  "change": {
+    "planned_buffer_minutes": 19.0,
+    "min_transfer_minutes": 5.0,
+    "p_change_works": 0.959,
+    "headline": "96% chance of making the change"
+  }
+}
