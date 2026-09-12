@@ -493,6 +493,8 @@ Test, the same 5,000 seeded examples for every model:
 | Plain cross-entropy | 2,000 | 3.702 | 2.954 | 0.899 | 0.089 | 0.155 |
 | Plain cross-entropy | 5,000 | 3.678 | 2.923 | 0.903 | 0.087 | 0.146 |
 | Plain cross-entropy, doubled learning rates | 2,000 | 3.717 | 2.956 | 0.895 | 0.089 | 0.152 |
+| Text only, plain cross-entropy | 2,000 | 3.635 | 2.907 | 0.886 | 0.087 | 0.160 |
+| Text plus encoder, plain cross-entropy | 2,000 | 3.641 | 2.912 | 0.892 | 0.087 | 0.158 |
 | `ecg-sp` starting checkpoint | 2,000 | 3.711 | 2.994 | 0.912 | 0.088 | 0.165 |
 | Random encoder | 2,000 | 3.727 | 3.006 | 0.912 | 0.089 | 0.166 |
 | Blend: 0.6 main quantiles + 0.4 XGBoost | 5,000 | 3.691 | 2.951 | 0.856 | 0.087 | 0.140 |
@@ -501,6 +503,19 @@ Test, the same 5,000 seeded examples for every model:
 | Blend by lead time: main and XGBoost | 5,000 | 3.671 | 2.950 | 0.856 | 0.087 | 0.140 |
 | Blend by lead time: text only and XGBoost | 2,000 | 3.627 | 2.928 | 0.858 | 0.086 | 0.140 |
 | Blend by lead time: plain and XGBoost | 5,000 | 3.641 | 2.907 | 0.830 | 0.086 | 0.139 |
+| Blend by lead time: text plus plain and XGBoost | 2,000 | 3.618 | 2.901 | 0.826 | 0.086 | 0.140 |
+| Blend by lead time: text plus encoder plus plain and XGBoost | 2,000 | 3.611 | 2.903 | 0.828 | 0.085 | 0.140 |
+
+- **The two ingredients add up.** Text input with the plain loss is the first single model that
+  beats XGBoost on the 5,000 examples with the interval clear of zero: CRPS -0.064 (-0.137 to
+  -0.005), median error -0.063 (-0.144 to -0.000), after 2,000 steps. Adding the encoder on top
+  of the text changes nothing (CRPS +0.005, -0.015 to +0.025, also within 15 minutes of arrival),
+  while both beat the encoder-only plain run clearly (-0.042, -0.071 to -0.015): the numbers in
+  the prompt carry the information. The lead-time blends of either with XGBoost are the best
+  models so far (CRPS -0.070 and -0.069 against XGBoost, intervals -0.127 to -0.030 and -0.120 to
+  -0.031). The recipe for the long run is therefore plain loss with the series in the prompt; the
+  encoder stays in at no cost, so the model remains a time-series language model and can take
+  series too long for a prompt later.
 
 - **More steps keep helping the plain loss:** 5,000 steps improve on 2,000 (CRPS -0.031, -0.064 to
   +0.004 on the 5,000 examples), and its lead-time blend has the widest margin over XGBoost so
@@ -561,7 +576,8 @@ Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against X
 
 ### Pending at the time of writing
 
-- Text only with the plain loss, and numbers in the prompt plus the encoder with the plain loss.
+- The long run of the chosen recipe (12,000 steps, text plus encoder, plain loss) on the full
+  test set, started 00:50 on 13 September.
 - The plain 2,000-step checkpoint on the full 93,738-example test set.
 - The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
   forward test.
