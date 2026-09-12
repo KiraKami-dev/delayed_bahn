@@ -1,0 +1,11 @@
+<task-notification>
+<task-id>bd2ei2t5i</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/1c8b741b-b39a-4a6e-aeba-a0748933d527/tasks/bd2ei2t5i.output</output-file>
+<status>killed</status>
+<summary>Background command "Screenshot the dashboard headlessly at 2560px and 3440px widths" was stopped because the system is running low on memory</summary>
+</task-notification>
+
+---
+
+delete the .env.example that should not be public
