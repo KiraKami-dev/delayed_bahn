@@ -48,7 +48,10 @@ quota. Request an increase in the console if not; jobs fail with
 
 ### c. Backend env
 
-Create `app/backend/.env` (git-ignored, never committed) with at least:
+The team keeps ONE env file at the repo root: `cp .env.example .env` there, then
+`ln -s ../../.env app/backend/.env`. The root example already carries the
+team default (eu-north1 project + subnet, 4x L40S). Minimum content if you
+write it by hand:
 
 ```bash
 NEBIUS_PROJECT_ID=project-...     # Administration -> Projects
@@ -70,7 +73,7 @@ All variables the backend reads (everything except `NEBIUS_PROJECT_ID` is option
 | `NEBIUS_ACCESS_TOKEN` | auth mode (a): static 12 h token from `nebius iam get-access-token` |
 | `NEBIUS_SA_ID`, `NEBIUS_SA_KEY_ID`, `NEBIUS_SA_PRIVATE_KEY_FILE` (or `NEBIUS_SA_PRIVATE_KEY`) | auth mode (b): service account |
 | `NEBIUS_CLI` | path to the CLI binary if not on PATH or in `~/.nebius/bin` |
-| `NEBIUS_DEFAULT_PLATFORM` / `NEBIUS_DEFAULT_PRESET` | defaults `gpu-l40s-a` / `1gpu-8vcpu-32gb` |
+| `NEBIUS_DEFAULT_PLATFORM` / `NEBIUS_DEFAULT_PRESET` | code defaults `gpu-l40s-a` / `1gpu-8vcpu-32gb`; the root `.env.example` sets the team default `gpu-l40s-d` / `4gpu-128vcpu-768gb` (eu-north1) |
 | `NEBIUS_DEFAULT_IMAGE` | default `pytorch/pytorch:2.7.1-cuda12.8-cudnn9-runtime` |
 | `NEBIUS_DEFAULT_TIMEOUT` / `NEBIUS_DEFAULT_DISK_GIB` | defaults `2h` / `250` |
 | `NEBIUS_OUTPUT_VOLUME` | bucket name/ID or `s3://bucket` mounted at `/outputs` for every training job |
@@ -216,7 +219,7 @@ Also budget for provisioning time (a few minutes per job) and any bucket storage
 
 | Symptom | Fix |
 |---|---|
-| `NEBIUS_PROJECT_ID is not set` | create `app/backend/.env` with `NEBIUS_PROJECT_ID=...` (section 1c) |
+| `NEBIUS_PROJECT_ID is not set` | `cp .env.example .env` at the repo root and `ln -s ../../.env app/backend/.env` (section 1c) |
 | `nebius iam get-access-token` returns nothing | `nebius profile create …`, log in in the browser |
 | 403 on create | the account/service account lacks editor on the project |
 | `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset. Check the **region** first: platforms are per project/region. Our tenant's `default-project-eu-west1` (the console default) only offers `gpu-h200-sxm`, and every 8-GPU H200 request there timed out. `default-project-us-central1` (`project-u00re9y9kc00bwpa7d9ftt`, team default) has B200, H200, RTX6000; `default-project-eu-north1` (`project-e00g0c62pr00fj32s0h4gj`) has H100, H200, L40S-a and L40S-d. Single-GPU jobs schedule in both within 2–3 min. **Team default is `gpu-l40s-d` / `4gpu-128vcpu-768gb` in eu-north1**, the only multi-GPU node that scheduled on 12 Sep 2026. 8× nodes (H200 in three regions; H100, B200, RTX 6000 pending for 10+ min) stall with the VM STOPPED in PROVISIONING, then error. GB300 is rejected outright: its preset needs an NVLInstanceGroup, not available via jobs. Never request the 8-GPU preset for a 0.5B/3B fine-tune |

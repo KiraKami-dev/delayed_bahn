@@ -33,7 +33,7 @@ SDK, sandbox, dataset, and credits notes from partner companies on site.
 - Earlier default: us-central1 (`project-u00re9y9kc00bwpa7d9ftt`, subnet
   `vpcsubnet-u00dkfnwx2mpagdhtw`): B200 180 GB (`gpu-b200-sxm`,
   `1gpu-20vcpu-224gb`, ~$7.15/h, ~84 h on $600), H200, RTX6000.
-  `app/backend/.env.example` points there; the CLI profile on Akshat's
+  the CLI profile on Akshat's
   machine was switched too.
 - **Fallback: eu-north1** (`project-e00g0c62pr00fj32s0h4gj`, subnet
   `vpcsubnet-e00hf5r45dv0k0aa0b`): H100, H200, L40S-a, L40S-d. A 1× L40S
@@ -51,12 +51,12 @@ SDK, sandbox, dataset, and credits notes from partner companies on site.
 - **eu-north1, `gpu-l40s-d`, `4gpu-128vcpu-768gb`**: 4× L40S 48 GB (192 GB
   GPU memory), 128 vCPU, 768 GiB RAM, ~$7.28/h (~82 node-hours on $600).
   Verified: job `aijob-e00d1m1qwztxqghv8g` ran nvidia-smi on all four GPUs
-  in under 3 min. `app/backend/.env.example` carries this config.
+  in under 3 min. The root `.env.example` carries this config (single team env; `app/backend/.env` is a symlink to it).
 - Also verified single-GPU tonight: H100 (eu-north1), B200 (us-central1),
   RTX PRO 6000 (uk-south2), L40S (eu-north1).
 - Not obtainable: every 8-GPU node tried (H200 ×3 regions, H100, B200,
   RTX 6000), single B300 (uk-south1), and GB300 (needs an NVLInstanceGroup,
   not available through jobs).
 
-Teammate setup: `cd app/backend && cp .env.example .env && npm run train -- doctor`
+Teammate setup: `cp .env.example .env && ln -s ../../.env app/backend/.env && cd app/backend && npm run train -- doctor`
 after a one-time `nebius profile create` login.
