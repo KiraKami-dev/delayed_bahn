@@ -78,6 +78,7 @@ run() {
 }
 
 # RUNS picks which of these a job runs; each selected run gets the next free GPU.
+run main
 run plain_ce --loss-mode plain
 run text_only --text-only --grad-checkpointing
 run ecg_sp_start --start-checkpoint OpenTSLM/llama-3.2-3b-ecg-sp

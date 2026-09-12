@@ -19,6 +19,8 @@ RUNS=(text_only plain_ce ecg_sp_start random_encoder)
 for run in "${RUNS[@]}"; do
   bash "$HERE/sync_bucket.sh" results "$PREFIX$run" "$STAGE/$run" > /dev/null || echo "no results yet for $run"
 done
+# The fair reference: the default configuration trained for the same 2000 steps.
+bash "$HERE/sync_bucket.sh" results h100-main-2k "$STAGE/main_2k" > /dev/null || echo "no results yet for main_2k"
 rsync -az "$STAGE/" "$HOST:$REMOTE/out/trip/ablations/"
 
 ssh "$HOST" "cd $REMOTE && for split in validation test; do
@@ -26,6 +28,8 @@ ssh "$HOST" "cd $REMOTE && for split in validation test; do
           --model \"key history=out/trip/baselines_5000/key_history_\$split.npz\"
           --model \"xgboost=out/trip/baselines_5000/xgboost_\$split.npz\"
           --model \"tslm main step 5000=$EVAL/tslm_\$split.npz\")
+  ref=out/trip/ablations/main_2k/main/tslm_\$split.npz
+  [ -f \"\$ref\" ] && models+=(--model \"reference main 2000 steps=\$ref\")
   for run in ${RUNS[*]}; do
     f=out/trip/ablations/\$run/\$run/tslm_\$split.npz
     [ -f \"\$f\" ] && models+=(--model \"ablation \$run=\$f\")
