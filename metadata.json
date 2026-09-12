@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BQVAZBN7AG53NRYVJTAHS1",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".env.example",
+    "app/backend/README.md",
+    "app/backend/src/features/training-jobs/README.md",
+    "team-setup/state/partner-notes.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 192,
+    "cache_creation_tokens": 9156,
+    "cache_read_tokens": 1398535,
+    "output_tokens": 6173,
+    "api_call_count": 6
+  }
+}
