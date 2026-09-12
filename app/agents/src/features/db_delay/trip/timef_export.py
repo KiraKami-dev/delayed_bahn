@@ -3,6 +3,10 @@
 Each record's relative zero is local midnight 30 days before the prediction moment. The daily
 history starts there; the two hourly series start 72 hours before the hour of the prediction
 moment. The run's delays sit on an ordinal axis, because they follow stops, not a clock.
+
+Records and annotations are materialised; the tasks are streamed (``set_task_stream``), because
+``add_tasks`` re-collects every registered task and record id on each call, which makes a
+record-by-record export quadratic in the number of examples.
 """
 
 from __future__ import annotations
@@ -18,7 +22,8 @@ import numpy as np
 import pandas as pd
 from timenet.dataset import TimeFDataset, TimeSeries
 from timenet.dataset.axis import OrdinalAxis, RegularAxis
-from timenet.types import Annotation, ClassificationTask, DataSource, DatasetMetadata, ScalarPredictionTask, TimeSeriesSpec, ureg
+from timenet.types import (Annotation, ClassificationTask, DataSource, DatasetMetadata, ScalarPredictionTask, Task,
+                           TimeSeriesSpec, ureg)
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -47,6 +52,23 @@ SPECS = {
 }
 ANNOTATED = ("split", "cls", "train_type", "train_number", "origin", "dest", "k_station", "hist_level",
              "pre_departure", "lead_minutes", "stops_ahead", "current_delay")
+TASK_TYPES = (ClassificationTask, ScalarPredictionTask)
+
+
+def _check_record_refs_without_scan(self: TimeFDataset, task: Task) -> None:
+    """TimeNet rebuilds the set of every record id for each streamed task, even for task types
+    that carry no record references; that makes the write quadratic. Skip the scan for those."""
+    if type(task).refs.record_id_fields:
+        _check_record_refs_original(self, task)
+
+
+_check_record_refs_original = TimeFDataset._check_record_refs
+TimeFDataset._check_record_refs = _check_record_refs_without_scan  # type: ignore[method-assign]
+
+
+def record_id(row: pd.Series) -> str:
+    """The record id of one example."""
+    return f"trip-{int(row['example_id'])}"
 
 
 def plain(value):
@@ -59,8 +81,8 @@ def plain(value):
 
 
 def add_example(dataset: TimeFDataset, row: pd.Series) -> None:
-    """Append one example as a record with its series, annotations and tasks."""
-    rid = f"trip-{int(row['example_id'])}"
+    """Append one example as a record with its series and annotations; the tasks are streamed."""
+    rid = record_id(row)
     t0 = pd.Timestamp(row["t0"])
     zero = (t0.normalize() - pd.Timedelta(days=HISTORY_DAYS)).to_pydatetime()
     hourly_start = int((t0.floor("h") - pd.Timedelta(hours=SERIES_HOURS) - pd.Timestamp(zero)) / pd.Timedelta(hours=1))
@@ -89,23 +111,37 @@ def add_example(dataset: TimeFDataset, row: pd.Series) -> None:
         Annotation(key="planned_arrival", value=pd.Timestamp(row["k_arr_pt"]).isoformat(), id=f"{rid}-arr"),
     ]
     record.add_annotations(annotations)
+
+
+def example_tasks(row: pd.Series) -> list[Task]:
+    """The tasks of one example, attached to its record: cancellation, and the delay when it runs."""
+    rid = record_id(row)
     stop = prompts.name(row["k_station"])
-    tasks = [ClassificationTask(prompt=f"Will the train be cancelled at {stop}?",
-                                target="cancelled" if row["cancelled"] else "runs", target_schema="cancelled|runs",
-                                id=f"{rid}-cancelled")]
+    tasks: list[Task] = [ClassificationTask(prompt=f"Will the train be cancelled at {stop}?",
+                                            target="cancelled" if row["cancelled"] else "runs",
+                                            target_schema="cancelled|runs", id=f"{rid}-cancelled")]
     if not row["cancelled"]:
         tasks.append(ScalarPredictionTask(prompt=f"How many minutes late will the train arrive at {stop}?",
                                           target=float(row["target_minutes"]), unit="minute",
                                           target_name="arrival_delay_minutes", rationale=prompts.rationale(row),
                                           id=f"{rid}-delay"))
-    dataset.add_tasks(record, tasks)
+    for task in tasks:  # streamed tasks carry their record ids themselves
+        task.record_ids = (rid,)
+    return tasks
 
 
 def to_timef(frame: pd.DataFrame, metadata: DatasetMetadata) -> TimeFDataset:
-    """Convert a frame of built examples into a TimeF dataset."""
+    """Convert a frame of built examples into a TimeF dataset with streamed tasks."""
     dataset = TimeFDataset(metadata=metadata)
     for i in range(len(frame)):
         add_example(dataset, frame.iloc[i])
+
+    def tasks():
+        # The writer iterates the source more than once, so build the tasks afresh each time.
+        for i in range(len(frame)):
+            yield from example_tasks(frame.iloc[i])
+
+    dataset.set_task_stream(TASK_TYPES, tasks)
     return dataset
 
 
@@ -152,7 +188,7 @@ def main() -> None:
         writer.write()
     path = root / dataset.metadata.dataset_id / str(dataset.metadata.dataset_version)
     print(f"converted {len(frame)} examples in {converted:.1f}s, wrote {path} in {time.time() - started - converted:.1f}s")
-    print(f"in memory: {len(dataset.records)} records, {len(dataset.tasks)} tasks")
+    print(f"in memory: {len(dataset.records)} records, {sum(1 for _ in dataset.iter_tasks())} tasks streamed")
     print("verified:", verify(path))
 
 

@@ -14,6 +14,13 @@ results: `../DESIGN.md`.
 | `model.py` | OpenTSLM-SP wrapper: padding fix, minute-aware loss, distribution readout |
 | `train.py` | Fine-tune from an OpenTSLM checkpoint, then evaluate. `--text-only` writes the series into the prompt as numbers (baseline without the encoder); `--start-checkpoint none` starts the encoder from random weights (ablation) |
 | `learning_curve.sh` | Scores saved checkpoints of the running main model on 300 validation examples, on the CPU |
+| `eval_checkpoint.sh` | Evaluates a saved checkpoint on the GPU next to training and reports it against the baselines |
+| `after_main.sh` | Waits for the main run, writes the report and triggers the September evaluation |
+| `calibrate.py` | Fits a temperature for the minute distribution on validation and applies it to test |
+| `combine.py` | Recalibrates P(cancelled) and blends TSLM and XGBoost quantiles, weights fitted on validation |
+| `bootstrap.py` | Paired bootstrap interval for the CRPS and median-error difference between two models |
+| `nebius/setup_vm.sh` | One-time setup of a persistent GPU VM in the devbox layout |
+| `nebius/compare_ablations.sh` | Pulls ablation results from the bucket and scores them against the baselines and the main run |
 | `report.py` | Score every model on the same examples |
 | `run_overnight.sh` | GPU queue: main run, report, plain cross-entropy ablation, report |
 | `run_forward_eval.sh` | After the overnight queue: both checkpoints on the September forward set, report |
@@ -37,3 +44,23 @@ bash trip/run_overnight.sh                            # full runs and out/trip/r
 
 Needs `duckdb`, `pandas`, `pyarrow`, `xgboost`, `torch`, `transformers`, `peft` and
 `opentslm`, plus one 48 GB GPU for training at batch 8.
+
+## Demo: a traveller's connection
+
+`predict.py` turns a trained checkpoint into the traveller view for recorded trips. With two
+example ids it reads the first as the arriving train, the second as the connecting train at the
+same station, and adds the chance of making the change from the two delay distributions and
+the transfer times (`connection.py`). `demo/goettingen_connection.json` is the output for two
+ICE trains meeting at Göttingen on the morning of 12 September 2026, forecast 14 and 29 minutes
+before their planned arrivals from the September forward set (data the model never trained on):
+
+```bash
+python trip/predict.py --examples data/trip/forward.parquet \
+    --checkpoint out/trip/ablations/plain_ce/plain_ce/checkpoint.pt \
+    --example-ids 1117 45787 --buffer 19 --min-transfer 5
+```
+
+Each forecast carries a headline ("about +1 min, likely 0 to 5 min, 92% chance of arriving on
+time"), the typical delay, the 10 to 90% range, P(on time), P(cancelled), the rationale built
+from the inputs and, for recorded trips, what actually happened. Inference for a pair takes a
+few seconds on one GPU once the model is loaded.

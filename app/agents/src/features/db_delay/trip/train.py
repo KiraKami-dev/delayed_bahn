@@ -26,15 +26,15 @@ ANSWER_RE = re.compile(r"Answer:\s*(cancelled|\d+)")
 class TripDataset(Dataset):
     """Formats examples lazily, so large splits cost no upfront time."""
 
-    def __init__(self, frame: pd.DataFrame, text_only: bool = False):
+    def __init__(self, frame: pd.DataFrame, mode: str = "series"):
         self.frame = frame.reset_index(drop=True)
-        self.text_only = text_only
+        self.mode = mode
 
     def __len__(self) -> int:
         return len(self.frame)
 
     def __getitem__(self, index: int) -> dict:
-        return prompts.sample(self.frame.iloc[index], text_only=self.text_only)
+        return prompts.sample(self.frame.iloc[index], mode=self.mode)
 
 
 def collate(batch: list[dict]) -> list[dict]:
@@ -44,9 +44,9 @@ def collate(batch: list[dict]) -> list[dict]:
     return extend_time_series_to_match_patch_size_and_aggregate(batch, patch_size=PATCH_SIZE)
 
 
-def loader(frame: pd.DataFrame, batch_size: int, shuffle: bool, workers: int, text_only: bool = False) -> DataLoader:
+def loader(frame: pd.DataFrame, batch_size: int, shuffle: bool, workers: int, mode: str = "series") -> DataLoader:
     """A DataLoader over formatted samples."""
-    return DataLoader(TripDataset(frame, text_only), batch_size=batch_size, shuffle=shuffle, collate_fn=collate,
+    return DataLoader(TripDataset(frame, mode), batch_size=batch_size, shuffle=shuffle, collate_fn=collate,
                       num_workers=workers, persistent_workers=False)
 
 
@@ -66,11 +66,11 @@ def learning_rate_factor(step: int, warmup: int, total: int) -> float:
 
 
 def evaluate_split(model: TripTSLM, frame: pd.DataFrame, batch_size: int, workers: int, out_dir: Path, name: str,
-                   text_only: bool = False) -> dict:
+                   mode: str = "series") -> dict:
     """Read the distribution for every example, score it, and save predictions."""
     probs, p_cancel, leak_decide, leak_minute = [], [], [], []
     started = time.time()
-    for step, batch in enumerate(loader(frame, batch_size, False, workers, text_only)):
+    for step, batch in enumerate(loader(frame, batch_size, False, workers, mode)):
         try:
             out = model.predict_distribution(batch)
         except torch.OutOfMemoryError:
@@ -96,11 +96,11 @@ def evaluate_split(model: TripTSLM, frame: pd.DataFrame, batch_size: int, worker
     return result
 
 
-def generation_check(model: TripTSLM, frame: pd.DataFrame, batch_size: int, out_dir: Path, text_only: bool = False) -> dict:
+def generation_check(model: TripTSLM, frame: pd.DataFrame, batch_size: int, out_dir: Path, mode: str = "series") -> dict:
     """Generate rationale and answer freely on a few examples and compare with the readout."""
     records = []
     for batch_rows in [frame.iloc[i:i + batch_size] for i in range(0, len(frame), batch_size)]:
-        samples = collate([prompts.sample(row, text_only=text_only) for _, row in batch_rows.iterrows()])
+        samples = collate([prompts.sample(row, mode=mode) for _, row in batch_rows.iterrows()])
         for (_, row), text in zip(batch_rows.iterrows(), model.generate_answers(samples)):
             match = ANSWER_RE.search(text)
             records.append({"example_id": int(row["example_id"]), "target": prompts.target_text(row),
@@ -139,10 +139,13 @@ def main() -> None:
     parser.add_argument("--eval-only", action="store_true")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--splits", default="validation,test", help="which splits to evaluate after training")
-    parser.add_argument("--text-only", action="store_true", help="baseline: series as numbers in the prompt, no encoder")
+    parser.add_argument("--prompt-mode", choices=prompts.MODES, default="series",
+                        help="series through the encoder, as numbers in the text (no encoder), or both")
+    parser.add_argument("--text-only", action="store_true", help="same as --prompt-mode text")
     parser.add_argument("--grad-checkpointing", action="store_true",
                         help="recompute activations in the backward pass; fits the longer text-only prompts in 48 GB")
     args = parser.parse_args()
+    mode = "text" if args.text_only else args.prompt_mode
 
     torch.manual_seed(args.seed)
     out_dir = Path(args.out)
@@ -180,7 +183,7 @@ def main() -> None:
         started, step, window, skipped = time.time(), 0, [], 0
         stop = False
         while not stop:
-            for batch in loader(train, args.batch_size, True, args.workers, args.text_only):
+            for batch in loader(train, args.batch_size, True, args.workers, mode):
                 for group, base in zip(optimizer.param_groups, base_lrs):
                     group["lr"] = base * learning_rate_factor(step, warmup, total)
                 try:
@@ -220,10 +223,10 @@ def main() -> None:
     results = {}
     for name, frame in (("validation", val), ("test", test)):
         if name in args.splits.split(","):
-            results[name] = evaluate_split(model, frame, args.eval_batch_size, args.workers, out_dir, name, args.text_only)
+            results[name] = evaluate_split(model, frame, args.eval_batch_size, args.workers, out_dir, name, mode)
             print(name, json.dumps(results[name]["overall"]), flush=True)
     if args.generate and "test" in args.splits.split(","):
-        log["generation_check"] = generation_check(model, test.head(args.generate), 8, out_dir, args.text_only)
+        log["generation_check"] = generation_check(model, test.head(args.generate), 8, out_dir, mode)
         print("generation", json.dumps(log["generation_check"]), flush=True)
     (out_dir / "metrics.json").write_text(json.dumps(results, indent=2))
     (out_dir / "train_log.json").write_text(json.dumps(log, indent=2))
