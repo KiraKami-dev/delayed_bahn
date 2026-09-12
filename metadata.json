@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BTQSTH6NARMGABRD3WC5TT",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/timef_export.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 5656,
+    "cache_creation_tokens": 1012698,
+    "cache_read_tokens": 128900709,
+    "output_tokens": 577172,
+    "api_call_count": 268
+  }
+}
