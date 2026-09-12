@@ -16,7 +16,10 @@ done
 WORK=/workspace/trip-run
 LOCAL=/workspace/results
 OUT="$DATA/runs/${RUN_TAG:-ablations}"
-STEPS=${STEPS:-12000}
+STEPS=${STEPS:-2000}
+VAL_LIMIT=${VAL_LIMIT:-3000}
+TEST_LIMIT=${TEST_LIMIT:-5000}
+GENERATE=${GENERATE:-16}
 mkdir -p "$WORK" "$LOCAL"
 cd "$WORK"
 
@@ -33,7 +36,8 @@ nvidia-smi
 
 # The CUDA runtime image is minimal: fetch curl, then uv, then a Python 3.12 environment
 # pinned to the versions the devbox trained with (opentslm needs Python 3.12 or later).
-apt-get update -qq && apt-get install -y -qq curl ca-certificates > /dev/null
+# build-essential: Triton compiles GPU kernels at runtime and needs a C compiler.
+apt-get update -qq && apt-get install -y -qq curl ca-certificates build-essential > /dev/null
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 uv venv --python 3.12 .venv
@@ -54,20 +58,29 @@ for repo in ("OpenTSLM/llama-3.2-3b-m4-sp", "OpenTSLM/llama-3.2-3b-ecg-sp"):
 print("models cached")
 PY
 
+RUNS=${RUNS:-plain_ce text_only ecg_sp_start random_encoder}
+NEXT_GPU=0
+
 run() {
-  local gpu=$1 name=$2
-  shift 2
+  local name=$1
+  shift
+  case " $RUNS " in *" $name "*) ;; *) return 0 ;; esac
+  local gpu=$NEXT_GPU
+  NEXT_GPU=$((NEXT_GPU + 1))
   mkdir -p "$LOCAL/$name"
   echo "$(date -u +%FT%TZ) $name starting on GPU $gpu"
-  CUDA_VISIBLE_DEVICES=$gpu .venv/bin/python -u trip/train.py --out "$LOCAL/$name" --max-steps "$STEPS" \
-    --max-hours 4.5 --workers 6 "$@" 2>&1 | tee "$LOCAL/$name/train.log" | sed -u "s/^/[$name] /"
-  local status=${PIPESTATUS[0]}
-  echo "$(date -u +%FT%TZ) $name exit $status" | tee -a "$LOCAL/status.log"
+  (
+    CUDA_VISIBLE_DEVICES=$gpu .venv/bin/python -u trip/train.py --out "$LOCAL/$name" --max-steps "$STEPS" \
+      --max-hours 4.5 --workers 6 --val-limit "$VAL_LIMIT" --test-limit "$TEST_LIMIT" --generate "$GENERATE" "$@" \
+      2>&1 | tee "$LOCAL/$name/train.log" | sed -u "s/^/[$name] /"
+    echo "$(date -u +%FT%TZ) $name exit ${PIPESTATUS[0]}" | tee -a "$LOCAL/status.log"
+  ) &
 }
 
-run 0 plain_ce --loss-mode plain &
-run 1 text_only --text-only --grad-checkpointing &
-run 2 ecg_sp_start --start-checkpoint OpenTSLM/llama-3.2-3b-ecg-sp &
-run 3 random_encoder --start-checkpoint none &
+# RUNS picks which of these a job runs; each selected run gets the next free GPU.
+run plain_ce --loss-mode plain
+run text_only --text-only --grad-checkpointing
+run ecg_sp_start --start-checkpoint OpenTSLM/llama-3.2-3b-ecg-sp
+run random_encoder --start-checkpoint none
 wait
 echo "$(date -u +%FT%TZ) all runs finished" | tee -a "$LOCAL/status.log"
