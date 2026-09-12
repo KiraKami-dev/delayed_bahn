@@ -1,0 +1,1 @@
+in gitignore entire said .entire files and all should not be in git ignore
