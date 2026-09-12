@@ -1,0 +1,187 @@
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-12k: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 text-only: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bvspw7y8n</task-id>
+<summary>Monitor event: "Four H100 ablation jobs (retry with gcc): states, progress, eval results, crashes"</summary>
+<event>h100 plain-ce: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-eval-plain-full: PROVISIONING
+jonas-h100-plain-lr2x: STARTING
+jonas-h100-plain-5k: STARTING
+jonas-h100-main-12k: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-main-2k: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-random-encoder-2: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-ecg-sp-start-2: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-plain-ce-2: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-text-only-2: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-random-encoder: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-ecg-sp-start: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-plain-ce: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b4uexrsws</task-id>
+<summary>Monitor event: "H100 plain-loss follow-ups (5k steps, 2x learning rate): states, progress, eval results, crashes"</summary>
+<event>h100 plain-5k: STARTING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b4uexrsws</task-id>
+<summary>Monitor event: "H100 plain-loss follow-ups (5k steps, 2x learning rate): states, progress, eval results, crashes"</summary>
+<event>h100 plain-lr2x: STARTING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-text-only: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-trip-ablations-2: CANCELLED
+jonas-trip-ablations: CANCELLED
+jonas-smoke-2245: COMPLETED</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>buly7s2a1</task-id>
+<summary>Monitor event: "H100 main-config jobs (2k reference, 12k full): states, progress, eval results, crashes"</summary>
+<event>h100 main-2k | 2026-09-12T21:48:09Z main starting on GPU 0</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+Is this docmented somewhere now? Then I'd compact your context afterwards
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-eval-plain-full: STARTING
+jonas-h100-plain-lr2x: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-plain-5k: RUNNING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-main-12k | 2026-09-12T21:48:49Z main starting on GPU 0</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
