@@ -18,7 +18,7 @@ from torch.nn.utils.rnn import pad_sequence
 BASE_LLM = "unsloth/Llama-3.2-3B"  # same safetensors as meta-llama/Llama-3.2-3B, ungated
 START_CHECKPOINT = "OpenTSLM/llama-3.2-3b-m4-sp"
 MAX_MINUTES = 999
-LOSS_MODES = ("soft_crps", "plain")
+LOSS_MODES = ("soft_crps", "plain", "plain_crps")  # plain_crps: exact-minute cross-entropy plus the CRPS term
 
 
 class TripTSLM(OpenTSLMSP):
@@ -122,11 +122,13 @@ class TripTSLM(OpenTSLMSP):
                 raise ValueError(f"answer does not end in 'Answer: <minutes>': {self.tokenizer.decode(ids[-6:])!r}")
             for j, token in enumerate(ids):
                 col = starts[i] + j - 1  # logits at a position predict the next token
-                if self.loss_mode == "soft_crps" and not cancelled and j == len(ids) - 2:
+                minute_position = not cancelled and j == len(ids) - 2
+                if minute_position and self.loss_mode != "plain":
                     num_rows.append(i)
                     num_cols.append(col)
                     num_targets.append(self.id_to_minute[token])
-                else:
+                if not (minute_position and self.loss_mode == "soft_crps"):
+                    # soft_crps replaces the token loss at the minute; plain_crps keeps it and adds CRPS
                     rows.append(i)
                     cols.append(col)
                     targets.append(token)
@@ -140,13 +142,16 @@ class TripTSLM(OpenTSLMSP):
             minute_logits = selected[:, self.minute_ids]
             log_probs = F.log_softmax(selected, dim=-1)[:, self.minute_ids]
             y = torch.tensor(num_targets, device=device, dtype=torch.float32)[:, None]
-            width = self.soft_width[0] + self.soft_width[1] * y
-            soft = torch.softmax(-(self.minutes[None] - y).abs() / width, dim=-1)
-            soft_ce = -(soft * log_probs).sum(dim=-1).mean()
             cdf = torch.softmax(minute_logits, dim=-1).cumsum(dim=-1)
             crps = ((cdf - (self.minutes[None] >= y).float()) ** 2).sum(dim=-1).mean()
-            loss = loss + soft_ce + self.crps_weight * crps
-            parts |= {"soft_ce": soft_ce.item(), "crps": crps.item()}
+            loss = loss + self.crps_weight * crps
+            parts |= {"crps": crps.item()}
+            if self.loss_mode == "soft_crps":
+                width = self.soft_width[0] + self.soft_width[1] * y
+                soft = torch.softmax(-(self.minutes[None] - y).abs() / width, dim=-1)
+                soft_ce = -(soft * log_probs).sum(dim=-1).mean()
+                loss = loss + soft_ce
+                parts |= {"soft_ce": soft_ce.item()}
         self.last_parts = parts
         return loss
 

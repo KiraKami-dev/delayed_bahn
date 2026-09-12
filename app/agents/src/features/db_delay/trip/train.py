@@ -119,7 +119,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--examples", default="data/trip/examples.parquet")
     parser.add_argument("--out", default="out/trip/tslm")
-    parser.add_argument("--loss-mode", default="soft_crps", choices=["soft_crps", "plain"])
+    parser.add_argument("--loss-mode", default="soft_crps", choices=["soft_crps", "plain", "plain_crps"])
     parser.add_argument("--start-checkpoint", default=START_CHECKPOINT)
     parser.add_argument("--resume", help="a checkpoint.pt written by this script")
     parser.add_argument("--batch-size", type=int, default=8)
