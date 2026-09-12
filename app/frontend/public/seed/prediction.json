@@ -1,0 +1,48 @@
+{
+  "journeyId": "seed-nue-muc-airport",
+  "modelId": "mock-prior-v1",
+  "legs": [
+    {
+      "trainId": "RB 16",
+      "expectedDelayMinutes": {
+        "value": 7,
+        "reasoning": "About +7 min, likely 1 to 24 min, 44% chance of arriving on time. Regional train on a 2.9 h leg into München Hbf at the morning peak; long regional runs into Munich accumulate delay at Ingolstadt and Pasing.",
+        "sources": ["mock: train-class × hour prior v1", "piebro/deutsche-bahn-data, Munich region"],
+        "confidence": "low"
+      },
+      "missProbability": {
+        "value": 0.38,
+        "reasoning": "16 min planned at München Hbf, 5 min needed to change → 11 min slack. P(RB 16 arrival delay − S 8 departure delay > 11 min) = 36%, plus 3% cancellation risk.",
+        "sources": ["connection.py chain", "mock: train-class × hour prior v1"],
+        "confidence": "low"
+      },
+      "distribution": { "bins": ["≤5", "5–15", "15–30", ">30", "cancelled"], "probs": [0.41, 0.3, 0.17, 0.09, 0.03] },
+      "quantiles": { "p10": 1, "p50": 7, "p90": 24 },
+      "pCancel": 0.03
+    },
+    {
+      "trainId": "S 8",
+      "expectedDelayMinutes": {
+        "value": 2,
+        "reasoning": "About +2 min, likely 0 to 9 min, 78% chance of arriving on time. S-Bahn through the Stammstrecke; short, frequent, small spread.",
+        "sources": ["mock: train-class × hour prior v1"],
+        "confidence": "low"
+      },
+      "missProbability": {
+        "value": 0,
+        "reasoning": "Final leg — nothing to miss after München Flughafen Terminal.",
+        "sources": ["connection.py chain"],
+        "confidence": "low"
+      },
+      "distribution": { "bins": ["≤5", "5–15", "15–30", ">30", "cancelled"], "probs": [0.76, 0.16, 0.04, 0.01, 0.03] },
+      "quantiles": { "p10": 0, "p50": 2, "p90": 9 },
+      "pCancel": 0.03
+    }
+  ],
+  "planFailProbability": {
+    "value": 0.38,
+    "reasoning": "1 − (1 − 0.38) = 0.38. One transfer at München Hbf drives the whole plan; trains are treated as independent, which is optimistic when one disruption hits both.",
+    "sources": ["connection.py chain", "mock: train-class × hour prior v1"],
+    "confidence": "low"
+  }
+}
