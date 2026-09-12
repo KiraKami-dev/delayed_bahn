@@ -1,0 +1,253 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2BQDKGWP1T6J3MAVXHN481Y",
+  "session_id": "abdb3068-b181-45de-82c2-0cdd5152ab32",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T21:12:21.908815Z",
+  "branch": "db-train-model",
+  "checkpoints_count": 13,
+  "save_step_count": 12,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "dc714d569ffa",
+  "checkpoint_transcript_start": 750,
+  "transcript_lines_at_start": 750,
+  "compact_transcript_start": 89,
+  "token_usage": {
+    "input_tokens": 2762,
+    "cache_creation_tokens": 473321,
+    "cache_read_tokens": 65511073,
+    "output_tokens": 330837,
+    "api_call_count": 119,
+    "subagent_tokens": {
+      "input_tokens": 0,
+      "cache_creation_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 0,
+      "api_call_count": 0
+    }
+  },
+  "session_metrics": {
+    "turn_count": 20
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 2347,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/DESIGN.md": 128,
+        "app/agents/src/features/db_delay/trip/README.md": 38,
+        "app/agents/src/features/db_delay/trip/baselines.py": 163,
+        "app/agents/src/features/db_delay/trip/build.py": 423,
+        "app/agents/src/features/db_delay/trip/check_samples.py": 60,
+        "app/agents/src/features/db_delay/trip/connection.py": 79,
+        "app/agents/src/features/db_delay/trip/inspect_examples.py": 52,
+        "app/agents/src/features/db_delay/trip/metrics.py": 111,
+        "app/agents/src/features/db_delay/trip/model.py": 170,
+        "app/agents/src/features/db_delay/trip/predict.py": 84,
+        "app/agents/src/features/db_delay/trip/prompts.py": 122,
+        "app/agents/src/features/db_delay/trip/report.py": 66,
+        "app/agents/src/features/db_delay/trip/run_forward_eval.sh": 32,
+        "app/agents/src/features/db_delay/trip/run_overnight.sh": 34,
+        "app/agents/src/features/db_delay/trip/test_build.py": 132,
+        "app/agents/src/features/db_delay/trip/test_connection.py": 52,
+        "app/agents/src/features/db_delay/trip/test_metrics.py": 46,
+        "app/agents/src/features/db_delay/trip/test_model.py": 80,
+        "app/agents/src/features/db_delay/trip/timef_export.py": 160,
+        "app/agents/src/features/db_delay/trip/timenet_connector/connector.py": 72,
+        "app/agents/src/features/db_delay/trip/timenet_connector/dataset.yaml": 24,
+        "app/agents/src/features/db_delay/trip/train.py": 219
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 33,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2347,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 33
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 33,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2347,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 33
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 33,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2347,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 33
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 33,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2347,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 33
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 33,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2347,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 33
+      }
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 95,
+      "user_lines_removed": 18,
+      "agent_lines_added": 2347,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".env.example": 13,
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/prompts.py": 14,
+        "app/agents/src/features/db_delay/trip/test_model.py": 12,
+        "app/agents/src/features/db_delay/trip/train.py": 21
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/prompts.py": 5,
+        "app/agents/src/features/db_delay/trip/train.py": 13
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 56,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2391,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/train.py": 21
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/train.py": 13
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 260,
+      "user_lines_removed": 17,
+      "agent_lines_added": 2391,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".env.example": 5,
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/model.py": 9,
+        "app/agents/src/features/db_delay/trip/nebius/requirements.txt": 121,
+        "app/agents/src/features/db_delay/trip/nebius/run_ablations.sh": 60,
+        "app/agents/src/features/db_delay/trip/predict.py": 2,
+        "app/agents/src/features/db_delay/trip/train.py": 28
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 2,
+        "app/agents/src/features/db_delay/trip/predict.py": 1,
+        "app/agents/src/features/db_delay/trip/train.py": 14
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 255,
+      "user_lines_removed": 17,
+      "agent_lines_added": 2396,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/model.py": 9,
+        "app/agents/src/features/db_delay/trip/nebius/requirements.txt": 121,
+        "app/agents/src/features/db_delay/trip/nebius/run_ablations.sh": 60,
+        "app/agents/src/features/db_delay/trip/predict.py": 2,
+        "app/agents/src/features/db_delay/trip/train.py": 28
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 2,
+        "app/agents/src/features/db_delay/trip/predict.py": 1,
+        "app/agents/src/features/db_delay/trip/train.py": 14
+      }
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 195,
+      "user_lines_removed": 17,
+      "agent_lines_added": 2460,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/model.py": 9,
+        "app/agents/src/features/db_delay/trip/nebius/requirements.txt": 121,
+        "app/agents/src/features/db_delay/trip/predict.py": 2,
+        "app/agents/src/features/db_delay/trip/train.py": 28
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 2,
+        "app/agents/src/features/db_delay/trip/predict.py": 1,
+        "app/agents/src/features/db_delay/trip/train.py": 14
+      }
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 198,
+      "user_lines_removed": 17,
+      "agent_lines_added": 2514,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/model.py": 9,
+        "app/agents/src/features/db_delay/trip/nebius/requirements.txt": 121,
+        "app/agents/src/features/db_delay/trip/nebius/sync_bucket.sh": 3,
+        "app/agents/src/features/db_delay/trip/predict.py": 2,
+        "app/agents/src/features/db_delay/trip/train.py": 28
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 2,
+        "app/agents/src/features/db_delay/trip/predict.py": 1,
+        "app/agents/src/features/db_delay/trip/train.py": 14
+      }
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 223,
+      "user_lines_removed": 32,
+      "agent_lines_added": 2514,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/trip/learning_curve.sh": 35,
+        "app/agents/src/features/db_delay/trip/model.py": 9,
+        "app/agents/src/features/db_delay/trip/nebius/requirements.txt": 121,
+        "app/agents/src/features/db_delay/trip/nebius/run_ablations.sh": 23,
+        "app/agents/src/features/db_delay/trip/nebius/sync_bucket.sh": 3,
+        "app/agents/src/features/db_delay/trip/predict.py": 2,
+        "app/agents/src/features/db_delay/trip/run_forward_eval.sh": 2,
+        "app/agents/src/features/db_delay/trip/train.py": 28
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/model.py": 2,
+        "app/agents/src/features/db_delay/trip/nebius/run_ablations.sh": 14,
+        "app/agents/src/features/db_delay/trip/predict.py": 1,
+        "app/agents/src/features/db_delay/trip/run_forward_eval.sh": 1,
+        "app/agents/src/features/db_delay/trip/train.py": 14
+      }
+    }
+  ]
+}
