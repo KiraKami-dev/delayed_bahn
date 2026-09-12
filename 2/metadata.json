@@ -3,23 +3,22 @@
   "checkpoint_id": "01M2BWVAK9NM4N1FWRYMEMT697",
   "session_id": "cd860853-789b-4793-89dd-f90596af0281",
   "strategy": "manual-commit",
-  "created_at": "2026-09-12T22:47:16.408058Z",
+  "created_at": "2026-09-12T22:47:19.026786Z",
   "branch": "main",
   "checkpoints_count": 1,
-  "save_step_count": 1,
   "files_touched": [],
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
   "turn_id": "01f02e043467",
-  "checkpoint_transcript_start": 136,
-  "transcript_lines_at_start": 136,
-  "compact_transcript_start": 19,
+  "checkpoint_transcript_start": 144,
+  "transcript_lines_at_start": 144,
+  "compact_transcript_start": 21,
   "token_usage": {
-    "input_tokens": 2,
-    "cache_creation_tokens": 368,
-    "cache_read_tokens": 84324,
-    "output_tokens": 535,
-    "api_call_count": 1
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
   },
   "skill_events_version": 1,
   "skill_events": [
@@ -57,33 +56,5 @@
   ],
   "session_metrics": {
     "turn_count": 2
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0
-    },
-    {
-      "checkpoint_number": 2,
-      "user_lines_added": 223,
-      "user_lines_removed": 0,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "app/backend/src/features/recommendation/fixtures/alternatives.json": 24,
-        "app/backend/src/features/recommendation/fixtures/reroute.json": 40,
-        "app/backend/src/features/share-parser/fixtures/share-texts/german-sample.txt": 7,
-        "app/backend/src/features/share-parser/fixtures/share-texts/real-sample-en.txt": 7,
-        "app/backend/src/features/share-parser/fixtures/share-texts/two-connections.txt": 14,
-        "app/backend/src/features/share-parser/fixtures/share-texts/two-legs-en.txt": 11,
-        "app/backend/src/features/share-parser/fixtures/share-texts/url-only.txt": 1,
-        "app/frontend/public/proof.json": 15,
-        "app/frontend/public/seed/causes.json": 30,
-        "app/frontend/public/seed/reroute.json": 74
-      }
-    }
-  ]
+  }
 }
