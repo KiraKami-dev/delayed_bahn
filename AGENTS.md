@@ -140,3 +140,10 @@ The `#guide` page must remain readable when API requests fail; its shortcuts
 and copy actions must not reset state or silently publish changes.
 Product checks use `team-setup/scripts/smoke.sh`; unconfigured is not a pass.
 A clean snapshot plus passing smoke is required before calling a demo ready.
+
+<!-- entire-graph:begin -->
+This repo has the entire-graph code graph installed. Before exploring code with
+grep/find/whole-file reads, read .entire/graph-agent.md — resolution-first guidance
+for using graph retrieval, focused source inspection, and verification.
+@.entire/graph-agent.md
+<!-- entire-graph:end -->
