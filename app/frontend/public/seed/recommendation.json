@@ -1,0 +1,33 @@
+{
+  "verdict": "take-alternative",
+  "advice": {
+    "value": "Storm warning: 38% chance you miss the S 8 at München Hbf. Take the RB 16 one hour earlier (03:34) — same 16 min change, but a missed connection costs you 10 minutes instead of your flight.",
+    "reasoning": "Plan-fail 0.38 is above the 0.15 comfort line. Adding up to 30 min at München Hbf still leaves 0.19, so the earlier train is the only option that brings the risk under the line while keeping the same route.",
+    "sources": ["recommendation-rules v1", "connection.py chain", "mock: train-class × hour prior v1"],
+    "confidence": "low"
+  },
+  "bufferMinutes": 60,
+  "chosenDeparture": "2026-09-13T03:34:00+02:00",
+  "leaveHomeBy": "2026-09-13T03:09:00+02:00",
+  "alternative": {
+    "id": "seed-nue-muc-airport-alt",
+    "source": "seed",
+    "legs": [
+      {
+        "trainId": "RB 16",
+        "from": { "evaNumber": "8000284", "name": "Nürnberg Hbf", "lat": 49.4456, "lon": 11.0823 },
+        "to": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+        "plannedDeparture": "2026-09-13T03:34:00+02:00",
+        "plannedArrival": "2026-09-13T06:25:00+02:00",
+        "transferMinutes": 16
+      },
+      {
+        "trainId": "S 8",
+        "from": { "evaNumber": "8000261", "name": "München Hbf", "lat": 48.1402, "lon": 11.56 },
+        "to": { "evaNumber": "8004167", "name": "München Flughafen Terminal", "lat": 48.3537, "lon": 11.786 },
+        "plannedDeparture": "2026-09-13T06:41:00+02:00",
+        "plannedArrival": "2026-09-13T07:22:00+02:00"
+      }
+    ]
+  }
+}
