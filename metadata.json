@@ -4,9 +4,7 @@
   "strategy": "manual-commit",
   "branch": "main",
   "checkpoints_count": 5,
-  "files_touched": [
-    "app/frontend/public/seed/recommendation.json"
-  ],
+  "files_touched": null,
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -17,10 +15,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 1632,
-    "cache_creation_tokens": 210395,
-    "cache_read_tokens": 10105977,
-    "output_tokens": 87638,
-    "api_call_count": 62
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
   }
 }
