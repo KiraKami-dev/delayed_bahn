@@ -93,6 +93,15 @@ def rationale(row: pd.Series) -> str:
         # Longer and shorter scales of the same history, so the model can weigh trend against base rate.
         parts.append(f"Over {int(row['hist_window_days'])} days the median was {row['hist_median_long']:.0f} minutes "
                      f"(90th percentile {row['hist_p90_long']:.0f}); over the last 7 days it was {row['hist_median_7']:.0f}.")
+    if "prev_arr_delays" in row:
+        prev = as_list(row["prev_arr_delays"])
+        if prev:
+            gaps = as_list(row["prev_gaps"])
+            parts.append(f"Today the previous {len(prev)} train{'s' if len(prev) > 1 else ''} of this type towards "
+                         f"{name(row['dest'])} reached {stop} {', '.join(f'{d:.0f}' for d in prev)} minutes late, "
+                         f"the latest {gaps[-1]:.0f} minutes before this one is due.")
+        else:
+            parts.append(f"No earlier train of this type towards {name(row['dest'])} reached {stop} in the last 6 hours.")
     if "station_late_same_hour" in row and len(row["station_series"]) >= 168:
         parts.append(f"At this time of day, {pct(row['station_late_same_hour'])} of stops at {stop} ran late over the "
                      f"last {len(row['station_series']) // 24} days, {pct(row['network_late_same_hour'])} nationwide.")
@@ -141,6 +150,7 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
         f"{WEEKDAYS[arrival.weekday()]} {arrival:%H:%M}."
     )
     run = as_list(row["run_delays"])
+    prev = as_list(row["prev_arr_delays"]) if "prev_arr_delays" in row else []
     raw = [
         ("Departure delay at each stop so far" if run else "No departures yet", run or [0.0], "minutes"),
         (f"Daily median arrival delay at {stop}, last {len(row['hist_series'])} days", row["hist_series"], "minutes"),
@@ -148,6 +158,10 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
         (f"Hourly share of late {row['cls']} stops nationwide, last {len(row['network_series'])} hours",
          row["network_series"], "share"),
     ]
+    if "prev_arr_delays" in row:
+        raw.append((f"Arrival delay at {stop} of the previous trains on this route today, oldest first"
+                    if prev else "No previous train on this route reached the stop in the last 6 hours",
+                    prev or [0.0], "minutes"))
     if mode in ("text", "both"):
         # The same numbers written into the prompt; in ``text`` no time-series encoder is involved.
         lines = []

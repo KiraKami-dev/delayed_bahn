@@ -83,7 +83,7 @@ def metrics_max() -> int:
 
 def features(frame: pd.DataFrame, categories: dict[str, list[str]]) -> pd.DataFrame:
     """Tabular features, categories encoded with the training vocabulary."""
-    x = frame[NUMERIC].astype(np.float64).copy()
+    x = frame[NUMERIC + [c for c in OPTIONAL_NUMERIC if c in frame.columns]].astype(np.float64).copy()
     for col in CATEGORICAL:
         x[col] = pd.Categorical(frame[col], categories=categories[col]).codes
     x["pre_departure"] = frame["pre_departure"].astype(np.float64)
