@@ -12,7 +12,7 @@ export function createTrainingService({ env = process.env, client, fetchImpl = f
   let _client = client;
   const getClient = () => {
     if (_client) return _client;
-    if (!env.NEBIUS_PROJECT_ID) { const e = new Error('NEBIUS_PROJECT_ID is not set; copy app/backend/.env.example to .env'); e.status = 503; throw e; }
+    if (!env.NEBIUS_PROJECT_ID) { const e = new Error('NEBIUS_PROJECT_ID is not set; create app/backend/.env with NEBIUS_PROJECT_ID=... (see the training-jobs README)'); e.status = 503; throw e; }
     _client = new NebiusJobsClient({ projectId: env.NEBIUS_PROJECT_ID, getToken: createTokenProvider(env, { fetchImpl }), fetchImpl });
     return _client;
   };

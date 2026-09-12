@@ -4,7 +4,7 @@ Node ≥ 22, **no npm dependencies** (built-in `http`, `fetch`, `crypto`).
 
 ```bash
 cd app/backend
-cp .env.example .env            # fill in NEBIUS_PROJECT_ID (see training-jobs README)
+printf "NEBIUS_PROJECT_ID=<project_ID>\n" > .env   # git-ignored; full variable list in the training-jobs README
 npm run dev                     # API on http://localhost:8000  (GET /api/health)
 npm test                        # offline smoke tests
 npm run train -- doctor         # check Nebius auth/project/subnet
