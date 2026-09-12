@@ -29,7 +29,8 @@ SDK, sandbox, dataset, and credits notes from partner companies on site.
   Three jobs there requested the full `8gpu-128vcpu-1600gb` node and all
   failed with `NotEnoughResources` (VM schedule timeout). Credits were never
   the problem; capacity was.
-- **Team default: us-central1** (`project-u00re9y9kc00bwpa7d9ftt`, subnet
+- **Superseded 20:35 UTC — team default is now eu-north1, 4× L40S** (see below).
+- Earlier default: us-central1 (`project-u00re9y9kc00bwpa7d9ftt`, subnet
   `vpcsubnet-u00dkfnwx2mpagdhtw`): B200 180 GB (`gpu-b200-sxm`,
   `1gpu-20vcpu-224gb`, ~$7.15/h, ~84 h on $600), H200, RTX6000.
   `app/backend/.env.example` points there; the CLI profile on Akshat's
@@ -44,3 +45,18 @@ SDK, sandbox, dataset, and credits notes from partner companies on site.
   the 8-GPU node is ~$36/h anyway (~16 h on $600).
 - Verified tonight: 1× L40S in eu-north1 and 1× B200 in us-central1 both
   ran nvidia-smi end to end with `npm run train -- smoke`.
+
+## Team GPU default (12 Sep 2026, 20:35 UTC)
+
+- **eu-north1, `gpu-l40s-d`, `4gpu-128vcpu-768gb`**: 4× L40S 48 GB (192 GB
+  GPU memory), 128 vCPU, 768 GiB RAM, ~$7.28/h (~82 node-hours on $600).
+  Verified: job `aijob-e00d1m1qwztxqghv8g` ran nvidia-smi on all four GPUs
+  in under 3 min. `app/backend/.env.example` carries this config.
+- Also verified single-GPU tonight: H100 (eu-north1), B200 (us-central1),
+  RTX PRO 6000 (uk-south2), L40S (eu-north1).
+- Not obtainable: every 8-GPU node tried (H200 ×3 regions, H100, B200,
+  RTX 6000), single B300 (uk-south1), and GB300 (needs an NVLInstanceGroup,
+  not available through jobs).
+
+Teammate setup: `cd app/backend && cp .env.example .env && npm run train -- doctor`
+after a one-time `nebius profile create` login.

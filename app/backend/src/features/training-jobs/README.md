@@ -181,6 +181,7 @@ curl -s localhost:8000/api/training/jobs -H 'content-type: application/json' -d 
 | gpu-l40s-d | 1gpu-16vcpu-96gb | 1.82 | ~330 |
 | gpu-h100-sxm | 1gpu-16vcpu-200gb | 3.85 | ~155 |
 | gpu-h200-sxm | 1gpu-16vcpu-200gb | 4.50 | ~133 |
+| gpu-l40s-d | 4gpu-128vcpu-768gb (team default) | 7.28 | ~82 node-hours |
 | gpu-h100-sxm | 8gpu-128vcpu-1600gb | 30.80 | ~19 |
 
 Rules of thumb: L40S (48 GB) is fine for ≤ 7B-parameter LoRA/QLoRA and any
@@ -196,7 +197,7 @@ Also budget for provisioning time (a few minutes per job) and any bucket storage
 | `NEBIUS_PROJECT_ID is not set` | copy `.env.example` → `.env` |
 | `nebius iam get-access-token` returns nothing | `nebius profile create …`, log in in the browser |
 | 403 on create | the account/service account lacks editor on the project |
-| `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset. Check the **region** first: platforms are per project/region. Our tenant's `default-project-eu-west1` (the console default) only offers `gpu-h200-sxm`, and every 8-GPU H200 request there timed out. `default-project-us-central1` (`project-u00re9y9kc00bwpa7d9ftt`, team default) has B200, H200, RTX6000; `default-project-eu-north1` (`project-e00g0c62pr00fj32s0h4gj`) has H100, H200, L40S-a and L40S-d. Single-GPU jobs schedule in both within 2–3 min; the 8× H200 node did not schedule in any region on 12 Sep 2026 (VM stays STOPPED in PROVISIONING, then errors). Never request the 8-GPU preset for a 0.5B/3B fine-tune |
+| `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset. Check the **region** first: platforms are per project/region. Our tenant's `default-project-eu-west1` (the console default) only offers `gpu-h200-sxm`, and every 8-GPU H200 request there timed out. `default-project-us-central1` (`project-u00re9y9kc00bwpa7d9ftt`, team default) has B200, H200, RTX6000; `default-project-eu-north1` (`project-e00g0c62pr00fj32s0h4gj`) has H100, H200, L40S-a and L40S-d. Single-GPU jobs schedule in both within 2–3 min. **Team default is `gpu-l40s-d` / `4gpu-128vcpu-768gb` in eu-north1**, the only multi-GPU node that scheduled on 12 Sep 2026. 8× nodes (H200 in three regions; H100, B200, RTX 6000 pending for 10+ min) stall with the VM STOPPED in PROVISIONING, then error. GB300 is rejected outright: its preset needs an NVLInstanceGroup, not available via jobs. Never request the 8-GPU preset for a 0.5B/3B fine-tune |
 | `FAILED` / `TimeoutExceeded` | raise `--timeout` |
 | `FAILED` right after `RUNNING` | `logs <id>`; usually a pip install or script error |
 | Preset rejected | run `nebius compute platform list` and use the IDs it prints; the catalog in `spec.js` is a convenience, not the source of truth |
