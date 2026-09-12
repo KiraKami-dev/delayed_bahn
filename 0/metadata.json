@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2B0FN3JB3M9HTA7290H8QDR",
+  "session_id": "c0b33902-4f96-4eea-920f-717366ed31ba",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T14:31:31.381829Z",
+  "branch": "feat/nebius-training-backend",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "team-setup/state/event.json",
+    "team-setup/state/log/bootstrap-auto.log",
+    "team-setup/state/pipeline.json"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "0804929c4f9e",
+  "checkpoint_transcript_start": 368,
+  "transcript_lines_at_start": 368,
+  "compact_transcript_start": 41,
+  "token_usage": {
+    "input_tokens": 96,
+    "cache_creation_tokens": 3906,
+    "cache_read_tokens": 441477,
+    "output_tokens": 2241,
+    "api_call_count": 3
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-12T14:31:31.335793Z",
+    "agent_lines": 90,
+    "agent_removed": 60,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 90,
+    "total_lines_changed": 150,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

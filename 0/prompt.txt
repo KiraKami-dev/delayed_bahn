@@ -1,0 +1,242 @@
+can you get this up and running in backend so we can train our models in our server > ## Documentation Index
+> Fetch the complete documentation index at: https://docs.nebius.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Getting started with Serverless AI jobs: Run nvidia-smi within a job
+
+export const resource_0 = "job"
+
+You can use Serverless AI jobs to work with AI models and perform such operations as fine-tuning, scientific simulations, data processing or batch inference.
+
+To get started with jobs, use the example below. It demonstrates how to run `nvidia-smi` in a Serverless AI job. As a result, you receive information about the GPUs of the [container virtual machine](/compute/virtual-machines/containers) (VM) in which the job is running. In the web console, the **nvidia-smi** quick-start configuration runs the same kind of workload with settings already filled in.
+
+## Prerequisites
+
+<Tabs>
+  <Tab title="Web console">
+    In the [Administration → Limits → Quotas](https://console.nebius.com/quota) section, check the **Number of virtual machines** (VMs) quota under **Compute**: it should have at least one VM available. If necessary, [increase the quota](/overview/quotas#change-quotas).
+  </Tab>
+
+  <Tab title="CLI">
+    * [Install and configure](/cli/install) the Nebius AI Cloud CLI.
+
+      Check that your project ID is saved in the Nebius AI Cloud CLI profile configuration:
+
+      ```bash theme={null}
+      cat ~/.nebius/config.yaml
+      ```
+
+    * In the [Administration → Limits → Quotas](https://console.nebius.com/quota) section, check the **Number of virtual machines** (VMs) quota, under **Compute**: it should have at least one VM available. If necessary, [increase the quota](/overview/quotas#change-quotas).
+  </Tab>
+
+  <Tab title="REST API">
+    * Get an access token to [authenticate to the REST API](/rest-api/authentication).
+    * In the [Administration → Limits → Quotas](https://console.nebius.com/quota) section, check the **Number of virtual machines** (VMs) quota, under **Compute**: it should have at least one VM available. If necessary, [increase the quota](/overview/quotas#change-quotas).
+  </Tab>
+</Tabs>
+
+## Steps
+
+### Run a Serverless AI job
+
+<Tabs>
+  <Tab title="Web console">
+    1. In the sidebar, go to <Icon icon="https://mintcdn.com/nebius-ai-cloud/rOlLZ_MFvrheaI-h/_assets/sidebar/serverless-ai.svg?fit=max&auto=format&n=rOlLZ_MFvrheaI-h&q=85&s=4c90b50c6c33e6bff000b87b8e37765a" width="16" height="16" data-path="_assets/sidebar/serverless-ai.svg" /> **Serverless AI** → **Jobs**.
+    2. Select the **nvidia-smi** quick start card.
+       The quick start configuration uses a verified container image and prefilled job settings.
+    3. Click **Create job**.
+  </Tab>
+
+  <Tab title="CLI">
+    Use `nebius ai create` to create a {resource_0} step by step in the terminal. The command prompts you to enter values to pass as parameters, shows the resulting configuration and then creates the {resource_0}.
+
+    1. Run the following command:
+       ```bash theme={null}
+       nebius ai create \
+         --type job \
+         --name my-job \
+         --image nvidia/cuda:13.1.1-runtime-ubuntu24.04 \
+         --container-command bash \
+         --args "-c nvidia-smi" \
+         --platform gpu-l40s-a \
+         --preset 1gpu-8vcpu-32gb \
+         --timeout 1h
+       ```
+       Alternatively, you can run `nebius ai create` and specify each value step by step with CLI prompts. The command pre-fills the following values:
+       * `--name`: Job name.
+       * `--image`: Container image to run. In the given example, the [nvidia/cuda:13.1.1-runtime-ubuntu24.04](https://hub.docker.com/layers/nvidia/cuda/13.1.1-runtime-ubuntu24.04/images/sha256-7ced05425d3bdea47c018551ee001f28081dd409efe1283872cd968ad3c1e957) image is used. It contains the Ubuntu 24.04 operating system as well as drivers and other components for GPUs.
+       * `--container-command`: Terminal shell for commands to run.
+       * `--args`: Arguments for `docker run` to pass to the entrypoint command. The specified arguments require the container to run `nvidia-smi`.
+       * `--platform`: VM platform for the job. As Serverless AI jobs are based on containers over VMs, every job uses [Compute platforms and presets](/compute/virtual-machines/types).
+       * `--preset`: Number of GPUs, vCPUs and RAM allocated to the container. The preset must match the selected platform.
+       * `--timeout`: Duration after which the job is canceled if it has not completed.
+    2. When the CLI prompts you to select a project, region or subnet, select from the values that are available.
+    3. Review the resulting configuration, then confirm creation.
+  </Tab>
+
+  <Tab title="REST API">
+    Send the following request:
+
+    ```bash theme={null}
+    curl --request POST \
+      --url 'https://api.nebius.cloud/ai/v1/jobs' \
+      --header "Authorization: Bearer <access_token>" \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "metadata": {
+          "parentId": "<project_ID>",
+          "name": "my-job"
+        },
+        "spec": {
+          "image": "nvidia/cuda:13.1.1-runtime-ubuntu24.04",
+          "containerCommand": "bash",
+          "args": "-c nvidia-smi",
+          "platform": "gpu-l40s-a",
+          "preset": "1gpu-8vcpu-32gb",
+          "timeout": "3600s",
+          "subnetId": "<subnet_ID>",
+          "disk": {
+            "type": "NETWORK_SSD",
+            "sizeBytes": 268435456000
+          }
+        }
+      }'
+
+    ```
+
+    In the `Authorization` header, replace `<access_token>` with the access token that you got in the prerequisites.
+
+    The request includes the following parameters:
+
+    * `metadata.parentId`: [Project ID](/iam/manage-projects#how-to-get-a-project-id).
+    * `metadata.name`: Job name.
+    * `spec.image`: Container image to run. In the given example, the [nvidia/cuda:13.1.1-runtime-ubuntu24.04](https://hub.docker.com/layers/nvidia/cuda/13.1.1-runtime-ubuntu24.04/images/sha256-7ced05425d3bdea47c018551ee001f28081dd409efe1283872cd968ad3c1e957) image is used. It contains the Ubuntu 24.04 operating system as well as drivers and other components for GPUs.
+    * `spec.containerCommand`: Terminal shell for commands to run.
+    * `spec.args`: Arguments for `docker run` to pass to the entrypoint command. The specified arguments require the container to run `nvidia-smi`.
+    * `spec.platform`: VM platform for the job. As Serverless AI jobs are based on containers over VMs, every job uses [Compute platforms and presets](/compute/virtual-machines/types).
+    * `spec.preset`: Number of GPUs, vCPUs and RAM allocated to the container. The preset must match the selected platform.
+    * `spec.timeout`: Duration after which the job is canceled if it has not completed.
+    * `spec.subnetId`: [Subnet ID](/vpc/networking/resources#how-to-get-a-subnet-id).
+    * `spec.disk.type`: Disk type for the container over VM.
+    * `spec.disk.sizeBytes`: Disk size in bytes. The specified value is 250 GiB.
+
+    The response returns the job ID in the `resourceId` parameter. Save this value because you need it in later steps.
+  </Tab>
+</Tabs>
+
+The job takes several minutes to complete. While the job is running, you can check its status and logs.
+
+### Check the job status and results
+
+<Note>
+  Checking job logs is available only in the web console and CLI.
+</Note>
+
+<Tabs>
+  <Tab title="Web console">
+    1. In the sidebar, go to <Icon icon="https://mintcdn.com/nebius-ai-cloud/rOlLZ_MFvrheaI-h/_assets/sidebar/serverless-ai.svg?fit=max&auto=format&n=rOlLZ_MFvrheaI-h&q=85&s=4c90b50c6c33e6bff000b87b8e37765a" width="16" height="16" data-path="_assets/sidebar/serverless-ai.svg" /> **Serverless AI** → **Jobs**.
+    2. Next to the job, click **View logs**. Alternatively, select the job that you want to view the logs for and switch to the **Logs** tab.
+  </Tab>
+
+  <Tab title="CLI">
+    1. Save the job ID to an environment variable:
+       ```bash theme={null}
+       export JOB_ID=$(nebius ai job get-by-name --name my-job \
+         --format jsonpath='{.metadata.id}')
+       ```
+    2. View information about the job:
+       ```bash theme={null}
+       nebius ai job get $JOB_ID
+       ```
+       The command output contains such data as the job status, start and finish times.
+    3. If the output doesn't indicate that the job has started, wait a few seconds. Next, run the previous command again and check that the job is running now.
+    4. When the job has started, check its logs:
+       ```bash theme={null}
+       nebius ai job logs $JOB_ID
+       ```
+       The logs contain information about the GPUs that `nvidia-smi` provides (in other words, the output of the `nvidia-smi` command).
+
+    You can run `nebius ai job get $JOB_ID` and `nebius ai job logs $JOB_ID` multiple times to determine whether the job is complete, and the full output of `nvidia-smi` is returned in logs.
+  </Tab>
+
+  <Tab title="REST API">
+    Get the job and check the `status.state` parameter in the response:
+
+    ```bash theme={null}
+    curl --request GET \
+      --url "https://api.nebius.cloud/ai/v1/jobs/<job_ID>" \
+      --header "Authorization: Bearer <access_token>"
+    ```
+
+    In the request, specify:
+
+    * Your access token in the `Authorization` header.
+    * In the request path, the job ID returned in the `resourceId` parameter when you created the job.
+
+    If the state doesn't indicate that the job has started, wait a few seconds and send the request again. You can repeat the request until the job reaches the `COMPLETED` state.
+  </Tab>
+</Tabs>
+
+### (Optional) Delete the job
+
+When the job is complete, Serverless AI automatically releases all allocated computing resources and the container disk of the job. When you delete a completed job, you remove it from the list of Serverless AI jobs.
+
+If you delete a running job, all the resources are released as well.
+
+<Tabs>
+  <Tab title="Web console">
+    1. In the sidebar, go to <Icon icon="https://mintcdn.com/nebius-ai-cloud/rOlLZ_MFvrheaI-h/_assets/sidebar/serverless-ai.svg?fit=max&auto=format&n=rOlLZ_MFvrheaI-h&q=85&s=4c90b50c6c33e6bff000b87b8e37765a" width="16" height="16" data-path="_assets/sidebar/serverless-ai.svg" /> **Serverless AI** → **Jobs**.
+    2. Locate the job and then click <Icon icon="https://mintcdn.com/nebius-ai-cloud/1Ha0sWR6e1mnIaHS/_assets/button-vellipsis.svg?fit=max&auto=format&n=1Ha0sWR6e1mnIaHS&q=85&s=e80b8e57c43bfd117679262e6a1334ad" width="12" height="24" data-path="_assets/button-vellipsis.svg" /> → **Delete**.
+    3. In the window that opens, confirm deleting the job.
+  </Tab>
+
+  <Tab title="CLI">
+    To delete the job, run the following command:
+
+    ```bash theme={null}
+    nebius ai job delete $JOB_ID
+    ```
+  </Tab>
+
+  <Tab title="REST API">
+    To delete the job, send the following request:
+
+    ```bash theme={null}
+    curl --request DELETE \
+      --url "https://api.nebius.cloud/ai/v1/jobs/<job_ID>" \
+      --header "Authorization: Bearer <access_token>"
+    ```
+
+    In the request, specify:
+
+    * Your access token in the `Authorization` header.
+    * In the request path, the job ID returned in the `resourceId` parameter when you created the job.
+  </Tab>
+</Tabs>
+ i have an acc with 600 dollar credits
+
+---
+
+<task-notification>
+<task-id>b4fiynzst</task-id>
+<tool-use-id>toolu_015CfiDr9r6nCyF15y2LpYap</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/1c8b741b-b39a-4a6e-aeba-a0748933d527/tasks/b4fiynzst.output</output-file>
+<status>completed</status>
+<summary>Background command "Install the Nebius CLI into ~/.nebius/bin" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+also tell us on how we can use and run it
+
+---
+
+should i have public or private endpoint ?
+
+---
+
+aijob-e01y1ghzpgqscgpj81
+
+---
+
+how do we connect it and get it up in github so everyone can use it
