@@ -1,0 +1,94 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2B0A1BEFEKQVR3TQXC2DEMC",
+  "session_id": "c0b33902-4f96-4eea-920f-717366ed31ba",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T14:28:27.881534Z",
+  "branch": "feat/nebius-training-backend",
+  "checkpoints_count": 3,
+  "save_step_count": 3,
+  "files_touched": [
+    ".gitignore",
+    "app/README.md",
+    "app/backend/.env.example",
+    "app/backend/README.md",
+    "app/backend/package.json",
+    "app/backend/secrets/.gitkeep",
+    "app/backend/src/features/training-jobs/README.md",
+    "app/backend/src/features/training-jobs/cli.js",
+    "app/backend/src/features/training-jobs/examples/custom-image.json",
+    "app/backend/src/features/training-jobs/examples/finetune-distilgpt2.json",
+    "app/backend/src/features/training-jobs/examples/nvidia-smi.json",
+    "app/backend/src/features/training-jobs/examples/requirements.txt",
+    "app/backend/src/features/training-jobs/examples/train.py",
+    "app/backend/src/features/training-jobs/nebius/auth.js",
+    "app/backend/src/features/training-jobs/nebius/client.js",
+    "app/backend/src/features/training-jobs/nebius/spec.js",
+    "app/backend/src/features/training-jobs/routes/training-jobs.js",
+    "app/backend/src/features/training-jobs/training-jobs.test.js",
+    "app/backend/src/server.js",
+    "team-setup/scripts/smoke.sh"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "0804929c4f9e",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 588,
+    "cache_creation_tokens": 109178,
+    "cache_read_tokens": 2326121,
+    "output_tokens": 58579,
+    "api_call_count": 24
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-12T14:28:27.846285Z",
+    "agent_lines": 1248,
+    "agent_removed": 14,
+    "human_added": 9,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1257,
+    "total_lines_changed": 1271,
+    "agent_percentage": 99.2918961447679,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 32,
+      "user_lines_removed": 35,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "team-setup/state/log/bootstrap-auto.log": 32
+      },
+      "user_removed_per_file": {
+        "team-setup/state/log/bootstrap-auto.log": 35
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1338,
+      "agent_lines_removed": 74
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1338,
+      "agent_lines_removed": 74
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1338,
+      "agent_lines_removed": 74
+    }
+  ]
+}
