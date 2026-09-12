@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2B0FN3JB3M9HTA7290H8QDR",
   "strategy": "manual-commit",
   "branch": "feat/nebius-training-backend",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "team-setup/state/event.json",
     "team-setup/state/log/bootstrap-auto.log",
@@ -16,13 +16,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": "/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 96,
-    "cache_creation_tokens": 3906,
-    "cache_read_tokens": 441477,
-    "output_tokens": 2241,
-    "api_call_count": 3
+    "input_tokens": 226,
+    "cache_creation_tokens": 23852,
+    "cache_read_tokens": 681881,
+    "output_tokens": 4583,
+    "api_call_count": 8
   }
 }
