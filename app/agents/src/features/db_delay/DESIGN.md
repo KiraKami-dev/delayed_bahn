@@ -488,6 +488,8 @@ Test, the same 5,000 seeded examples for every model:
 | Key history | | 5.873 | 4.999 | 0.628 | 0.158 | 0.189 |
 | XGBoost | | 3.698 | 2.971 | 0.822 | 0.087 | 0.140 |
 | Main (soft targets plus CRPS) | 5,000 | 3.722 | 2.974 | 0.913 | 0.089 | 0.179 |
+| Main, the reference for the ablations | 2,000 | 3.711 | 2.994 | 0.911 | 0.088 | 0.167 |
+| Text only: numbers in the prompt, no encoder | 2,000 | 3.635 | 2.938 | 0.914 | 0.086 | 0.164 |
 | Plain cross-entropy | 2,000 | 3.702 | 2.954 | 0.899 | 0.089 | 0.155 |
 | `ecg-sp` starting checkpoint | 2,000 | 3.711 | 2.994 | 0.912 | 0.088 | 0.165 |
 | Random encoder | 2,000 | 3.727 | 3.006 | 0.912 | 0.089 | 0.166 |
@@ -495,6 +497,19 @@ Test, the same 5,000 seeded examples for every model:
 | Blend: 0.8 plain quantiles + 0.2 XGBoost | 2,000 | 3.687 | 2.943 | 0.835 | 0.088 | 0.140 |
 | Blend by lead time: plain and XGBoost | 2,000 | 3.646 | 2.924 | 0.831 | 0.086 | 0.140 |
 | Blend by lead time: main and XGBoost | 5,000 | 3.671 | 2.950 | 0.856 | 0.087 | 0.140 |
+| Blend by lead time: text only and XGBoost | 2,000 | 3.627 | 2.928 | 0.858 | 0.086 | 0.140 |
+
+- **The time-series encoder does not earn its place at 2,000 steps.** The text-only run, which
+  writes the same four series into the prompt as numbers, beats the reference trained the same way
+  with the encoder: CRPS -0.057 (95% interval -0.090 to -0.026), median error -0.076 (-0.121 to
+  -0.033). Against XGBoost it wins on median error (-0.063, -0.138 to -0.001) but not clearly on
+  CRPS (-0.034, -0.096 to +0.017); its lead-time blend with XGBoost wins on both (CRPS -0.044,
+  -0.094 to -0.008; median error -0.071, -0.130 to -0.028). The starting checkpoint (`m4-sp`,
+  `ecg-sp`, random encoder) makes no measurable difference, which says the same thing: the language
+  model reads the numbers, the encoder path carries little. Numbers in the prompt plus the encoder,
+  and text only with the plain loss, are the next runs.
+- **The plain loss beats the soft targets on CRPS** at equal steps: -0.041 (-0.069 to -0.011), with
+  no difference in median error.
 
 - **Single models do not differ significantly.** Paired bootstrap on the 4,729 test examples that
   ran (95% intervals of the CRPS difference): main minus XGBoost +0.003 (-0.059 to +0.054); plain
@@ -520,9 +535,8 @@ Test, the same 5,000 seeded examples for every model:
 
 ### Pending at the time of writing
 
-- The main configuration at 2,000 steps (the fair reference for the ablations) and the text-only
-  baseline (does the time-series encoder beat numbers in the prompt?).
 - Plain cross-entropy at 5,000 steps and with doubled learning rates.
+- Text only with the plain loss, and numbers in the prompt plus the encoder with the plain loss.
 - The plain 2,000-step checkpoint on the full 93,738-example test set.
 - The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
   forward test.
