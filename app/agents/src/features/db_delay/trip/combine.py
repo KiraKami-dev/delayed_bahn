@@ -3,6 +3,8 @@
 1. Recalibrate the TSLM's P(cancelled) with Platt scaling: sigmoid(a * logit(p) + b).
 2. Blend TSLM and XGBoost: average their quantile functions with weight w, and their
    P(late) and P(cancelled) with the same kind of weight, each chosen by validation score.
+3. The same blend with one quantile weight per lead-time bucket: the TSLM is strongest close to
+   arrival and XGBoost further out, so the weight follows the lead time.
 
     python trip/combine.py --run out/trip/eval_step5000
 """
@@ -62,12 +64,23 @@ def split_data(run: Path, baselines: Path, examples: pd.DataFrame, split: str):
     return aligned(tslm, ids), aligned(xgb, ids), frame
 
 
-def blend(tslm: dict, xgb: dict, w: float, wc: float, cancel: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Quantile average with weight w on the TSLM; P(cancelled) average with weight wc."""
-    q = np.sort(w * tslm["quantiles"] + (1 - w) * xgb["quantiles"], axis=1)
+def blend(tslm: dict, xgb: dict, w: float | np.ndarray, wc: float, cancel: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Quantile average with weight w on the TSLM (a scalar or one weight per example);
+    P(cancelled) average with weight wc."""
+    w = np.broadcast_to(np.asarray(w, dtype=np.float64), (len(cancel),))
+    q = np.sort(w[:, None] * tslm["quantiles"] + (1 - w[:, None]) * xgb["quantiles"], axis=1)
     p_late = w * tslm["p_late"] + (1 - w) * xgb["p_late"]
     p_cancel = wc * cancel + (1 - wc) * xgb["p_cancel"]
     return q, p_late, p_cancel
+
+
+def lead_weights(frame: pd.DataFrame, weights: dict[str, float]) -> np.ndarray:
+    """One TSLM weight per example, looked up by its lead-time bucket."""
+    bucket = pd.cut(frame["lead_minutes"], metrics.LEAD_BINS, labels=metrics.LEAD_LABELS)
+    return bucket.astype(str).map(weights).to_numpy(dtype=np.float64)
+
+
+MIN_BUCKET = 100
 
 
 def main() -> None:
@@ -88,29 +101,41 @@ def main() -> None:
     a, b = fit_platt(v_tslm["p_cancel"], v_cancel)
     v_cal = platt(v_tslm["p_cancel"], a, b)
 
-    def val_crps(w: float) -> float:
+    def val_crps(w: float, mask: np.ndarray = v_runs) -> float:
         q = np.sort(w * v_tslm["quantiles"] + (1 - w) * v_xgb["quantiles"], axis=1)
-        return float(metrics.crps_from_quantiles(v_y[v_runs], q[v_runs]).mean())
+        return float(metrics.crps_from_quantiles(v_y[mask], q[mask]).mean())
 
     w = min(WEIGHTS, key=val_crps)
+    v_bucket = pd.cut(v_frame["lead_minutes"], metrics.LEAD_BINS, labels=metrics.LEAD_LABELS)
+    by_lead: dict[str, float] = {}
+    for label in metrics.LEAD_LABELS:
+        mask = (v_bucket == label).to_numpy() & v_runs
+        # Small buckets keep the global weight rather than a noisy one of their own.
+        by_lead[label] = float(min(WEIGHTS, key=lambda k: val_crps(k, mask))) if mask.sum() >= MIN_BUCKET else float(w)
     wc = min(WEIGHTS, key=lambda c: log_loss(c * v_cal + (1 - c) * v_xgb["p_cancel"], v_cancel))
     fitted = {"platt_a": round(float(a), 3), "platt_b": round(float(b), 3), "quantile_weight_tslm": float(w),
-              "cancel_weight_tslm": float(wc), "validation_crps_by_weight": {float(k): round(val_crps(k), 4) for k in WEIGHTS}}
+              "cancel_weight_tslm": float(wc), "quantile_weight_tslm_by_lead": by_lead,
+              "validation_crps_by_weight": {float(k): round(val_crps(k), 4) for k in WEIGHTS}}
     print("fitted on validation:", {k: v for k, v in fitted.items() if k != "validation_crps_by_weight"})
 
     t_tslm, t_xgb, t_frame = split_data(run, baselines, examples, "test")
     t_cal = platt(t_tslm["p_cancel"], a, b)
     q, p_late, p_cancel = blend(t_tslm, t_xgb, w, wc, t_cal)
+    q_lead, p_late_lead, _ = blend(t_tslm, t_xgb, lead_weights(t_frame, by_lead), wc, t_cal)
     results = {
         "xgboost": metrics.evaluate(t_frame, t_xgb["quantiles"], t_xgb["p_cancel"], t_xgb["p_late"]),
         "tslm": metrics.evaluate(t_frame, t_tslm["quantiles"], t_tslm["p_cancel"], t_tslm["p_late"]),
         "tslm, cancel recalibrated": metrics.evaluate(t_frame, t_tslm["quantiles"], t_cal, t_tslm["p_late"]),
         f"blend (w={w}, cancel w={wc})": metrics.evaluate(t_frame, q, p_cancel, p_late),
+        "blend by lead": metrics.evaluate(t_frame, q_lead, p_cancel, p_late_lead),
     }
     np.savez_compressed(run / "blend_test.npz", example_id=t_frame["example_id"].to_numpy(), quantiles=q,
                         p_cancel=p_cancel, p_late=p_late)
+    np.savez_compressed(run / "blend_lead_test.npz", example_id=t_frame["example_id"].to_numpy(), quantiles=q_lead,
+                        p_cancel=p_cancel, p_late=p_late_lead)
     (run / "combine.json").write_text(json.dumps({"fitted": fitted, "test": results}, indent=2))
-    for group in ("overall", "lead <=15 min", "lead 30-60 min", "before departure", "long-distance"):
+    print("tslm weight by lead bucket:", by_lead)
+    for group in ("overall", "lead <=15 min", "lead 15-30 min", "lead 30-60 min", "before departure", "long-distance"):
         print(f"\n## test, {group}\n" + metrics.to_markdown(results, group))
 
 
