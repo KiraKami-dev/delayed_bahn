@@ -39,3 +39,7 @@ cancel the pending 8-gpu jobs
 <status>completed</status>
 <summary>Background command "Re-issue cancel via the CLI for the two us-central1 jobs and read their states" completed (exit code 0)</summary>
 </task-notification>
+
+---
+
+can you merge the branch from db train model to main
