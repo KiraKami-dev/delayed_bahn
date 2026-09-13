@@ -45,6 +45,40 @@ bash trip/run_overnight.sh                            # full runs and out/trip/r
 Needs `duckdb`, `pandas`, `pyarrow`, `xgboost`, `torch`, `transformers`, `peft` and
 `opentslm`, plus one 48 GB GPU for training at batch 8.
 
+## Final model
+
+The submission checkpoint is **stacked text on the v7 examples, 6,000 steps**: the train's own
+delays and the previous trains written into the prompt, plus one rationale sentence with the
+same-train and corridor gains and XGBoost's out-of-fold forecast. Loss: exact minute plus CRPS.
+
+| | |
+|---|---|
+| Checkpoint | bucket `models/db-trip-delay-final.pt` (same bytes as `models/db-trip-delay-v7-text-6k.pt`) |
+| Base | `unsloth/Llama-3.2-3B` with the `OpenTSLM/llama-3.2-3b-m4-sp` start checkpoint, LoRA |
+| Examples | `examples_v7.parquet` (298,430 examples; train November to April, validation May, test June to August) |
+| Prompt mode | `text` |
+| Test, 30,000 examples | median error 3.224, CRPS 2.560; against XGBoost with the same features -0.074 (-0.097 to -0.055) |
+| September, 10,000 examples | median error 2.524, CRPS 2.001; against XGBoost -0.062 (-0.102 to -0.036) |
+
+Rebuild and retrain:
+
+```bash
+python trip/build.py --out data/trip/examples_v7_base.parquet   # same-train and corridor series included
+python trip/baselines.py --examples data/trip/examples_v7_base.parquet --out out/trip/baselines_v7f \
+    --extra-examples data/trip/forward_v7_base.parquet
+python trip/stack.py --examples data/trip/examples_v7_base.parquet --baselines out/trip/baselines_v7f \
+    --out data/trip/examples_v7.parquet                           # out-of-fold forecasts on the training split
+python trip/train.py --examples data/trip/examples_v7.parquet --max-steps 6000 --val-limit 3000 \
+    --test-limit 30000 --generate 48 --loss-mode plain_crps --prompt-mode text --eval-batch-size 32
+```
+
+The September set (`forward_v7_base.parquet`) is built with the same code from the September feeds, see `run_forward_eval.sh`; its forecasts come from XGBoost
+trained on May only (`stack.py --splits test --no-oof`). Every other run and its exact command is
+in `RUNS.md`; the results are in `../EVALUATION.md` and `../DESIGN.md` section 16.
+
+Serve it behind the app with `trip/serve.py --checkpoint <checkpoint> --prompt-mode text --examples
+<v7 examples>` (live model), or with `--predictions` on saved September forecasts (no GPU).
+
 ## Model server for the app
 
 `serve.py` answers the backend's `PREDICT_URL` contract: a journey in, one arrival-delay
