@@ -706,6 +706,22 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
 - **Planned trajectory channels** (running time, dwell and minutes left per stop through the
   encoder, `examples_v5`): 3.604 / 2.879 against 3.606 / 2.878 without them. Nothing.
 
+### Finals: 12,000 steps, full test set (93,738 examples)
+
+Scored on every test example; bootstraps on the 88,479 that ran, against XGBoost on the same
+features (3.462 / 2.759 on the original features).
+
+| Model | Median error | CRPS | vs XGBoost (CRPS, 95% interval) |
+|---|---|---|---|
+| Text plus encoder, plain loss (04:47) | 3.397 | 2.699 | -0.060 (-0.073 to -0.048), real |
+| same, within 15 min (36,556) | | | -0.091 (-0.116 to -0.069), real |
+| same, beyond 30 min (39,829) | | | -0.046 (-0.063 to -0.029), real |
+| its lead-time blend | 3.387 | 2.692 | -0.067 (-0.078 to -0.056), real |
+
+- **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
+  XGBoost beyond 30 minutes (+0.076) and overall (+0.015); at 12,000 steps it wins at every lead
+  time on the full test set, alone. Validation 2.709 / 2.175.
+
 ### Pending at the time of writing
 
 - Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text

@@ -101,7 +101,7 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | TSLM, plain loss, encoder, 2k | 3.477 | 2.774 | +0.015 |
 | Lead-time blend of that with XGBoost | 3.427 | 2.731 | -0.028 (-0.039 to -0.019) real; median error -0.035 |
 | TSLM, original recipe, 12k (30,000 of the test) | 3.434 | 2.754 | XGBoost on the same 30,000: 3.469 / 2.765; median error real |
-| Final: text + encoder, plain loss, 12k | *pending, about 04:35* | | |
+| Final: text + encoder, plain loss, 12k | 3.397 | 2.699 | -0.060 (-0.073 to -0.048) real; median error -0.066 real; within 15 min -0.091 real; beyond 30 min -0.046 real; lead-time blend -0.067 |
 | Final: text, plain loss, 24k | *pending, about 05:05* | | |
 | Final A: text, v2 data, plain + CRPS, 12k | *pending, about 05:30* | | |
 | Final B: text + encoder, v3 data, plain + CRPS, 12k | *pending, about 06:30* | | |
