@@ -3589,3 +3589,52 @@ If this event is something the user would act on now, send a PushNotification. R
 <event>jonas-h100-final-v4-text | [custom] step 8000/12000 {'loss': 0.3138, 'token_ce': 0.0889, 'crps': 2.249} 4755s (0.59s/step)</event>
 If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
 </task-notification>
+
+---
+
+<task-notification>
+<task-id>brsd7qz8x</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/abdb3068-b181-45de-82c2-0cdd5152ab32/tasks/brsd7qz8x.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for the devbox September test to finish" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+Can you task a subagent or so to use the branch and just combine it together? Just trying if it works on a compute note or so
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-final-v3-both | [custom] step 8000/12000 {'loss': 0.3073, 'token_ce': 0.0781, 'crps': 2.2915} 8283s (1.04s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-final-v4-text | [custom] step 9000/12000 {'loss': 0.3373, 'token_ce': 0.0829, 'crps': 2.5443} 5347s (0.59s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+Or is there anything else (or ablations to show). I think we need to show it is better than the baseline model and probably better than without the embeddings. Can we show that or is that sth we have to still work on? /Users/jonasstenglein/Downloads/Aionic_Temporal_AI_Hackathon.pdf
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-final-v4-both | [custom] step 5000/12000 {'loss': 0.3199, 'token_ce': 0.0908, 'crps': 2.291} 5372s (1.07s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+Also please continue committing while you go
