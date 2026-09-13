@@ -3,194 +3,23 @@
   "checkpoint_id": "01M2D2CAZB0KP41SR9VS53J7TM",
   "session_id": "f367c1a0-5ca9-4267-ba17-c73dc43314e1",
   "strategy": "manual-commit",
-  "created_at": "2026-09-13T09:43:09.294707Z",
+  "created_at": "2026-09-13T09:43:10.259833Z",
   "branch": "main",
   "checkpoints_count": 16,
-  "save_step_count": 16,
-  "files_touched": [
-    "app/agents/src/features/db_route/TRAINING.md"
-  ],
+  "save_step_count": 1,
+  "files_touched": [],
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
   "turn_id": "96928a7cc13a",
-  "checkpoint_transcript_start": 214,
-  "transcript_lines_at_start": 214,
-  "compact_transcript_start": 25,
+  "compact_transcript_start": 0,
   "token_usage": {
-    "input_tokens": 2968,
-    "cache_creation_tokens": 246176,
-    "cache_read_tokens": 27152467,
-    "output_tokens": 160775,
-    "api_call_count": 118
+    "input_tokens": 3264,
+    "cache_creation_tokens": 318828,
+    "cache_read_tokens": 28035808,
+    "output_tokens": 175472,
+    "api_call_count": 131
   },
   "session_metrics": {
     "turn_count": 18
-  },
-  "initial_attribution": {
-    "calculated_at": "2026-09-13T09:43:08.999704Z",
-    "agent_lines": 0,
-    "agent_removed": 0,
-    "human_added": 0,
-    "human_modified": 0,
-    "human_removed": 0,
-    "total_committed": 0,
-    "total_lines_changed": 0,
-    "agent_percentage": 0,
-    "metric_version": 2
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 581,
-      "user_lines_removed": 44,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "app/agents/src/features/db_route/TRAINING.md": 29,
-        "app/agents/src/features/db_route/relay_proxy.py": 203,
-        "app/agents/src/features/db_route/serve_live.py": 304,
-        "app/frontend/src/features/delay-prediction/components/ForecastPanel.tsx": 6,
-        "app/frontend/src/features/globe-map/README.md": 6,
-        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 6,
-        "app/frontend/src/features/globe-map/train-layer.ts": 10,
-        "app/frontend/src/features/globe-map/train-models.ts": 6,
-        "app/frontend/src/lib/track-path.ts": 8,
-        "app/frontend/src/lib/train-story.ts": 1,
-        "app/frontend/train-visual.smoke.mjs": 1,
-        "app/frontend/traveler.smoke.mjs": 1
-      },
-      "user_removed_per_file": {
-        "app/frontend/src/features/globe-map/README.md": 1,
-        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 4,
-        "app/frontend/src/features/globe-map/train-layer.ts": 8,
-        "app/frontend/src/features/globe-map/train-models.ts": 4,
-        "app/frontend/src/lib/train-story.ts": 1,
-        "app/frontend/train-visual.smoke.mjs": 1,
-        "app/frontend/traveler.smoke.mjs": 25
-      }
-    },
-    {
-      "checkpoint_number": 2,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 3,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 4,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 5,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 6,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 7,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 8,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 9,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 10,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 11,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 44
-    },
-    {
-      "checkpoint_number": 12,
-      "user_lines_added": 102,
-      "user_lines_removed": 0,
-      "agent_lines_added": 581,
-      "agent_lines_removed": 140,
-      "user_added_per_file": {
-        "app/agents/src/features/db_delay/trip/run_local.sh": 102
-      }
-    },
-    {
-      "checkpoint_number": 13,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 588,
-      "agent_lines_removed": 45
-    },
-    {
-      "checkpoint_number": 14,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 720,
-      "agent_lines_removed": 50
-    },
-    {
-      "checkpoint_number": 15,
-      "user_lines_added": 102,
-      "user_lines_removed": 15,
-      "agent_lines_added": 735,
-      "agent_lines_removed": 118,
-      "user_added_per_file": {
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 74,
-        "app/frontend/src/lib/store.tsx": 28
-      },
-      "user_removed_per_file": {
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 12,
-        "app/frontend/src/lib/store.tsx": 3
-      }
-    },
-    {
-      "checkpoint_number": 16,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 764,
-      "agent_lines_removed": 60
-    },
-    {
-      "checkpoint_number": 17,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 1062,
-      "agent_lines_removed": 139
-    }
-  ]
+  }
 }
