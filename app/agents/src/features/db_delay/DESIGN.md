@@ -735,6 +735,11 @@ features (3.462 / 2.759 on the original features).
 - **Better data and the exact-minute loss add another 0.054.** The text model on the combined
   data beats XGBoost trained on the same features by 0.076 on the full test, with the lead-time
   blend choosing weight 1.0: nothing left for XGBoost to add. Validation 2.665 / 2.139.
+- **September (05:30), 10,000 examples:** the combined-data text final scores 2.669 / 2.106 on the
+  combined-feature September set against XGBoost's 2.745 / 2.175: CRPS -0.070 (-0.111 to -0.041),
+  median error -0.076, within 15 minutes -0.096, all real, alone. Text plus encoder with the plain
+  loss on the original September set: 3.214 / 2.566 against 3.244 / 2.586, -0.020 (-0.042 to
+  +0.003) alone, within 15 minutes -0.040 and the blind blend -0.031 real.
 
 ### Fourth wave: what the time series and the embeddings add (05:00)
 
@@ -750,8 +755,8 @@ summary numbers.
 | Through the encoder only | 365 + 45 soft | 3.693 | 2.956 | +0.052 (+0.025 to +0.083), worse; vs not at all -0.002 (-0.014 to +0.011) |
 | Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | no-series partner at 12,000 steps *running* |
 | Through the encoder only, one value per patch (`z4`) | 365 + about 230 soft | 3.689 | 2.959 | vs the encoder with patches of four +0.003 (-0.010 to +0.016) |
-| Text plus encoder | 961 + 45 soft | *running* | | |
-| Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | *running* | | |
+| Text plus encoder | 961 + 45 soft | 3.617 | 2.898 | -0.005 (-0.023 to +0.011); vs not at all -0.059 (-0.092 to -0.028), real |
+| Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | 3.647 | 2.925 | vs text plus encoder +0.027 (+0.003 to +0.052), worse |
 
 - **The time series carry the win.** Without them the model is level with XGBoost (-0.014,
   -0.073 to +0.035); with them it beats it. The series are worth 0.101 CRPS beyond 30 minutes
@@ -760,6 +765,12 @@ summary numbers.
 - **At 2,000 steps the encoder reads nothing yet.** Encoder only equals no series on the test set;
   at 12,000 steps the same route reaches the text level (third wave). Whether that gain is the
   series or just longer training is what the 12,000-step no-series run decides.
+- **Forcing the model to read the encoder does not help.** Hiding the numbers from the text in half
+  the training rows (modality dropout) costs 0.027 against plain text plus encoder, and splitting
+  the inputs so the encoder alone carries the long history costs 0.023 on the stacked data. One
+  soft token per value instead of patches of four changes nothing. At 2,000 steps, on four short
+  series, writing the numbers out is the better route; the encoder matches it at about half the
+  prompt when it also has the stacked forecast (0.019 behind).
 - **The encoder is the compact route:** the four series cost about 480 prompt tokens as numbers
   and 45 soft tokens through the encoder.
 

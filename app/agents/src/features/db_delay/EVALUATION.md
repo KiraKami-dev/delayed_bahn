@@ -133,7 +133,7 @@ are new.
 | TSLM, text, plain + CRPS loss, 2k | 3.266 | 2.610 | +0.024; within 15 min -0.016 (-0.026 to -0.006) real |
 | Lead-time blend of that | 3.230 | 2.573 | -0.013 (-0.022 to -0.005) real |
 | TSLM, encoder only, plain + CRPS loss, 12k | 3.199 | 2.553 | -0.033 (-0.050 to -0.017) real; median error -0.045 real; within 15 min -0.038 real; May blend weights 1.0, nothing to add |
-| Finals | *pending* | | |
+| Final: text + encoder, plain loss, 12k | 3.214 | 2.566 | -0.020 (-0.042 to +0.003); within 15 min -0.040 real; lead-time blend -0.031 (-0.048 to -0.015) real |
 
 Second September set, built with the combined features (previous trains on the route) and the
 statistical forecast: 10,000 of its 32,553 September examples; XGBoost retrained on those
@@ -150,6 +150,7 @@ examples).
 | Lead-time blend of that (weights from May) | | | -0.040 (-0.082 to -0.011) real |
 | TSLM, text + encoder, combined data without the forecast, 2k | 2.711 | 2.148 | -0.028 (-0.072 to +0.005); within 15 min -0.071 (-0.160 to -0.023) real |
 | Lead-time blend of that (weights from May) | | | -0.044 (-0.086 to -0.018) real |
+| Final A: text, combined data, plain + CRPS, 12k (not stacked) | 2.669 | 2.106 | -0.070 (-0.111 to -0.041) real; median error -0.076 real; within 15 min -0.096 real |
 | Stacked finals (12k) | *pending* | | |
 
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the
