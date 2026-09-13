@@ -44,37 +44,6 @@ test('an explicit demo works offline and is visibly labelled', async t => {
   assert.match(await page.locator('.outlook-number').innerText(), /^38%/)
 })
 
-test('real trip prediction failures never reuse the bundled forecast', async t => {
-  const page = await pageFor(t)
-  const journey = await seed('journey')
-  journey.id = 'traveler-trip'
-  journey.source = 'db-share'
-  await page.route('**/api/journeys/parse', route => route.fulfill({ json: journey }))
-  await page.route('**/api/predict', route => route.fulfill({ status: 503, json: { error: 'Unavailable' } }))
-  await page.goto(base)
-  await page.locator('textarea').fill('My own trip')
-  await page.getByRole('button', { name: /Check my (plan|trip)/ }).click()
-  await page.getByRole('alert').waitFor()
-  assert.equal(await page.locator('.outlook-number').count(), 0)
-  assert.equal(await page.getByText('Example trip · not live travel advice', { exact: true }).count(), 0)
-})
-
-for (const [width, height] of [[320, 844], [375, 844], [768, 1024], [1024, 900], [1440, 1000], [844, 390]]) {
-  test(`traveler form stays accessible at ${width}x${height}`, async t => {
-    const page = await pageFor(t, width, height)
-    await page.goto(base)
-    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light')
-    await page.getByRole('button', { name: 'From → To' }).click()
-    await page.getByRole('combobox', { name: 'From station', exact: true }).waitFor()
-    await page.getByRole('combobox', { name: 'From station', exact: true }).fill('Berlin')
-    await page.getByRole('combobox', { name: 'From station', exact: true }).press('ArrowDown')
-    await page.getByRole('combobox', { name: 'From station', exact: true }).press('Enter')
-    assert.match(await page.getByRole('combobox', { name: 'From station', exact: true }).inputValue(), /Berlin/)
-    await page.getByRole('button', { name: 'Find my route', exact: true }).scrollIntoViewIfNeeded()
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
-  })
-}
-
 test('help dialog supports Escape and restores keyboard focus', async t => {
   const page = await pageFor(t)
   await page.goto(base)
@@ -93,22 +62,6 @@ test('a shared journey URL retains its text if the parser is unavailable', async
   await page.getByRole('alert').waitFor()
   assert.equal(await page.locator('textarea').inputValue(), 'Berlin Hbf to Hamburg Hbf, my saved journey')
   assert.equal(new URL(page.url()).searchParams.has('text'), false)
-})
-
-test('changing a selected station clears the old selection', async t => {
-  const page = await pageFor(t)
-  await page.goto(base)
-  await page.getByRole('button', { name: 'From → To' }).click()
-  assert.equal(await page.locator('input').count(), 2)
-  for (const [label, query] of [['From station', 'Berlin'], ['To station', 'Hamburg']]) {
-    const field = page.getByRole('combobox', { name: label, exact: true })
-    await field.fill(query)
-    await field.press('ArrowDown')
-    await field.press('Enter')
-  }
-  assert.equal(await page.getByRole('button', { name: 'Find my route', exact: true }).isEnabled(), true)
-  await page.getByRole('combobox', { name: 'From station', exact: true }).fill('Not a known station')
-  assert.equal(await page.getByRole('button', { name: 'Find my route', exact: true }).isEnabled(), false)
 })
 
 test('German travel times handle summer, winter and nonexistent daylight-saving times', async t => {

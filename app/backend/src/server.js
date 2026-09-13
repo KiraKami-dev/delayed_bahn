@@ -9,6 +9,7 @@ import { registerRoutes as registerShareParser } from './features/share-parser/r
 import { registerRoutes as registerDelayPrediction } from './features/delay-prediction/routes/delay-prediction.js';
 import { registerRoutes as registerRecommendation } from './features/recommendation/routes/recommendation.js';
 import { registerRoutes as registerCauses } from './features/causes/routes/causes.js';
+import { registerRoutes as registerJourneySearch } from './features/journey-search/routes/journey-search.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -70,6 +71,7 @@ export function createApp({ env = process.env } = {}) {
   registerTrainingJobs(router, { env });
   registerPwaShell(router, { env });
   registerShareParser(router, { env });
+  registerJourneySearch(router, { env });
   const predict = registerDelayPrediction(router, { env });
   registerRecommendation(router, { env, predict });
   registerCauses(router, { env });

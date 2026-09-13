@@ -64,7 +64,7 @@ async function main() {
     case 'smoke': {
       // Same workload as Nebius's own quick start: nvidia-smi on one L40S.
       const name = args.name || `smoke-nvidia-smi-${Date.now().toString(36)}`;
-      const body = { name, image: 'nvidia/cuda:13.1.1-runtime-ubuntu24.04', command: 'bash', args: '-c nvidia-smi', timeout: '1h', platform: args.platform, preset: args.preset };
+      const body = { name, image: 'nvidia/cuda:13.1.1-runtime-ubuntu24.04', command: 'bash', args: '-c nvidia-smi', timeout: '1h', platform: args.platform, preset: args.preset, preemptible: !!args.preemptible };
       return submitAndMaybeWait(svc, body, { ...args, wait: true });
     }
     case 'submit': {

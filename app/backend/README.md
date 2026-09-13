@@ -60,3 +60,7 @@ per leg, the recorded service and stop the forecast came from in the reasoning t
 
 Owner: see `../../team-setup/state/owners.md` (decided fresh per event,
 not fixed here).
+
+## Environment
+
+- `DB_CLIENT_ID` / `DB_API_KEY` — DB API Marketplace "Timetables" credentials; power `GET /api/journeys/search` (direct trains for the PWA's Find my route) and the share-parser station lookup. Free plan: 60 requests/minute; plan files are cached 20 min.

@@ -68,7 +68,7 @@ export function AdvicePanel() {
     const text = `${kind}${fmtDate(journey.legs[0].plannedDeparture)}: ${journey.legs[0].from.name} → ${journey.legs.at(-1)!.to.name}. Estimated plan-failure risk: ${pct(s.prediction?.planFailProbability.value ?? 0)}. ${travelerAdvice(rec)} Confirm current trains in DB Navigator.`
     setShareStatus("")
     try {
-      if (navigator.share) { await navigator.share({ title: "error404 journey outlook", text }); setShareStatus("Result shared.") }
+      if (navigator.share) { await navigator.share({ title: "delayedBahn journey outlook", text }); setShareStatus("Result shared.") }
       else { await navigator.clipboard.writeText(text); setShareStatus("Result copied to clipboard.") }
     } catch (error) {
       /* dismissed */

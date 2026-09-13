@@ -101,7 +101,7 @@ export function EvidencePanel() {
 
       <section className="rounded-2xl border border-border bg-white p-4 text-center">
         <p className="text-lg font-medium">Not “it will rain” — “take an umbrella”.</p>
-        <p className="mt-1 text-sm text-muted-foreground">Install error404 and it shows up in the DB app's share sheet.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Install delayedBahn and it shows up in the DB app's share sheet.</p>
         <div className="mt-3">
           <InstallButton big />
         </div>

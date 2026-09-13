@@ -208,6 +208,15 @@ curl -s localhost:8000/api/training/jobs -H 'content-type: application/json' -d 
 | gpu-h200-sxm | 1gpu-16vcpu-200gb | 4.50 | ~133 |
 | gpu-l40s-d | 4gpu-128vcpu-768gb (team default) | 7.28 | ~82 node-hours |
 | gpu-h100-sxm | 8gpu-128vcpu-1600gb | 30.80 | ~19 |
+| gpu-h100-sxm | 1gpu-16vcpu-200gb, `--preemptible` | 2.15 | ~280 |
+| gpu-h200-sxm | 1gpu-16vcpu-200gb, `--preemptible` | 2.45 | ~245 |
+
+**Preemptible** (`--preemptible`, or `"preemptible": true` in a spec) is about
+45% off H100/H200 and works on every GPU platform. Nebius may stop the VM at
+any time with a 60 s SIGTERM warning; the job then ends, it is not requeued.
+Use it for runs that checkpoint to `/outputs` and can be resubmitted, and for
+sweeps of short jobs. A preemptible 1x H100 nvidia-smi smoke scheduled in
+eu-north1 in ~2 min on 13 Sep 2026 (`aijob-e00r5027jrrvg6x95b`).
 
 Rules of thumb: L40S (48 GB) is fine for ≤ 7B-parameter LoRA/QLoRA and any
 small model; go H100/H200 for full fine-tunes or long contexts. **Always set
@@ -222,7 +231,7 @@ Also budget for provisioning time (a few minutes per job) and any bucket storage
 | `NEBIUS_PROJECT_ID is not set` | `cp .env.example .env` at the repo root and `ln -s ../../.env app/backend/.env` (section 1c) |
 | `nebius iam get-access-token` returns nothing | `nebius profile create …`, log in in the browser |
 | 403 on create | the account/service account lacks editor on the project |
-| `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset. Check the **region** first: platforms are per project/region. Our tenant's `default-project-eu-west1` (the console default) only offers `gpu-h200-sxm`, and every 8-GPU H200 request there timed out. `default-project-us-central1` (`project-u00re9y9kc00bwpa7d9ftt`, team default) has B200, H200, RTX6000; `default-project-eu-north1` (`project-e00g0c62pr00fj32s0h4gj`) has H100, H200, L40S-a and L40S-d. Single-GPU jobs schedule in both within 2–3 min. **Team default is `gpu-l40s-d` / `4gpu-128vcpu-768gb` in eu-north1**, the only multi-GPU node that scheduled on 12 Sep 2026. 8× nodes (H200 in three regions; H100, B200, RTX 6000 pending for 10+ min) stall with the VM STOPPED in PROVISIONING, then error. GB300 is rejected outright: its preset needs an NVLInstanceGroup, not available via jobs. Never request the 8-GPU preset for a 0.5B/3B fine-tune |
+| `ERROR` / `NotEnoughResources` | GPU quota is 0 or capacity is short: raise the quota or try another platform/preset. Check the **region** first: platforms are per project/region. Our tenant's `default-project-eu-west1` (the console default) only offers `gpu-h200-sxm`, and every 8-GPU H200 request there timed out. `default-project-us-central1` (`project-u00re9y9kc00bwpa7d9ftt`, team default) has B200, H200, RTX6000; `default-project-eu-north1` (`project-e00g0c62pr00fj32s0h4gj`) has H100, H200, L40S-a and L40S-d. Single-GPU jobs schedule in both within 2–3 min. **Team default is `gpu-l40s-d` / `4gpu-128vcpu-768gb` in eu-north1**, the only multi-GPU node that scheduled on 12 Sep 2026. On-demand 8× nodes (H200 in three regions; H100, B200, RTX 6000 pending for 10+ min) stall with the VM STOPPED in PROVISIONING, then error. **`--preemptible` is the way to get an 8× node**: a preemptible `gpu-h100-sxm/8gpu-128vcpu-1600gb` smoke in eu-north1 scheduled and ran all eight GPUs in 7 min on 13 Sep 2026 (`aijob-e00trhp842v8kxz4xc`, $17.20/h). GB300 is rejected outright: its preset needs an NVLInstanceGroup, not available via jobs. Never request the 8-GPU preset for a 0.5B/3B fine-tune |
 | `FAILED` / `TimeoutExceeded` | raise `--timeout` |
 | `FAILED` right after `RUNNING` | `logs <id>`; usually a pip install or script error |
 | Preset rejected | run `nebius compute platform list` and use the IDs it prints; the catalog in `spec.js` is a convenience, not the source of truth |
