@@ -3,22 +3,21 @@
   "checkpoint_id": "01M2CR6R5WSMJ5HNJ4B1FR7XQF",
   "session_id": "6f11fbbe-b41b-4ac6-96cf-af296c485bf7",
   "strategy": "manual-commit",
-  "created_at": "2026-09-13T06:45:26.370662Z",
+  "created_at": "2026-09-13T06:45:33.605478Z",
   "branch": "feat/db-route-multiscale",
   "checkpoints_count": 6,
+  "save_step_count": 1,
   "files_touched": [],
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
   "turn_id": "d9c5e9a8fe2f",
-  "checkpoint_transcript_start": 9652,
-  "transcript_lines_at_start": 9652,
-  "compact_transcript_start": 1570,
+  "compact_transcript_start": 0,
   "token_usage": {
-    "input_tokens": 274,
-    "cache_creation_tokens": 30128,
-    "cache_read_tokens": 3072458,
-    "output_tokens": 20912,
-    "api_call_count": 15
+    "input_tokens": 8674,
+    "cache_creation_tokens": 2609940,
+    "cache_read_tokens": 625053401,
+    "output_tokens": 966055,
+    "api_call_count": 1023
   },
   "skill_events_version": 1,
   "skill_events": [
@@ -118,17 +117,5 @@
   ],
   "session_metrics": {
     "turn_count": 322
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 647,
-      "user_lines_removed": 0,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "pred.html": 647
-      }
-    }
-  ]
+  }
 }
