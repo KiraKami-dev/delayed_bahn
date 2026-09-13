@@ -132,6 +132,7 @@ are new.
 | Lead-time blend of that (weights from May) | 3.225 | 2.570 | -0.016 (-0.027 to -0.006) real |
 | TSLM, text, plain + CRPS loss, 2k | 3.266 | 2.610 | +0.024; within 15 min -0.016 (-0.026 to -0.006) real |
 | Lead-time blend of that | 3.230 | 2.573 | -0.013 (-0.022 to -0.005) real |
+| TSLM, encoder only, plain + CRPS loss, 12k | 3.199 | 2.553 | -0.033 (-0.050 to -0.017) real; median error -0.045 real; within 15 min -0.038 real; May blend weights 1.0, nothing to add |
 | Finals | *pending* | | |
 
 Second September set, built with the combined features (previous trains on the route) and the
@@ -169,8 +170,9 @@ details and intervals in `DESIGN.md` section 16.
 - **Given enough steps, the encoder path catches up.** Encoder only for 12,000 steps reaches the
   best validation score of all runs and beats XGBoost at every lead time on the shared test
   (-0.082 overall, -0.072 beyond 30 minutes), level with the text model at 5,000 steps (+0.006,
-  -0.044 to +0.062). The series channel carries the same information as the text and needs about
-  twice the training to extract it.
+  -0.044 to +0.062), and beats XGBoost alone on the September set as well (-0.033). The series
+  channel carries the same information as the text and needs about twice the training to extract
+  it.
 - **More training keeps helping** (2k to 5k: -0.024 CRPS for text); the long runs are the finals.
 - **The statistical forecast as an input makes the TSLM win everywhere.** With XGBoost's own
   median, range and probabilities written into the prompt as one sentence (out-of-fold on the

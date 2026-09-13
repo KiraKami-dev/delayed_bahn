@@ -657,6 +657,13 @@ encoder-only plain run at 3.702 / 2.954.
   after 5,000 steps: the series channel carries the same information as the text, and needs
   about twice the training to extract it. That is the fair statement about OpenTSLM's encoder on
   this task, and the reason the finals keep it alongside the text.
+- **And it holds out of time (04:06):** the same encoder-only 12,000-step checkpoint on the
+  original September set (10,000 examples, XGBoost 3.244 / 2.586) scores 3.199 / 2.553: CRPS
+  -0.033 (-0.050 to -0.017), median error -0.045 (-0.069 to -0.021), within 15 minutes -0.038
+  (-0.048 to -0.030), all real. The May-fitted lead-time weights are 1.0 in every bucket, so the
+  blend adds nothing. Compare the original recipe at 12,000 steps on the same set (3.257 / 2.611,
+  behind XGBoost): the exact-minute plus CRPS loss is what turned the long encoder run into a
+  model that beats the tabular baseline on its own, on data none of it had seen.
 
 ### Stacking: the statistical forecast as a sentence in the prompt (03:15)
 
