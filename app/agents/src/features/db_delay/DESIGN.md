@@ -831,6 +831,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
 | TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
+| TSLM, no series (summaries in the rationale only), v7, 2k | 3.442 / 2.769 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
@@ -838,11 +839,18 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
   the best finished TSLM final (2.616 vs 2.644 on the full test), so the submission comparison is
   against XGBoost-v7.
-- **The first time the embeddings carry what the text does not, and it pays (06:05).** In `split`
-  mode the two new series reach the model only through the encoder. After 2,000 steps it beats
-  XGBoost-v7 on the shared test: CRPS -0.052 (-0.095 to -0.020) and median error -0.058, real;
-  within 15 minutes -0.086 and beyond 30 minutes -0.038, both real; against the stacked text
-  model on v4 -0.089 (-0.130 to -0.050). Validation 2.605 / 2.102, the best of all runs.
+- **Split beats XGBoost-v7, but not because of the encoder (06:05, corrected 07:30).** In `split`
+  mode the two new series reach the model as series only through the encoder. After 2,000 steps it
+  beats XGBoost-v7 on the shared test: CRPS -0.052 (-0.095 to -0.020) and median error -0.058, real;
+  within 15 minutes -0.086 and beyond 30 minutes -0.038, both real. The control below shows the
+  gain comes from the rationale, which also states the new series' summaries as text (the median
+  gain this train number made on the remaining stretch, the corridor trains' latest gains).
+- **Control: no series at all on v7 (07:25).** Same prompts with the summaries but no series in
+  any form: 3.442 / 2.769. Split against it +0.002 (-0.003 to +0.007), no difference; text against
+  it -0.009 (-0.017 to -0.001), real but small; no series against XGBoost-v7 -0.054 (-0.098 to
+  -0.023), real. On the new data, as on the old, the win over the tabular model comes from the
+  language model reading the facts in the rationale; the series add at most a hundredth, as text,
+  and nothing through the encoder.
 - **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
