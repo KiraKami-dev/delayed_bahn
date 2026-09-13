@@ -107,11 +107,16 @@ def build_rows(dataset, bridge) -> list[dict]:
                 options.setdefault(getattr(task, "target_schema", ""), set()).add(str(task.target))
     menus = {schema: tuple(sorted(values)) for schema, values in options.items()}
 
+    # One fixed feature layout for every row: records carry different subsets of
+    # the numeric annotations (a station outside the hub has no category, a new
+    # entity no eight-week habit), and a ragged matrix is what the tabular
+    # baselines cannot take. Missing is NaN, which XGBoost handles natively.
+    keys = sorted({k for record in dataset.records for k, v in bridge.annotation_map(record).items()
+                   if isinstance(v, (int, float)) and not isinstance(v, bool) and k not in LEAKY})
     rows: list[dict] = []
     for record in dataset.records:
         ann = bridge.annotation_map(record)
-        scalars = {k: float(v) for k, v in ann.items()
-                   if isinstance(v, (int, float)) and not isinstance(v, bool) and k not in LEAKY}
+        scalars = {k: (float(ann[k]) if isinstance(ann.get(k), (int, float)) else float("nan")) for k in keys}
         for task in dataset.tasks_for(record):
             kind = type(task).__name__
             target = task.target
@@ -211,7 +216,10 @@ def baselines(train: list[dict], cell_rows: list[dict]) -> dict:
     idx = names.index("habit_median_delay_8w") if "habit_median_delay_8w" in names else None
     if idx is not None:
         habit = np.array([r["features"][idx] for r in cell_rows])
-        out["persistence_median_error"] = float(np.abs(habit - y).mean())
+        ok = ~np.isnan(habit)
+        if ok.any():
+            out["persistence_median_error"] = float(np.abs(habit[ok] - y[ok]).mean())
+            out["persistence_n"] = int(ok.sum())
     try:
         import xgboost as xgb  # noqa: PLC0415
 
