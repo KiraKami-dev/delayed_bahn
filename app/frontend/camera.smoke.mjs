@@ -66,14 +66,14 @@ for (const [width, height, rect] of [
     assert.ok(map.flights[0].zoom >= 4, 'Keep country-level detail instead of showing the whole globe')
     assert.ok(camera.HOME.zoom >= 4, 'The first map paint must also start at country scale')
     camera.fitJourney(map, [journey], { duration: 0 })
-    assert.equal(map.fits[0].options.pitch, 48)
+    assert.equal(map.fits[0].options.pitch, 0) // flat while motion is off
     assert.equal(map.fits[0].options.duration, 0)
     assert.equal(map.fits[0].options.padding.bottom, camera.panelPadding().bottom)
     camera.flyToStation(map, journey.legs[0].to)
     camera.flyToLeg(map, journey.legs[1])
     camera.fitJourney(map, [journey])
     assert.equal(map.fits.length, 3)
-    assert.equal(map.fits[1].options.pitch, 35)
+    assert.equal(map.fits[1].options.pitch, 0) // flat while motion is off
   })
 }
 

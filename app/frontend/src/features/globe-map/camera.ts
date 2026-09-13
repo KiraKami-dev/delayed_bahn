@@ -46,7 +46,7 @@ export function fitJourney(map: maplibregl.Map, journeys: Journey[], opts: { max
       [minLon - padDeg, minLat - padDeg],
       [maxLon + padDeg, maxLat + padDeg],
     ],
-    { padding: panelPadding(), duration: opts.duration ?? dur(DUR.fly), maxZoom: opts.maxZoom ?? 10.5, pitch: 48, bearing: 0, essential: true },
+    { padding: panelPadding(), duration: opts.duration ?? dur(DUR.fly), maxZoom: opts.maxZoom ?? 10.5, pitch: motionOff() ? 0 : 48, bearing: 0, essential: true },
   )
 }
 
@@ -60,7 +60,7 @@ export function flyToLeg(map: maplibregl.Map, leg: Leg) {
       [bounds[0][0] - padDeg, bounds[0][1] - padDeg],
       [bounds[1][0] + padDeg, bounds[1][1] + padDeg],
     ],
-    { padding: panelPadding(), duration: dur(1600), maxZoom: 11.5, pitch: 35, essential: true },
+    { padding: panelPadding(), duration: dur(1600), maxZoom: 11.5, pitch: motionOff() ? 0 : 35, essential: true },
   )
 }
 
@@ -70,7 +70,7 @@ export function flyToStation(map: maplibregl.Map, station: Station, zoom = 11) {
   map.flyTo({
     center: [station.lon, station.lat],
     zoom,
-    pitch: 50,
+    pitch: motionOff() ? 0 : 50,
     bearing: -15,
     duration: dur(1800),
     essential: true,

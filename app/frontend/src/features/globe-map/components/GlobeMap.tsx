@@ -220,8 +220,9 @@ export function GlobeMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, journey, basemapMode])
 
+  // 3D train models only once motion is switched on: by default the map shows the flat route.
   useEffect(() => {
-    if (!map || !journey) return
+    if (!map || !journey || still) return
     if (map.getLayer("journey-miniatures")) map.removeLayer("journey-miniatures")
     try { const layer = createTrainLayer(journey, prediction); map.addLayer(layer); trainLayer.current = layer } catch (error) { console.warn("3D trains unavailable", error) }
     map.triggerRepaint()
