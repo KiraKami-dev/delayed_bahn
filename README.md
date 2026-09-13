@@ -4,11 +4,11 @@
 
 DelayedBahn is an installable web app for Deutsche Bahn travellers. Share a journey from DB Navigator and it forecasts how late each train is likely to be, the chance of making every change, and the best move if a change is at risk. Two fine-tuned time-series language models, trained on DB's own delay history and fed today's live data, answer every trip.
 
-Built by team **error404.ai** at the European Hackathon League Zurich, September 2026.
-
 <p align="center">
   <img src="docs/images/Intro.jpeg" width="300" alt="DelayedBahn start screen">
 </p>
+
+Built by team **error404.ai** at the European Hackathon League Zurich, September 2026.
 
 ---
 
