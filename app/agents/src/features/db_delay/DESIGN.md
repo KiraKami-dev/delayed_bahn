@@ -835,7 +835,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | TSLM, no series (summaries in the rationale only), v7, 2k | 3.442 / 2.769 | | |
 | TSLM, encoder only (all series as embeddings, summaries in the rationale), v7, 2k | 3.451 / 2.773 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
-| TSLM, stacked text, v7, 6k (candidate, 30,000 test examples) | 3.224 / 2.560 on its 30,000 | | *queued* |
+| TSLM, stacked text, v7, 6k (submission model, 30,000 test examples) | 3.224 / 2.560 on its 30,000 | | 2.524 / 2.001 (10,000) |
 | TSLM, split, v7, 6k (30,000 test examples) | 3.234 / 2.570 on its 30,000 | | |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
@@ -863,6 +863,11 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   28,290 that ran: CRPS -0.074 (-0.097 to -0.055), median error -0.072, within 15 minutes -0.104,
   beyond 30 minutes -0.060, all real; against the 2,000-step v7 text model -0.019 (-0.037 to
   -0.002), real. Checkpoint in the bucket as `models/db-trip-delay-v7-text-6k.pt`.
+- **And it holds out of time: the submission model (08:00).** On 10,000 September examples: 2.524 /
+  2.001, CRPS -0.062 (-0.102 to -0.036), median error -0.076 (-0.120 to -0.046), within 15 minutes
+  -0.095, all real against XGBoost-v7 alone; the lead-time weights fitted on May are 1.0 in every
+  bucket. The best September result of all runs, so this checkpoint is the submission model unless
+  the 12,000-step run is clearly better on both the test and September.
 - **Split at 6,000 steps stays a hundredth behind (07:50).** 3.234 / 2.570 on the same 30,000:
   against XGBoost-v7 -0.063 (-0.086 to -0.045), real; against the text candidate +0.010 (+0.007 to
   +0.014), real. The same gap as at 2,000 steps.
