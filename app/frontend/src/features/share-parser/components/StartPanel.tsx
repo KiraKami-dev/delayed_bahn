@@ -1,5 +1,5 @@
 import { ArrowRight, Check, ClipboardPaste, Loader2, PenLine, Share2, TrainFront } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useDropText } from "@/features/pwa-shell/hooks/useDropText"
@@ -17,7 +17,8 @@ type Mode = "paste" | "build"
 
 export function StartPanel() {
   const s = useStore()
-  const [mode, setMode] = useState<Mode>("paste")
+  const [mode, setMode] = useState<Mode>(() => s.sharedText ? "paste" : "build")
+  useEffect(() => { if (s.sharedText) setMode("paste") }, [s.sharedText])
   const text = s.sharedText ?? ""
   const setText = (text: string) => s.dispatch({ type: "draft", text })
   const drop = useDropText((t) => { if (!s.busy) setText(t) })
@@ -30,7 +31,7 @@ export function StartPanel() {
       </div>
       <div className="input-modes" aria-label="How to enter your trip">
         <button type="button" aria-pressed={mode === "paste"} onClick={() => setMode("paste")} disabled={s.busy}><ClipboardPaste size={16} /> Paste DB journey</button>
-        <button type="button" aria-pressed={mode === "build"} onClick={() => setMode("build")} disabled={s.busy}><PenLine size={16} /> Enter train details</button>
+        <button type="button" aria-pressed={mode === "build"} onClick={() => setMode("build")} disabled={s.busy}><PenLine size={16} /> From → To</button>
       </div>
       {mode === "paste" ? (
         <form onSubmit={(e) => { e.preventDefault(); if (text.trim() && !s.busy) void s.runFromText(text) }}>
@@ -40,7 +41,7 @@ export function StartPanel() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={s.busy}
-            rows={5}
+            rows={3}
             maxLength={20000}
             aria-describedby="paste-hint"
             placeholder={"Paste the shared journey text here…\n\nNürnberg Hbf → München Hbf\nRB 16 · 04:34 – 07:25"}

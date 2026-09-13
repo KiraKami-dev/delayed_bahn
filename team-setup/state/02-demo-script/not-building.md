@@ -6,9 +6,9 @@
 - One delay for the whole journey — always per train, chained.
 - On-device / in-browser inference — backend only.
 - Our own journey planner or ticket exchange — we build on top of the DB app's share flow.
-- (3D) map view with from → to search — idea for later, not in the demo.
+- Advanced journey-planner filters remain out of scope. Akshat explicitly requested two-station lookup for departures from now, with globe exploration and route zoom.
 - Previous/next-train delay as model input (series of delays) — imagined for later, add only if the core is done.
-- Level 3 causes / disaster probability — scientific evaluation after the demo scope, not a shipped feature.
+- Causal prediction / disaster probability remains evaluation. The homepage may link to clearly labelled station-level possible-cause evidence; never claim it explains a specific train without supporting data.
 - Push notifications — only if the PWA check says they work for free; not a demo shot.
 - Full network coverage — the model is trained on the one storyline route.
 - Training data before October 2025 — old format, excluded.

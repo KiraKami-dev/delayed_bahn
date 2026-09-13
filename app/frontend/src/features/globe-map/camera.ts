@@ -3,17 +3,30 @@ import type { Journey, Leg, Station } from "@/lib/contract"
 import { journeyBounds, type LngLat } from "@/lib/geo"
 import { DUR, motionOff } from "@/lib/motion"
 
-export const HOME = { center: [10.5, 48] as LngLat, zoom: 1.35, pitch: 0, bearing: 0 }
+export const HOME = { center: [10.5, 35] as LngLat, zoom: 1.3, pitch: 0, bearing: 0 }
 
 /** Padding that keeps the route clear of the overlay panel. */
 export function panelPadding(): { top: number; bottom: number; left: number; right: number } {
-  return { top: 50, bottom: 50, left: 45, right: 75 }
+  const app = document.querySelector<HTMLElement>('.travel-app')
+  const sheet = app?.querySelector<HTMLElement>('.travel-sheet')
+  const visible = sheet && !sheet.hidden
+  if (app) {
+    if (window.innerWidth < 768 && window.innerWidth < window.innerHeight) {
+      const occupied = visible ? window.innerHeight - sheet.getBoundingClientRect().top : 66
+      return { top: 55, bottom: Math.min(window.innerHeight - 160, occupied + 15), left: 24, right: 62 }
+    }
+    return { top: 95, bottom: 75, left: visible ? Math.round(sheet.getBoundingClientRect().right + 25) : 50, right: 70 }
+  }
+  return { top: 50, bottom: 60, left: 50, right: 60 }
 }
 
 const dur = (ms: number) => (motionOff() ? 0 : ms)
 
 export function goHome(map: maplibregl.Map) {
-  map.flyTo({ ...HOME, duration: dur(DUR.fly), essential: true })
+  const portrait = window.innerWidth < 768 && window.innerWidth < window.innerHeight
+  const padding = panelPadding()
+  const zoom = portrait ? padding.bottom > 150 ? 0.1 : 0.65 : window.innerHeight < 520 ? 0.4 : HOME.zoom
+  map.flyTo({ ...HOME, zoom, padding, duration: dur(DUR.fly), essential: true })
 }
 
 export function fitJourney(map: maplibregl.Map, journeys: Journey[], opts: { maxZoom?: number; duration?: number } = {}) {
@@ -27,22 +40,25 @@ export function fitJourney(map: maplibregl.Map, journeys: Journey[], opts: { max
   if (!isFinite(minLon)) return
   // Give very short routes some air so the fit does not zoom to street level.
   const padDeg = 0.02
+  map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 })
   map.fitBounds(
     [
       [minLon - padDeg, minLat - padDeg],
       [maxLon + padDeg, maxLat + padDeg],
     ],
-    { padding: panelPadding(), duration: opts.duration ?? dur(DUR.fly), maxZoom: opts.maxZoom ?? 10.5, pitch: 0, bearing: 0, essential: true },
+    { padding: panelPadding(), duration: opts.duration ?? dur(DUR.fly), maxZoom: opts.maxZoom ?? 10.5, pitch: 48, bearing: 0, essential: true },
   )
 }
 
 export function flyToLeg(map: maplibregl.Map, leg: Leg) {
-  if (leg.from.lon == null || leg.to.lon == null || leg.from.lat == null || leg.to.lat == null) return
+  const bounds = journeyBounds({ id: "leg-focus", source: "manual", legs: [leg] })
+  if (!bounds) return
   const padDeg = 0.03
+  map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 })
   map.fitBounds(
     [
-      [Math.min(leg.from.lon, leg.to.lon) - padDeg, Math.min(leg.from.lat, leg.to.lat) - padDeg],
-      [Math.max(leg.from.lon, leg.to.lon) + padDeg, Math.max(leg.from.lat, leg.to.lat) + padDeg],
+      [bounds[0][0] - padDeg, bounds[0][1] - padDeg],
+      [bounds[1][0] + padDeg, bounds[1][1] + padDeg],
     ],
     { padding: panelPadding(), duration: dur(1600), maxZoom: 11.5, pitch: 35, essential: true },
   )
@@ -71,11 +87,12 @@ export function startIdleSpin(map: maplibregl.Map): () => void {
     stopped = true
     cancelAnimationFrame(raf)
   }
+  const start = performance.now()
   const tick = () => {
     if (stopped) return
-    if (!map.isMoving()) {
-      const c = map.getCenter()
-      map.jumpTo({ center: [c.lng + 0.035, c.lat] })
+    if (!document.hidden && !map.isMoving()) {
+      const elapsed = (performance.now() - start) / 1000
+      map.jumpTo({ center: [HOME.center[0] + Math.sin(elapsed / 25) * 12, HOME.center[1]], bearing: Math.sin(elapsed / 30) * 4 })
     }
     raf = requestAnimationFrame(tick)
   }

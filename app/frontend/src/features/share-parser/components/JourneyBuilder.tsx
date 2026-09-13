@@ -1,11 +1,11 @@
-import { ArrowRight, Loader2, Plus, Trash2 } from "lucide-react"
-import { useEffect, useId, useState } from "react"
-import type { Leg } from "@/lib/contract"
+import { ArrowRight, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { useEffect, useId, useRef, useState } from "react"
+import type { Journey } from "@/lib/contract"
 import { useStore } from "@/lib/store"
 import { searchStations, type StationEntry } from "@/lib/stations"
 
-type Draft = { id: string; trainId: string; from?: StationEntry; to?: StationEntry; dep: string; arr: string }
-const emptyLeg = (): Draft => ({ id: crypto.randomUUID(), trainId: "", dep: "", arr: "" })
+import { searchJourneys } from "@/lib/journey-search"
+import { fmtTime } from "@/lib/geo"
 const fieldClass = "w-full rounded-lg border border-input bg-white px-3 py-2.5 text-sm outline-none focus:border-ring"
 
 function StationField({ label, value, onPick, disabled }: { label: string; value?: StationEntry; onPick: (s: StationEntry | undefined) => void; disabled: boolean }) {
@@ -44,45 +44,44 @@ export function germanTime(date: string, hhmm: string): string {
 
 export function JourneyBuilder() {
   const s = useStore()
-  const [date, setDate] = useState(() => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date()))
-  const [legs, setLegs] = useState<Draft[]>(() => [emptyLeg()])
+  const [from, setFrom] = useState<StationEntry>()
+  const [to, setTo] = useState<StationEntry>()
+  const [results, setResults] = useState<Journey[] | null>(null)
   const [error, setError] = useState("")
-  const update = (i: number, patch: Partial<Draft>) => setLegs(ls => ls.map((l, j) => i === j ? { ...l, ...patch } : l))
-  const complete = Boolean(date) && legs.every(l => l.trainId.trim() && l.from && l.to && l.from.evaNumber !== l.to.evaNumber && l.dep && l.arr)
-  const submit = () => {
-    if (!complete || s.busy) return
-    setError("")
+  const [loading, setLoading] = useState(false)
+  const [optionIndex, setOptionIndex] = useState(0)
+  const request = useRef<AbortController | null>(null)
+  useEffect(() => () => request.current?.abort(), [])
+  const clear = () => { request.current?.abort(); request.current = null; setLoading(false); setResults(null); setError("") }
+  const submit = async () => {
+    if (!from || !to || from.evaNumber === to.evaNumber || loading) return
+    clear()
+    const controller = new AbortController()
+    request.current = controller
+    setLoading(true)
+    const timeout = window.setTimeout(() => controller.abort(), 15000)
     try {
-      let day = date
-      let previousArrival = 0
-      const nextDay = () => { day = new Date(Date.parse(`${day}T12:00:00Z`) + 86400000).toISOString().slice(0, 10) }
-      const built: Leg[] = legs.map((l, i) => {
-        if (i > 0 && legs[i - 1].to?.evaNumber !== l.from?.evaNumber) throw new Error("Each connecting train must leave from the station where the previous train arrives.")
-        let departure = germanTime(day, l.dep)
-        if (Date.parse(departure) < previousArrival) { nextDay(); departure = germanTime(day, l.dep) }
-        let arrival = germanTime(day, l.arr)
-        if (Date.parse(arrival) <= Date.parse(departure)) { nextDay(); arrival = germanTime(day, l.arr) }
-        previousArrival = Date.parse(arrival)
-        return { trainId: l.trainId.trim(), from: l.from!, to: l.to!, plannedDeparture: departure, plannedArrival: arrival }
-      })
-      built.forEach((l, i) => { if (built[i + 1]) l.transferMinutes = Math.round((Date.parse(built[i + 1].plannedDeparture) - Date.parse(l.plannedArrival)) / 60000) })
-      void s.runJourney({ id: `manual-${crypto.randomUUID()}`, source: "manual", legs: built })
-    } catch (e) { setError((e as Error).message) }
+      const journeys = await searchJourneys(from, to, controller.signal)
+      if (request.current === controller) { setResults(journeys); setOptionIndex(0) }
+    } catch {
+      if (request.current === controller) setError("We couldn’t load connections. Your stations are saved here. Try again, or paste a DB journey.")
+    } finally {
+      window.clearTimeout(timeout)
+      if (request.current === controller) setLoading(false)
+    }
   }
+  if (results) {
+    const option = results[optionIndex]
+    return <div className="compact-route-results"><button type="button" className="compact-back" onClick={() => setResults(null)}>← Change stations</button><h3>{option ? 'Choose your connection' : 'No supported connections found'}</h3>{option ? <><div className="compact-route-option"><strong>{fmtTime(option.legs[0].plannedDeparture)} → {fmtTime(option.legs.at(-1)!.plannedArrival)}</strong><p>{option.legs.length} trains · {option.legs.length - 1} changes</p><p>{option.legs[0].from.name} → {option.legs.at(-1)!.to.name}</p></div><div className="travel-pager"><button type="button" aria-label="Previous connection" disabled={optionIndex === 0} onClick={() => setOptionIndex(i => i - 1)}><ChevronLeft size={18} /></button><span>Connection {optionIndex + 1} / {results.length}</span><button type="button" aria-label="Next connection" disabled={optionIndex === results.length - 1} onClick={() => setOptionIndex(i => i + 1)}><ChevronRight size={18} /></button></div><button type="button" className="travel-primary" disabled={s.busy} onClick={() => void s.runJourney(option)}>Check this connection <ArrowRight size={17} /></button></> : <p>Try another pair or paste a DB journey. Walking transfers and unavailable trains are excluded.</p>}</div>
+  }
+  return <form className="station-search-form" onSubmit={e => { e.preventDefault(); void submit() }}>
+    <StationField label="From station" value={from} onPick={v => { clear(); setFrom(v) }} disabled={s.busy} />
+    <StationField label="To station" value={to} onPick={v => { clear(); setTo(v) }} disabled={s.busy} />
+    <p className="field-hint">Leaving now · We’ll find the trains and changes for you.</p>
+    {from && to && from.evaNumber === to.evaNumber && <p role="status">Choose two different stations.</p>}
+    <button type="submit" className="primary-button check-button" disabled={!from || !to || from.evaNumber === to.evaNumber || loading || s.busy}>{loading ? <><Loader2 size={18} className="animate-spin" /> Finding connections…</> : <>Find my route <ArrowRight size={18} /></>}</button>
+    {error && <p className="error-banner" role="alert">{error}</p>}
 
-  return <form className="space-y-4" onSubmit={e => { e.preventDefault(); submit() }}>
-    <div><label className="field-label" htmlFor="travel-date">Travel date</label><input id="travel-date" type="date" required value={date} disabled={s.busy} onChange={e => setDate(e.target.value)} className={fieldClass} /></div>
-    {legs.map((l, i) => <fieldset key={l.id} disabled={s.busy} className="space-y-3 rounded-xl border border-border bg-background/60 p-3.5">
-      <legend className="px-1 text-xs font-semibold text-muted-foreground">Train {i + 1}</legend>
-      {legs.length > 1 && <div className="flex justify-end"><button type="button" onClick={() => setLegs(ls => ls.filter(x => x.id !== l.id))} className="icon-button" aria-label={`Remove train ${i + 1}`}><Trash2 size={16} /></button></div>}
-      <div><label className="field-label" htmlFor={`train-${l.id}`}>Train name or number</label><input id={`train-${l.id}`} required value={l.trainId} onChange={e => update(i, { trainId: e.target.value })} placeholder="For example, ICE 1005" className={fieldClass} /></div>
-      <StationField label={i === 0 ? "From station" : `From station, train ${i + 1}`} value={l.from} onPick={from => update(i, { from })} disabled={s.busy} />
-      <StationField label={i === 0 ? "To station" : `To station, train ${i + 1}`} value={l.to} onPick={to => update(i, { to })} disabled={s.busy} />
-      <div className="grid grid-cols-2 gap-3"><div><label className="field-label" htmlFor={`dep-${l.id}`}>Departure</label><input id={`dep-${l.id}`} type="time" required value={l.dep} onChange={e => update(i, { dep: e.target.value })} className={fieldClass} /></div><div><label className="field-label" htmlFor={`arr-${l.id}`}>Arrival</label><input id={`arr-${l.id}`} type="time" required value={l.arr} onChange={e => update(i, { arr: e.target.value })} className={fieldClass} /></div></div>
-    </fieldset>)}
-    <p className="text-[10px] leading-relaxed text-muted-foreground">Use scheduled times in Germany. Earlier clock times continue on the next day for overnight trips. Confirm the dates in your journey summary.</p>
-    {error && <p role="alert" className="error-banner">{error}</p>}
-    <button type="button" disabled={s.busy || legs.length >= 8} onClick={() => setLegs(ls => [...ls, { ...emptyLeg(), from: ls.at(-1)?.to }])} className="inline-flex min-h-10 items-center gap-1.5 text-xs font-medium text-primary"><Plus size={16} /> Add a connecting train</button>
-    <button type="submit" disabled={!complete || s.busy} className="primary-button check-button">{s.busy ? <><Loader2 size={17} className="animate-spin" /> Checking your journey…</> : <>Check my trip <ArrowRight size={17} /></>}</button>
+    <p className="lookup-source">Timetable lookup via <a href="https://v6.db.transport.rest/api.html" target="_blank" rel="noreferrer">transport.rest</a>. Confirm live departures in DB Navigator.</p>
   </form>
 }

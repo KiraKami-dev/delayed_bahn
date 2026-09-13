@@ -64,13 +64,13 @@ for (const [width, height] of [[320, 844], [375, 844], [768, 1024], [1024, 900],
     const page = await pageFor(t, width, height)
     await page.goto(base)
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light')
-    await page.getByRole('button', { name: 'Enter train details' }).click()
-    await page.getByLabel('Travel date').waitFor()
+    await page.getByRole('button', { name: 'From → To' }).click()
+    await page.getByRole('combobox', { name: 'From station', exact: true }).waitFor()
     await page.getByRole('combobox', { name: 'From station', exact: true }).fill('Berlin')
     await page.getByRole('combobox', { name: 'From station', exact: true }).press('ArrowDown')
     await page.getByRole('combobox', { name: 'From station', exact: true }).press('Enter')
     assert.match(await page.getByRole('combobox', { name: 'From station', exact: true }).inputValue(), /Berlin/)
-    await page.getByRole('button', { name: 'Check my trip', exact: true }).scrollIntoViewIfNeeded()
+    await page.getByRole('button', { name: 'Find my route', exact: true }).scrollIntoViewIfNeeded()
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
   })
 }
@@ -98,19 +98,17 @@ test('a shared journey URL retains its text if the parser is unavailable', async
 test('changing a selected station clears the old selection', async t => {
   const page = await pageFor(t)
   await page.goto(base)
-  await page.getByRole('button', { name: 'Enter train details' }).click()
-  await page.getByLabel('Train name or number').fill('ICE 1005')
+  await page.getByRole('button', { name: 'From → To' }).click()
+  assert.equal(await page.locator('input').count(), 2)
   for (const [label, query] of [['From station', 'Berlin'], ['To station', 'Hamburg']]) {
     const field = page.getByRole('combobox', { name: label, exact: true })
     await field.fill(query)
     await field.press('ArrowDown')
     await field.press('Enter')
   }
-  await page.getByLabel('Departure', { exact: true }).fill('10:00')
-  await page.getByLabel('Arrival', { exact: true }).fill('12:00')
-  assert.equal(await page.getByRole('button', { name: 'Check my trip', exact: true }).isEnabled(), true)
+  assert.equal(await page.getByRole('button', { name: 'Find my route', exact: true }).isEnabled(), true)
   await page.getByRole('combobox', { name: 'From station', exact: true }).fill('Not a known station')
-  assert.equal(await page.getByRole('button', { name: 'Check my trip', exact: true }).isEnabled(), false)
+  assert.equal(await page.getByRole('button', { name: 'Find my route', exact: true }).isEnabled(), false)
 })
 
 test('German travel times handle summer, winter and nonexistent daylight-saving times', async t => {
@@ -222,4 +220,46 @@ test('WebGL-unavailable browsers still get the full trip summary', async t => {
   await page.getByText('The interactive map isn’t supported by this browser.', { exact: false }).waitFor()
   await page.getByRole('heading', { name: 'Your trains, step by step.' }).waitFor()
   assert.match(await page.locator('.outlook-number').innerText(), /^38%/)
+})
+
+test('Higgsfield homepage reveals a globe and explains the example connections', async t => {
+  const page = await pageFor(t)
+  await page.route('**/api/**', route => route.abort())
+  await page.goto(base)
+  const art = page.locator('img[src="/rail-globe.png"]')
+  await art.waitFor()
+  assert.ok(await art.evaluate(el => el.complete && el.naturalWidth > 0), 'Generated artwork loads locally')
+  await page.screenshot({ path: '/tmp/rail-homepage.png', fullPage: true })
+  await page.getByRole('button', { name: 'Explore the interactive globe' }).click()
+  await page.locator('.globe-preview .map-frame').waitFor()
+  await page.getByRole('button', { name: /Try an example trip/ }).click()
+  await page.getByRole('heading', { name: 'Follow your connection story.' }).waitFor()
+  assert.ok(await page.locator('.story-train').count() > 0)
+  await page.getByRole('button', { name: 'Replay', exact: true }).click()
+  await page.getByRole('button', { name: 'Find a calmer plan' }).click()
+  await page.screenshot({ path: '/tmp/rail-journey.png', fullPage: true })
+})
+
+for (const outage of [false, true]) test(`mobile two-station search ${outage ? 'preserves stations on outage' : 'returns a selectable connection'}`, async t => {
+  const page = await pageFor(t, 375, 844)
+  await page.route('https://v6.db.transport.rest/journeys?**', route => outage ? route.fulfill({ status: 503 }) : route.fulfill({ json: { journeys: [{ legs: [{ line: { name: 'ICE 100', mode: 'train' }, origin: { id: '8011160', name: 'Berlin Hbf' }, destination: { id: '8002549', name: 'Hamburg Hbf' }, plannedDeparture: '2026-09-13T10:00:00+02:00', plannedArrival: '2026-09-13T12:00:00+02:00' }] }] } }))
+  await page.goto(base)
+  assert.equal(await page.locator('input').count(), 2)
+  for (const [label, query] of [['From station', 'Berlin'], ['To station', 'Hamburg']]) {
+    const field = page.getByRole('combobox', { name: label, exact: true })
+    await field.fill(query); await field.press('ArrowDown'); await field.press('Enter')
+  }
+  await page.screenshot({ path: '/tmp/rail-mobile-stations.png', fullPage: true })
+  await page.getByRole('button', { name: 'Find my route' }).click()
+  if (outage) {
+    await page.getByRole('alert').waitFor()
+    assert.match(await page.getByRole('combobox', { name: 'From station', exact: true }).inputValue(), /Berlin/)
+    assert.equal(await page.locator('.route-options button').count(), 0)
+  } else {
+    await page.getByRole('heading', { name: 'Choose a connection' }).waitFor()
+    await page.route('**/api/predict', route => route.fulfill({ status: 503 }))
+    await page.getByRole('button', { name: /Check this connection/ }).click()
+    await page.getByRole('heading', { name: /Berlin Hbf.*Hamburg Hbf/ }).waitFor()
+  }
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
 })

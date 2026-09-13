@@ -41,8 +41,9 @@ function lerp(a: [number, number], b: [number, number], t: number): [number, num
 
 function partial(line: [number, number][], t: number): [number, number][] {
   if (t >= 0.999) return line
-  const [a, b] = [line[0], line[line.length - 1]]
-  return [a, lerp(a, b, Math.max(t, 0.002))]
+  const position = Math.max(0.002, t) * (line.length - 1)
+  const index = Math.min(line.length - 2, Math.floor(position))
+  return [...line.slice(0, index + 1), lerp(line[index], line[index + 1], position - index)]
 }
 
 export type DrawOptions = {
@@ -61,6 +62,7 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
   const base = kind === "main" ? RISK_COLOUR.none : "#a7f3d0"
   const width = opts.width ?? (kind === "main" ? 4.5 : 3.5)
   const animate = (opts.animate ?? true) && !motionOff()
+  const beforeLabels = map.getStyle().layers?.find(layer => layer.type === "symbol")?.id
 
   journey.legs.forEach((leg, i) => {
     const line = legLine(leg)
@@ -80,7 +82,7 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
       source: sourceId,
       layout: { "line-cap": "round", "line-join": "round" },
       paint: { "line-color": colour, "line-width": width * 3, "line-opacity": 0.22, "line-blur": 6 },
-    })
+    }, beforeLabels)
     map.addLayer({
       id: lineId,
       type: "line",
@@ -90,9 +92,9 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
         "line-color": colour,
         "line-width": width,
         "line-opacity": 0.95,
-        ...(opts.dashed ? { "line-dasharray": [1.5, 1.5] } : {}),
+        ...((opts.dashed || (leg.routeGeometry?.length ?? 0) < 2) ? { "line-dasharray": [1.5, 1.5] } : {}),
       },
-    })
+    }, beforeLabels)
     h.layerIds.push(glowId, lineId)
   })
 

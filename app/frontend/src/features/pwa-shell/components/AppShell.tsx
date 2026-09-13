@@ -1,134 +1,96 @@
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, CircleHelp, Clock3, Info, Leaf, Loader2, MapPin, MoveUpRight, Pause, Play, Route, ShieldCheck, TrainFront, X } from "lucide-react"
-import { lazy, Suspense, useEffect, useRef, useState } from "react"
-import { useStore } from "@/lib/store"
-import { fmtDate, fmtTime } from "@/lib/geo"
-import { toggleMotion, useReducedMotion } from "@/lib/motion"
-import { StartPanel } from "@/features/share-parser/components/StartPanel"
-import { JourneyCards } from "@/features/share-parser/components/JourneyCards"
-import { ForecastPanel } from "@/features/delay-prediction/components/ForecastPanel"
-import { AdvicePanel, LeaveHomeBy, travelerAdvice } from "@/features/recommendation/components/AdvicePanel"
-import { CausesPanel } from "@/features/causes/components/CausesPanel"
-import { EvidencePanel } from "@/features/evidence/components/EvidencePanel"
-import { WhyDisclosure } from "@/features/delay-prediction/components/WhyDisclosure"
-import { TabBar } from "./TabBar"
-import { InstallButton, OfflinePill } from "./StatusPills"
-import { STAGE_STEPS } from "../hooks/useStageKeys"
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, CircleHelp, Clock3, Info, Loader2, Pause, Play, Route, ShieldCheck, TrainFront, Umbrella, X } from 'lucide-react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useStore, type Tab } from '@/lib/store'
+import { fmtDate, fmtTime } from '@/lib/geo'
+import { toggleMotion, useReducedMotion } from '@/lib/motion'
+import { StartPanel } from '@/features/share-parser/components/StartPanel'
+import { InstallButton, OfflinePill } from './StatusPills'
+import { travelerAdvice } from '@/features/recommendation/components/AdvicePanel'
+import '@/single-screen.css'
 
-const GlobeMap = lazy(() => import("@/features/globe-map/components/GlobeMap").then(m => ({ default: m.GlobeMap })))
-
-function JourneyOutlook() {
-  const s = useStore()
-  const p = s.prediction
-  if (!p) return null
-  const risk = p.planFailProbability.value
-  const direct = s.journey?.legs.length === 1
-  const delay = p.legs.at(-1)?.expectedDelayMinutes
-  const tone = direct ? "low" : risk < 0.15 ? "low" : risk < 0.4 ? "mid" : "high"
-  const title = direct ? "One train. No changes to make." : tone === "low" ? "A little more peace of mind." : tone === "mid" ? "Give yourself a little more time." : "This connection needs a backup plan."
-  return (
-    <section className="outlook-card" data-risk={tone} aria-labelledby="outlook-heading">
-      <div className="eyebrow"><ShieldCheck size={15} /><h2 id="outlook-heading">Your connection outlook</h2></div>
-      <div className="outlook-main"><h3>{title}</h3><div className="outlook-number">{direct ? `+${Math.round(delay?.value ?? 0)}` : `${Math.round(risk * 100)}%`}<span>{direct ? "minutes estimated arrival delay" : "estimated plan-failure risk"}</span></div></div>
-      <p>{direct ? "There’s no connection to miss, but your train can still arrive late. This delay estimate is not a guarantee; check live departures before traveling." : s.recommendation ? travelerAdvice(s.recommendation) : "See the train-by-train forecast below. Connection estimates are not a guarantee of arrival."}</p>
-      <div className="outlook-footer"><WhyDisclosure item={direct && delay ? delay : p.planFailProbability} label="What’s behind this estimate?" /><button type="button" onClick={() => s.dispatch({ type: "tab", tab: "advice" })}>Your next steps <ArrowRight size={15} /></button></div>
-    </section>
-  )
+const GlobeMap = lazy(() => import('@/features/globe-map/components/GlobeMap').then(m => ({ default: m.GlobeMap })))
+const tabs: { id: Tab; label: string; icon: typeof Route }[] = [{ id: 'plan', label: 'My journey', icon: Route }, { id: 'advice', label: 'What next?', icon: Umbrella }, { id: 'evidence', label: 'Why?', icon: Info }]
+function Art({ kind = 0 }: { kind?: number }) { return <span className="travel-art" style={{ backgroundPosition: `${kind * 50}% center` }} aria-hidden="true" /> }
+function Pager({ index, count, onChange, label }: { index: number; count: number; onChange: (index: number) => void; label: string }) {
+  return <div className="travel-pager"><button type="button" aria-label={`Previous ${label}`} disabled={index <= 0} onClick={() => onChange(index - 1)}><ChevronLeft size={18} /></button><span>{label} {index + 1} / {count}</span><button type="button" aria-label={`Next ${label}`} disabled={index >= count - 1} onClick={() => onChange(index + 1)}><ChevronRight size={18} /></button></div>
 }
-
-function RouteView() {
-  const s = useStore()
-  const [visible, setVisible] = useState(() => window.matchMedia("(min-width: 1024px)").matches)
-  if (!s.journey) return null
-  return (
-    <section className="route-card" aria-label="Journey visualization">
-      <div className="route-heading"><div><span className="eyebrow">THE BIG PICTURE</span><h2>Your journey, connected.</h2></div><button className="icon-button" type="button" aria-expanded={visible} aria-label={visible ? "Hide 3D route" : "Show 3D route"} onClick={() => setVisible(!visible)}><ChevronDown size={20} className={visible ? "rotate-180" : ""} /></button></div>
-      {visible && <div className="map-frame"><Suspense fallback={<div className="map-placeholder"><Loader2 size={24} className="animate-spin" /> Opening your route…</div>}><GlobeMap /></Suspense></div>}
-      <div className="route-stops">
-        {s.journey.legs.map((leg, i) => <button key={i} type="button" aria-pressed={s.selectedLeg === i} onClick={() => { s.dispatch({ type: "selectLeg", index: s.selectedLeg === i ? null : i }); setVisible(true) }}><span className="stop-dot">{i + 1}</span><span><strong>{leg.from.name}</strong><small>{fmtTime(leg.plannedDeparture)} · {leg.trainId}</small></span><MoveUpRight size={15} /></button>)}
-        <div className="destination-stop"><span className="stop-dot"><MapPin size={14} /></span><span><strong>{s.journey.legs.at(-1)?.to.name}</strong><small>{fmtTime(s.journey.legs.at(-1)!.plannedArrival)} · scheduled arrival</small></span></div>
-      </div>
-      <p className="map-note">Route lines connect stations, not actual tracks. All times are local to Germany.</p>
-    </section>
-  )
+function TextPages({ text }: { text: string }) {
+  const [page, setPage] = useState(0)
+  // Preserve every word, with short pages instead of a growing scroll panel.
+  const words = text.split(/\s+/); const pages: string[] = []; let current = ''
+  for (const word of words) { if (current.length + word.length > 180) { pages.push(current); current = '' } current += `${current ? ' ' : ''}${word}` }
+  if (current) pages.push(current)
+  useEffect(() => setPage(0), [text])
+  const index = Math.min(page, Math.max(0, pages.length - 1))
+  return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
+function JourneyPanel() {
+  const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)
+  const leg = journey.legs[index], forecast = s.prediction?.legs[index], next = journey.legs[index + 1]
+  const change = next ? (Date.parse(next.plannedDeparture) - Date.parse(leg.plannedArrival)) / 60000 : null
+  const left = change != null && forecast ? Math.round(change - forecast.expectedDelayMinutes.value) : null
+  const risk = s.prediction?.planFailProbability.value
+  const direct = journey.legs.length === 1
+  return <div className="travel-panel-body">
+    <div className="travel-verdict"><div><span className="travel-kicker">YOUR WHOLE JOURNEY</span><h2>{risk == null ? s.error ? 'Forecast unavailable.' : 'Checking your connections…' : journey.legs.length === 1 ? 'One train. A simpler journey.' : risk < .15 ? 'This connection looks good.' : 'Give your day a backup plan.'}</h2></div><strong>{risk == null ? '—' : direct ? `+${Math.round(forecast?.expectedDelayMinutes.value ?? 0)}` : `${Math.round(risk * 100)}%`}<small>{direct ? 'minutes estimated arrival delay' : 'estimated plan-failure risk'}</small></strong></div>
+    <button type="button" className="travel-train-card" onClick={() => s.dispatch({ type: 'selectLeg', index })} aria-label={`Focus map on ${leg.trainId}`}>
+      <Art /><div><span className="travel-kicker">TRAIN {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small></div>
+    </button>
+    <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
+    <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />
 
+  </div>
+}
+function AdviceCompact() {
+  const s = useStore(); const [view, setView] = useState<'advice' | 'leave' | 'alternative' | 'recovery'>('advice'); const [legIndex, setLegIndex] = useState(0); const [loading, setLoading] = useState(false)
+  const journey = s.journey!, rec = s.recommendation
+  useEffect(() => { s.dispatch({ type: 'overlay', overlay: view === 'alternative' && rec?.alternative ? 'alternative' : 'none' }) }, [view, rec?.alternative, s.dispatch])
+  const depart = journey.legs[0].plannedDeparture
+  const leave = new Date(Date.parse(depart) - (s.doorToStationMin + 5) * 60000).toISOString()
+  const alt = rec?.alternative; const leg = alt?.legs[Math.min(legIndex, alt.legs.length - 1)]
+  const recovery = s.reroute?.options[s.rerouteChoice]
+  return <div className="travel-panel-body">
+    <div className="travel-subtabs" aria-label="Recommendations">{(['advice', 'leave', 'alternative', 'recovery'] as const).map((v, i) => <button type="button" key={v} aria-pressed={view === v} onClick={() => { setView(v); setLegIndex(0) }}>{['Best next step', 'Leave by', 'Other route', 'Disrupted?'][i]}</button>)}</div>
+    {view === 'advice' && <><div className="travel-feature"><Art kind={1} /><div><span className="travel-kicker">COMFORT OVER A SPRINT</span><h2>{rec?.verdict === 'good' ? 'Keep this connection.' : rec ? 'A little breathing room.' : 'Advice is not available yet.'}</h2></div></div><TextPages text={rec ? travelerAdvice(rec) : 'Your route is saved. Retry the check, or confirm the next departures in DB Navigator.'} />{rec?.bufferMinutes != null && <p className="travel-fine"><b>+{rec.bufferMinutes} min</b> suggested transfer buffer. Find a matching connection in DB.</p>}<p className="travel-fine">Recommendations build on the per-train estimates. They are not a guarantee.</p></>}
+    {view === 'leave' && <><div className="travel-feature"><Art kind={1} /><div><span className="travel-kicker">LESS RUSH. MORE ROOM.</span><h2>Aim to leave by <b>{fmtTime(leave)}</b></h2></div></div><p className="travel-fine">{fmtDate(leave)} · original {fmtTime(depart)} train.</p><label className="travel-range">Time to the first station <strong>{s.doorToStationMin} min</strong><input aria-label="Minutes to the first station" type="range" min={5} max={90} step={5} value={s.doorToStationMin} onChange={e => s.dispatch({ type: 'door', minutes: Number(e.target.value) })} /></label><p className="travel-fine">Includes 5 minutes to find the platform. This is preparation time, not a forecast-derived arrival-deadline guarantee. Allow extra time for assistance.</p></>}
+    {view === 'alternative' && <>{leg ? <><span className="travel-kicker">TIMING SCENARIO · NOT A VERIFIED SERVICE</span><h2>{leg.trainId} · {fmtTime(leg.plannedDeparture)}</h2><p className="travel-copy">{leg.from.name} → {leg.to.name}</p><div className="travel-buffer"><strong>{fmtTime(leg.plannedArrival)}</strong><span>scheduled scenario arrival{leg.transferMinutes != null && <><br />{leg.transferMinutes} min to change</>}</span></div><Pager label="alternative leg" index={Math.min(legIndex, alt!.legs.length - 1)} count={alt!.legs.length} onChange={setLegIndex} /><p className="travel-fine">Dashed on the map. Find an actual train and check ticket validity in DB Navigator before changing plans.</p></> : <><Art kind={1} /><h2>No alternative returned yet.</h2><p className="travel-copy">A longer transfer or an earlier departure may help. Check current connections in DB Navigator.</p></>}</>}
+    {view === 'recovery' && <>{recovery && s.overlay === 'reroute' ? <><span className="travel-kicker">RECOVERY SCENARIO · CONFIRM IN DB</span><h2>{recovery.label}</h2><TextPages text={`${recovery.journey.legs.map(l => `${l.trainId}: ${l.from.name} ${fmtTime(l.plannedDeparture)} to ${l.to.name} ${fmtTime(l.plannedArrival)}`).join('. ')}. These are timing scenarios, not verified departures.`} /><Pager label="option" index={s.rerouteChoice} count={s.reroute!.options.length} onChange={i => s.dispatch({ type: 'rerouteChoice', index: i })} /></> : <><div className="travel-feature"><Art kind={2} /><div><span className="travel-kicker">ALREADY ON THE WAY?</span><h2>Missed or cancelled?</h2></div></div><p className="travel-copy">{journey.legs.length > 1 ? `Check next steps after ${journey.legs[Math.min(legIndex, journey.legs.length - 2)].trainId}, at ${journey.legs[Math.min(legIndex, journey.legs.length - 2)].to.name}.` : 'For a cancelled direct train, check current departures with DB station staff or DB Navigator.'}</p>{journey.legs.length > 1 && <><Pager label="connection" index={Math.min(legIndex, journey.legs.length - 2)} count={journey.legs.length - 1} onChange={setLegIndex} /><button type="button" className="travel-primary" disabled={loading || s.busy} onClick={async () => { setLoading(true); await s.fetchReroute(Math.min(legIndex, journey.legs.length - 2)); setLoading(false) }}>{loading ? 'Checking…' : 'Find next steps'} <ArrowRight size={17} /></button></>}</>}</>}
+  </div>
+}
+function EvidenceCompact() {
+  const s = useStore(); const [view, setView] = useState<'prediction' | 'advice' | 'proof' | 'causes'>(s.tab === 'causes' ? 'causes' : 'prediction')
+  const [causePage, setCausePage] = useState(0)
+  const station = s.journey?.legs[Math.min(s.selectedLeg ?? 0, s.journey.legs.length - 1)]?.to
+  useEffect(() => { if (view === 'causes' && station) void s.fetchCauses(station) }, [view, station?.evaNumber])
+  const item = view === 'advice' ? s.recommendation?.advice : s.prediction?.planFailProbability
+  const families = s.causes ? Object.entries(s.causes.families) : []
+  const familyNames: Record<string, string> = { works: 'Construction', weather: 'Weather', technical: 'Technical faults', knock_on: 'Knock-on delays', staff: 'Staff shortage', external: 'External incidents', unattributed: 'No cause given' }
+  return <div className="travel-panel-body"><div className="travel-subtabs">{(['prediction', 'advice', 'proof', 'causes'] as const).map((v, i) => <button type="button" key={v} aria-pressed={view === v} onClick={() => { setView(v); s.dispatch({ type: 'tab', tab: v === 'causes' ? 'causes' : 'evidence' }) }}>{['Estimate', 'Advice', 'Model test', 'Causes'][i]}</button>)}</div>
+    {view === 'proof' ? <><div className="travel-feature"><ShieldCheck size={36} /><h2>Evidence before confidence.</h2></div><TextPages text="The maintained model-comparison file contains placeholder baseline numbers. A verified held-out comparison is still needed before claiming the fine-tuned model beats the raw-data GPT/Claude baseline. Model confidence is advisory, not a calibrated probability." /></> : view === 'causes' ? <><div className="travel-feature"><Art kind={2} /><div><span className="travel-kicker">EXPLORATORY · LEVEL 3</span><h2>Possible causes</h2><p>{station?.name}</p></div></div>{families.length ? <><div className="travel-buffer"><strong>{Math.round(families[causePage % families.length][1] * 100)}%</strong><span>{familyNames[families[causePage % families.length][0]]}</span></div><Pager label="cause family" index={causePage % families.length} count={families.length} onChange={setCausePage} /><TextPages text={`Station-level patterns, not a confirmed cause for your train. Source: ${s.causes!.source}. Only ${Math.round(s.causes!.attributionRate * 100)}% of stop events carry a cause code.`} /></> : <p className="travel-copy">{s.error ? 'Station evidence is unavailable. Your journey remains saved.' : 'Loading station-level evidence…'}</p>}</> : <><span className="travel-kicker">{view === 'advice' ? 'WHY THIS RECOMMENDATION?' : 'HOW WE READ YOUR JOURNEY'}</span><h2>Per train. Then connected.</h2><TextPages text={item ? `${item.reasoning} Sources: ${item.sources.join('; ')}. Confidence: ${item.confidence}, advisory and not calibrated.` : 'We need a returned estimate before showing its reasoning. No model evidence has been invented.'} /></>}
+  </div>
+}
 export function AppShell() {
-  const s = useStore()
-  const still = useReducedMotion()
-  const dialog = useRef<HTMLDialogElement>(null)
-  const main = useRef<HTMLElement>(null)
-  const [help, setHelp] = useState<"how" | "evidence">("how")
-  const [imageFailed, setImageFailed] = useState(false)
-  const first = s.journey?.legs[0]
-  const last = s.journey?.legs.at(-1)
-  const isDemo = s.journey?.source === "seed"
-  const isPrior = s.prediction?.modelId.toLowerCase().includes("mock") || s.prediction?.modelId.toLowerCase().includes("prior")
-  const openHelp = (section: "how" | "evidence") => { setHelp(section); dialog.current?.showModal() }
-
-  useEffect(() => {
-    if (s.journey) main.current?.focus({ preventScroll: true })
-  }, [s.journey?.id])
-
-  return (
-    <div className="shell">
-      <a className="skip-link" href="#main-content">Skip to trip planner</a>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="error404 home"><span className="brand-mark"><TrainFront size={22} strokeWidth={1.8} /></span><span>error<span className="brand-digits">404</span><small>A clearer way to travel.</small></span></a>
-        <nav className="header-nav" aria-label="Main navigation"><a href="#main-content" className="nav-active">Check a trip</a><button type="button" onClick={() => openHelp("how")}>How it works</button><button type="button" onClick={() => openHelp("evidence")} className="about-link">About our estimates <ArrowUpRight size={13} /></button></nav>
-        <div className="header-tools"><OfflinePill /><InstallButton /><span className="rail-badge"><span /> Built for DB journeys</span></div>
-      </header>
-
-      <main id="main-content" ref={main} tabIndex={-1}>
-        {!s.journey ? (
-          <div className="landing-layout">
-            <div className="landing-content">
-              <div className="eyebrow hero-eyebrow"><span className="little-line" /> A LITTLE CERTAINTY, EVERY JOURNEY</div>
-              <h1>Less “will I make it?”<br /><span>More “I’m on my way.”</span></h1>
-              <p className="hero-description">A tight change shouldn’t take over your trip. Check your Deutsche Bahn journey, understand the risks, and travel with a plan.</p>
-              {s.error && <div role="alert" className="error-banner"><Info size={18} /><div><strong>We couldn’t complete your check.</strong><p>{s.error}</p></div></div>}
-              <StartPanel />
-            </div>
-            <div className="landing-visual">
-              <div className="scenic-art" data-still={still} onPointerMove={e => {
-                if (still || e.pointerType !== "mouse") return
-                const r = e.currentTarget.getBoundingClientRect()
-                e.currentTarget.style.setProperty("--tilt-x", `${((e.clientY - r.top) / r.height - 0.5) * -4}deg`)
-                e.currentTarget.style.setProperty("--tilt-y", `${((e.clientX - r.left) / r.width - 0.5) * 5}deg`)
-              }} onPointerLeave={e => { e.currentTarget.style.setProperty("--tilt-x", "0deg"); e.currentTarget.style.setProperty("--tilt-y", "0deg") }}>
-                <div className="scene-orbit" aria-hidden="true" />
-                {!imageFailed ? <img src="/rail-landscape.svg" alt="A miniature white train winding through a green European landscape" width="1536" height="1152" fetchPriority="high" onError={() => setImageFailed(true)} /> : <div className="scenic-fallback" aria-hidden="true"><TrainFront size={100} strokeWidth={0.8} /><span>A clearer way to travel.</span></div>}
-                <div className="scene-tag"><span className="scene-tag-icon"><Leaf size={19} /></span><span>Take the scenic route.<small>Leave the guesswork behind.</small></span></div>
-                <div className="scene-caption">A little perspective for the journey ahead.</div>
-              </div>
-              <div className="benefit-grid"><div><span className="benefit-icon"><Route size={21} /></span><h3>Every connection.</h3><p>Understand how one train’s delay affects the next.</p></div><div><span className="benefit-icon"><Clock3 size={21} /></span><h3>A plan, not a puzzle.</h3><p>Know where extra time can make a difference.</p></div><div><span className="benefit-icon"><ShieldCheck size={21} /></span><h3>No false promises.</h3><p>Clear estimates, honest limitations. You stay in control.</p></div></div>
-            </div>
-          </div>
-        ) : (
-          <div className="journey-page">
-            <button className="back-button" type="button" onClick={() => s.dispatch({ type: "reset" })}><ArrowLeft size={16} /> Check another trip</button>
-            <div className="journey-page-heading"><div><div className="eyebrow">YOUR JOURNEY, WITH A LITTLE MORE CLARITY</div><h1>{first?.from.name}<ArrowRight aria-label="to" />{last?.to.name}</h1><p>{first && fmtDate(first.plannedDeparture)}<span>·</span>{first && fmtTime(first.plannedDeparture)} – {last && fmtTime(last.plannedArrival)}<span>·</span>{s.journey.legs.length - 1} {s.journey.legs.length === 2 ? "change" : "changes"}</p></div><span className="journey-pill"><TrainFront size={16} /> {isDemo ? "Example journey" : "Your DB journey"}</span></div>
-            {(isDemo || isPrior) && <div className="data-notice"><Info size={18} /><div><strong>{isDemo ? "Example trip · not live travel advice" : "Illustrative estimate · no live delay data"}</strong><p>{isDemo ? "Explore the experience with a saved example. Its dates, forecast and alternatives are for demonstration only." : "The backend returned a statistical prior, not a live or fine-tuned forecast. Confirm current times and connections in DB Navigator."}</p></div></div>}
-            {s.error && <div className="error-banner" role="alert"><Info size={18} /><div><strong>Your journey is saved in this session.</strong><p>{s.error}</p><button type="button" className="text-button" disabled={s.busy} onClick={() => void s.runJourney(s.journey!)}>Try the check again <ArrowRight size={14} /></button></div></div>}
-            {s.busy && <div className="progress-notice" role="status"><Loader2 size={18} className="animate-spin" />{s.stage === "recommending" ? "Finding useful next steps…" : "Checking each train and connection…"}</div>}
-            <div className="results-layout"><div className="results-main"><JourneyOutlook /><TabBar /><div className="tab-content" id="journey-panel">
-              {s.tab === "plan" && <><JourneyCards journey={s.journey} />{s.recommendation && <LeaveHomeBy rec={s.recommendation} />}</>}
-              {s.tab === "forecast" && <ForecastPanel />}
-              {s.tab === "advice" && <AdvicePanel />}
-              {s.tab === "causes" && <CausesPanel />}
-              {s.tab === "evidence" && <EvidencePanel />}
-            </div><p className="travel-disclaimer"><Info size={14} /> Estimates help you plan; they do not guarantee an arrival time. Check live departures and platforms in DB Navigator before traveling.</p></div><RouteView /></div>
-          </div>
-        )}
-      </main>
-
-      <footer className="site-footer"><div><span className="footer-mark"><TrainFront size={16} /> error404</span><span>Made for the journey. Not the worry.</span></div><div><span>Independent companion · not affiliated with Deutsche Bahn</span><button type="button" className="motion-button" aria-label={still ? "Enable visual motion" : "Pause visual motion"} aria-pressed={still} onClick={toggleMotion}>{still ? <Play size={13} /> : <Pause size={13} />}{still ? "Motion off" : "Pause motion"}</button></div></footer>
-      {s.stageMode && <div className="stage-dots" aria-label={`Step ${s.stageStep + 1} of ${STAGE_STEPS.length}`}><span>{STAGE_STEPS[s.stageStep]?.label}</span><button type="button" aria-label="Exit presentation mode" onClick={() => s.dispatch({ type: "stageMode", on: false })}><X size={16} /></button></div>}
-
-      <dialog ref={dialog} className="help-dialog" aria-labelledby="help-title" onClick={e => { if (e.target === e.currentTarget) dialog.current?.close() }}>
-        <div className="dialog-inner"><div className="dialog-heading"><span className="icon-tile"><CircleHelp size={22} /></span><button type="button" className="icon-button" aria-label="Close help" onClick={() => dialog.current?.close()}><X size={20} /></button></div><h2 id="help-title">{help === "how" ? "A clearer journey in three steps." : "Good decisions start with honest estimates."}</h2>
-          {help === "how" ? <><ol className="how-steps"><li><span>01</span><div><h3>Bring your journey.</h3><p>Open a connection in DB Navigator, choose Share, then paste the full text here. A booking link alone won’t contain the train details.</p></div></li><li><span>02</span><div><h3>See the connections that matter.</h3><p>We check individual train delays and how they could affect your changes. Look at the data notice to see whether the result uses example data, a prior, or a model forecast.</p></div></li><li><span>03</span><div><h3>Choose your next step.</h3><p>Review your transfer time and advice, then confirm schedules and any alternative in DB Navigator. This app does not book or change tickets.</p></div></li></ol><div className="install-note"><Check size={18} /><div><strong>Keep it close for your next trip.</strong><p>On Android, install from Chrome to share directly into error404. On iPhone, use Safari’s Add to Home Screen and paste your journey.</p><InstallButton /></div></div></> : <EvidencePanel />}
-        </div>
-      </dialog>
-    </div>
-  )
+  const s = useStore(); const still = useReducedMotion(); const [help, setHelp] = useState(false); const [mapOnly, setMapOnly] = useState(false)
+  const dialog = useRef<HTMLDialogElement>(null); const trigger = useRef<HTMLButtonElement>(null)
+  const [messagePage, setMessagePage] = useState(0)
+  useEffect(() => { setMapOnly(false) }, [s.journey?.id])
+  useEffect(() => { window.dispatchEvent(new Event("rail-layout")) }, [mapOnly])
+  useEffect(() => { if (help) dialog.current?.showModal(); else dialog.current?.close() }, [help])
+  const journey = s.journey; const prior = /mock|prior/i.test(s.prediction?.modelId ?? '')
+  const badge = journey?.source === 'seed' ? 'Example trip · not live advice' : prior ? 'Illustrative prior · not a live model forecast' : s.prediction ? 'Advisory forecast · confirm live departures' : 'Independent DB travel companion'
+  const selectTab = (tab: Tab) => { setMapOnly(false); if (tab !== "advice") s.dispatch({ type: "overlay", overlay: "none" }); s.dispatch({ type: 'tab', tab }) }
+  const panelTitle = !journey ? 'Where are we going?' : s.tab === 'advice' ? 'A plan, not just a prediction.' : s.tab === 'evidence' || s.tab === 'causes' ? 'A little more context.' : 'Every connection counts.'
+  return <div className="travel-app" data-map-only={mapOnly}>
+    <header className="travel-header"><a href="/" className="travel-brand" aria-label="error404 home"><TrainFront size={21} />error<span>404</span></a><div><OfflinePill /><button type="button" aria-label={still ? 'Enable motion' : 'Pause motion'} onClick={toggleMotion}>{still ? <Play size={17} /> : <Pause size={17} />}</button><button type="button" ref={trigger} aria-label="How this works" onClick={() => setHelp(true)}><CircleHelp size={19} /></button></div></header>
+    <div className="travel-map"><Suspense fallback={<div className="map-placeholder"><Loader2 className="animate-spin" /> Opening Germany…</div>}><GlobeMap /></Suspense></div>
+    <div className="travel-map-title"><span className="travel-kicker">GERMANY, WITH A LITTLE LESS GUESSWORK</span><h1>{journey ? <>{journey.legs[0].from.name}<span>to {journey.legs.at(-1)!.to.name}</span></> : <>Big plans.<span>Calmer journeys.</span></>}</h1></div>
+    <button type="button" className="travel-map-toggle" onClick={() => setMapOnly(v => !v)} aria-expanded={!mapOnly} aria-controls="trip-panel">{mapOnly ? 'Show my plan' : 'Explore map'} <Route size={14} /></button>
+    <main id="trip-panel" className="travel-sheet" hidden={mapOnly}>
+      <div className="travel-sheet-heading">{journey && <button type="button" aria-label="Start a new journey" onClick={() => s.dispatch({ type: 'reset' })}><ArrowLeft size={18} /></button>}<div><h2>{panelTitle}</h2><p>{badge}</p></div>{!journey && <Art />}</div>
+      {s.error ? <div className="travel-error" role="alert"><TextPages text={s.error} />{journey && <button type="button" disabled={s.busy} onClick={() => void s.runJourney(journey)}>Retry check</button>}</div> : s.busy && <div className="travel-status" role="status"><Loader2 size={14} className="animate-spin" />{s.stage === 'recommending' ? 'Finding useful next steps…' : 'Reading your journey…'}</div>}
+      <div className="travel-sheet-content">{!journey ? <StartPanel /> : s.tab === 'advice' ? <AdviceCompact /> : s.tab === 'evidence' || s.tab === 'causes' ? <EvidenceCompact /> : <JourneyPanel />}</div>
+    </main>
+    <nav className="travel-bottom-nav" aria-label="Journey views">{tabs.map(t => <button type="button" key={t.id} disabled={!journey} aria-current={(t.id === 'plan' && s.tab === 'forecast') || (t.id === 'evidence' && s.tab === 'causes') || s.tab === t.id ? 'page' : undefined} onClick={() => selectTab(t.id)}><t.icon size={20} /><span>{t.label}</span></button>)}</nav>
+    <dialog ref={dialog} className="travel-help" onCancel={() => setHelp(false)} onClose={() => { setHelp(false); trigger.current?.focus() }} aria-labelledby="travel-help-title"><button type="button" aria-label="Close help" onClick={() => setHelp(false)}><X size={20} /></button><span className="travel-kicker">BUILT ON TOP OF DB</span><h2 id="travel-help-title">Less stress, one connection at a time.</h2><p>{['Share a connection from DB Navigator into the installed PWA. We read the supplied text automatically. Or choose From and To to look up trains leaving now.', 'First, predict each train’s delay. Then examine the connections. Recommendations are a separate step: comfortable transfers, extra buffer, or what to do after disruption.', 'Map trains are illustrations, not live vehicle positions. Solid lines use timetable geometry; dashed lines are station links. Possible causes are station-level evidence, not a diagnosis.', 'No account or ticket exchange. On Android, install the PWA to receive DB shares. On iPhone, add it to the home screen and paste the full shared journey.'][messagePage]}</p><Pager label="guide" index={messagePage} count={4} onChange={setMessagePage} /><InstallButton /></dialog>
+  </div>
 }

@@ -3,6 +3,7 @@ import type { Journey, Leg } from "./contract"
 export type LngLat = [number, number]
 
 export function legLine(leg: Leg): LngLat[] | null {
+  if (leg.routeGeometry && leg.routeGeometry.length > 1) return leg.routeGeometry
   if (leg.from.lon == null || leg.from.lat == null || leg.to.lon == null || leg.to.lat == null) return null
   return [
     [leg.from.lon, leg.from.lat],
@@ -13,7 +14,8 @@ export function legLine(leg: Leg): LngLat[] | null {
 export function journeyBounds(journey: Journey): [LngLat, LngLat] | null {
   let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity
   for (const leg of journey.legs) {
-    for (const s of [leg.from, leg.to]) {
+    for (const [lon, lat] of legLine(leg) ?? []) {
+      const s = { lon, lat }
       if (s.lon == null || s.lat == null) continue
       minLon = Math.min(minLon, s.lon); maxLon = Math.max(maxLon, s.lon)
       minLat = Math.min(minLat, s.lat); maxLat = Math.max(maxLat, s.lat)

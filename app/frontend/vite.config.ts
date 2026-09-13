@@ -12,7 +12,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "icons/*.png", "seed/*.json", "proof.json"],
+      includeAssets: ["favicon.svg", "icons/*.png", "seed/*.json", "proof.json", "germany.geojson"],
       manifest: {
         id: "/",
         name: "error404 — A clearer way to travel",
@@ -43,6 +43,7 @@ export default defineConfig({
       } as Record<string, unknown>,
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,json,woff2}"],
+        globIgnores: ["**/rail-globe.png", "**/rail-landscape.svg"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//],

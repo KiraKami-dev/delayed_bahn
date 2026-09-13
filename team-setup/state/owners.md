@@ -15,7 +15,7 @@ same as directory ownership — nothing here is fixed by background.
 
 | Directory | Owner | Harness |
 |---|---|---|
-| app/frontend | | |
+| app/frontend | Akshat | Codex |
 | app/backend | | |
 | app/agents | | |
 | app/shared | generated — no owner, see app/shared/README.md | - |
@@ -28,7 +28,7 @@ same as directory ownership — nothing here is fixed by background.
 | delay-prediction (backend/agents: model, inference endpoint) | | |
 | recommendation (backend/agents: algorithm on top of delays) | | |
 | share-parser (frontend: DB share text → journey) | | |
-| pwa-shell (frontend: installable app, share target, UI) | | |
+| pwa-shell (frontend: installable app, share target, UI) | Akshat | |
 | data-pipeline (agents: Oct→Aug data cut, agentic workflow) | | |
 | evaluation (agents: baseline vs fine-tuned chart) | | |
 
@@ -47,3 +47,5 @@ same as directory ownership — nothing here is fixed by background.
 
 Read the current roster, harnesses, and backgrounds from `team.json`.
 Do not duplicate roster entries or infer event ownership from background.
+
+Akshat owns homepage wiring, frontend assets, frontend manifest/lockfile and frontend smoke checks for this redesign. Backend and generated shared types remain outside this delegation.

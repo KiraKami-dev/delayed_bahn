@@ -68,8 +68,8 @@ export function CausesPanel() {
   return (
     <div className="space-y-3">
       <div>
-        <h2 className="text-base font-semibold">Why trains run late at {station.name}</h2>
-        <p className="text-xs text-muted-foreground">Tap another leg card on the Plan tab to switch station.</p>
+        <h2 className="text-base font-semibold">Possible delay causes at {station.name}</h2>
+        <p className="text-xs text-muted-foreground">Station-level patterns explain what can happen, not the confirmed cause of your train’s delay. Select a station below.</p>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {journey.legs.map((l, i) => (

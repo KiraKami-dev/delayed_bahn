@@ -217,17 +217,17 @@
     },
     {
       "id": "t-7d0e90f029665c83a814f29a64781389",
-      "title": "Map view (later)",
-      "status": "backlog",
-      "owner": null,
+      "title": "Single-screen mobile journey companion",
+      "status": "building",
+      "owner": "Akshat",
       "sub_owners": [],
       "depends_on": [
         "t-2c8fd7c2f1385a18a805bcf4a5c30274"
       ],
       "target_time": null,
-      "mvp": "later",
+      "mvp": "round-1",
       "stage": "Product",
-      "notes": "(3D) map from \u2192 to, zooms in, shows probability. Not for this demo."
+      "notes": "Akshat authorized full frontend redo from transcript. Fixed viewport, persistent Germany globe, Higgsfield train/umbrella/disruption assets, paged train risks and recommendations, From/To or automatic DB share. Build/source verification passes; Akshat owns browser testing (no Playwright). Provider route geometry and real model evidence remain external dependencies. See app/frontend/HOMEPAGE-REVIEW.md."
     },
     {
       "id": "t-e7f1be5090ed589ab84aed758d0320db",

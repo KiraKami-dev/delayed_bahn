@@ -18,3 +18,11 @@ Format:
 - [d-87f8fa723555480193229a11015dc8df] [T+06:06] Keep the currently working API connection; rate limit is 60 requests per minute per client ID/secret — team — API confirmed working, stick with this
 - [d-59fdbe5b63ce48738a1f59151e9af8ae] [T+06:06] Round-one focus is data, training, GPU access and pitch; one person writes the pitch now while the rest builds; regroup around midnight — team — nothing else was missing when asked
 - [d-5561ef83780446f79e00952938aaaee5] [T+06:06] Team discussions are audio-recorded and transcribed from now on; the structured record lives in state/meetings/ — team — so decisions are not lost
+
+- [d-bfc04238-2d4a-426a-bc6c-6b20e1a0d9a4] [T+11:58] Expand the homepage with a Higgsfield train/globe illustration, interactive world view and route zoom, and an animated connection story leading to recommendations and possible cause evidence; Akshat owns frontend implementation and verification — Akshat — explicit homepage redesign request; preserve per-train prediction and distinguish station-level causes from confirmed causes.
+
+- [d-dbe01848-520b-47a3-9462-2e71bb579c2d] [T+12:10] Manual homepage entry asks only for start and end stations, searches departures from now, and prioritizes mobile layout — Akshat — explicit follow-up; use public timetable lookup without fabricating train details when lookup fails.
+
+- [d-15436830-9845-4840-bae8-57de35496cac] [T+12:25] Replace the static homepage hero with one persistent Germany-focused rotating globe, overlay From/To entry, automatic DB share parsing, timetable route geometry and Three.js train/delay visualization; Akshat will browser-test this pass, no Playwright run — Akshat — explicit map-first mobile direction; preserve honest fallback when route geometry is unavailable.
+
+- [d-f4090f95-2d2b-45c3-86a1-56aec7d7bce4] [T+12:53] Rebuild the frontend as a single mobile viewport with Higgsfield train/comfort/disruption assets and paged My journey / What next? / Why? views; restrict content to the transcript’s prediction → recommendation → optional cause-evidence order — Akshat — explicit full-redesign request, no long scrolling homepage; human browser verification retained.

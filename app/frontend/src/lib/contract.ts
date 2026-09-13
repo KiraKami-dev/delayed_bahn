@@ -9,6 +9,9 @@ export type Station = {
 }
 
 export type Leg = {
+  // Optional frontend map metadata from the timetable provider; never inferred.
+  routeGeometry?: [number, number][]
+
   trainId: string // e.g. "RB 16"
   trainNumber?: string
   from: Station
