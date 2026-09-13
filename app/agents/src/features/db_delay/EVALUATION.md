@@ -84,6 +84,7 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | TSLM, text input, plain loss, 2k | 3.635 | 2.907 | -0.064 (-0.137 to -0.005) real |
 | TSLM, text input, plain + CRPS loss, 2k | 3.621 | 2.903 | |
 | TSLM, text input, plain loss, 5k | 3.614 | 2.883 | |
+| TSLM, encoder only, plain + CRPS loss, 12k | 3.602 | 2.889 | -0.082 (-0.137 to -0.041) real; within 15 min -0.112, beyond 30 min -0.072, both real |
 | XGBoost retrained with previous trains (v2 data) | 3.654 | 2.937 | |
 | TSLM, text, v2 data, 2k | 3.616 | 2.889 | -0.048 vs XGBoost-v2 (-0.121 to +0.010) |
 | TSLM, text + encoder, v2 data, 2k | 3.603 | 2.877 | -0.060 vs XGBoost-v2 (-0.130 to -0.005) real |
@@ -159,12 +160,17 @@ details and intervals in `DESIGN.md` section 16.
   distribution; the cross-entropy on the exact minute lets the model keep it sharp, and adding a
   CRPS term (`plain_crps`) rewards near misses through a proper score instead. It is the loss of
   the final runs.
-- **Writing the series into the prompt beats the time-series encoder** (-0.057, -0.090 to -0.026),
-  and the encoder adds nothing on top of the text on the original data. Eleven encoder-side
-  changes (raw scale, series-reading curriculum, 720-point series, a pretrained or random start,
-  a five-times faster encoder, training the encoder alone) all land within noise of the encoder
-  baseline or below it. With the richer v2 data the text-plus-encoder model is the best 2,000-step
-  run, 0.013 ahead of text alone (inside the noise).
+- **At 2,000 steps, writing the series into the prompt beats the time-series encoder** (-0.057,
+  -0.090 to -0.026), and the encoder adds nothing on top of the text on the original data.
+  Eleven encoder-side changes (raw scale, series-reading curriculum, 720-point series, a
+  pretrained or random start, a five-times faster encoder, training the encoder alone or first)
+  all land within noise of the encoder baseline or below it. With the richer v2 data the
+  text-plus-encoder model is the best 2,000-step run, 0.013 ahead of text alone (inside the noise).
+- **Given enough steps, the encoder path catches up.** Encoder only for 12,000 steps reaches the
+  best validation score of all runs and beats XGBoost at every lead time on the shared test
+  (-0.082 overall, -0.072 beyond 30 minutes), level with the text model at 5,000 steps (+0.006,
+  -0.044 to +0.062). The series channel carries the same information as the text and needs about
+  twice the training to extract it.
 - **More training keeps helping** (2k to 5k: -0.024 CRPS for text); the long runs are the finals.
 - **The statistical forecast as an input makes the TSLM win everywhere.** With XGBoost's own
   median, range and probabilities written into the prompt as one sentence (out-of-fold on the
@@ -186,8 +192,9 @@ details and intervals in `DESIGN.md` section 16.
   across the board; the wins are within 15 minutes of arrival and through the lead-time blend.
   With it, the 2,000-step model wins at every lead time and out of time; the 12,000-step finals
   say by how much.
-- The encoder, the part of OpenTSLM built for time series, is not where the gain comes from on
-  this data; the language model reading the numbers as text is.
+- The encoder, the part of OpenTSLM built for time series, learns more slowly than the text
+  channel on this data and adds nothing on top of it at 2,000 steps; at 12,000 steps alone it
+  matches the text and beats the tabular baseline.
 - Differences of 0.01 to 0.03 CRPS between single runs on 5,000 examples are inside the noise;
   only the full-test and bootstrap-backed claims above should be quoted.
 - The September set is scraped from the live feeds and covers 12 days; its XGBoost partner was
