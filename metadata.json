@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2CSGSDBJTPGFMNXHMZTGED7",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 4,
+  "checkpoints_count": 5,
   "files_touched": [
     "app/frontend/.trains.smoke.tmp.mjs",
     "app/frontend/src/features/globe-map/train-layer.ts",
@@ -16,13 +16,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": ""
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": "/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 96,
-    "cache_creation_tokens": 2835,
-    "cache_read_tokens": 843885,
-    "output_tokens": 2815,
-    "api_call_count": 3
+    "input_tokens": 110,
+    "cache_creation_tokens": 10008,
+    "cache_read_tokens": 1837072,
+    "output_tokens": 5936,
+    "api_call_count": 10
   }
 }
