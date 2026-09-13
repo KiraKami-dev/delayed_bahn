@@ -1,0 +1,59 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CE01GRVECWXDSM19HQKXYP",
+  "session_id": "470422f3-9e2e-4cbe-abbf-d262ed718dfb",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T03:46:56.558567Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/frontend/HOMEPAGE-REVIEW.md",
+    "app/frontend/src/lib/journey-search.ts",
+    "app/frontend/train-visual.smoke.mjs"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-5",
+  "turn_id": "a61aeecbd7f1",
+  "checkpoint_transcript_start": 281,
+  "transcript_lines_at_start": 281,
+  "compact_transcript_start": 31,
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 1516,
+    "cache_read_tokens": 242028,
+    "output_tokens": 1099,
+    "api_call_count": 3
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-13T03:46:56.539658Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 1,
+    "total_committed": 0,
+    "total_lines_changed": 1,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 24,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/frontend/HOMEPAGE-REVIEW.md": 4,
+        "app/frontend/src/lib/journey-search.ts": 9,
+        "app/frontend/train-visual.smoke.mjs": 11
+      },
+      "user_removed_per_file": {
+        "app/frontend/src/lib/journey-search.ts": 1
+      }
+    }
+  ]
+}
