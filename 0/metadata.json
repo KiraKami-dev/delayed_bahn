@@ -1,0 +1,81 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CBJR5CW9AZFY6NS3ADE5QK",
+  "session_id": "abdb3068-b181-45de-82c2-0cdd5152ab32",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T03:04:42.49074Z",
+  "branch": "db-train-model",
+  "checkpoints_count": 12,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "5424c00b74fb",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 11840,
+    "cache_creation_tokens": 1951776,
+    "cache_read_tokens": 242426373,
+    "output_tokens": 997414,
+    "api_call_count": 654
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_01JbfWq4VYNGTEDNoEuHy7Go",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "artifact-design"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "06ef08617cb5",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 4851,
+        "end": 4852,
+        "entry_ids": [
+          "e636dc6c-3ce5-4ff7-ad8c-083efa9b64af"
+        ],
+        "tool_use_id": "toolu_01JbfWq4VYNGTEDNoEuHy7Go"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_01JbfWq4VYNGTEDNoEuHy7Go"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: artifact-design",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 116
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 1030,
+      "user_lines_removed": 6,
+      "agent_lines_added": 3798,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/DESIGN.md": 22,
+        "app/agents/src/features/db_delay/trip/prompts.py": 19,
+        "app/agents/uv.lock": 8,
+        "tmp/nebius/results/h100-none-plaincrps/custom/generations.jsonl": 16,
+        "tmp/nebius/results/h100-none-plaincrps/custom/metrics.json": 250,
+        "tmp/nebius/results/h100-none-plaincrps/custom/train.log": 112,
+        "tmp/nebius/results/h100-none-plaincrps/custom/train_log.json": 601,
+        "tmp/nebius/results/h100-none-plaincrps/status.log": 2
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/trip/prompts.py": 6
+      }
+    }
+  ]
+}
