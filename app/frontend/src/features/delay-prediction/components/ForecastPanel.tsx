@@ -11,11 +11,10 @@ import { WhyDisclosure } from "./WhyDisclosure"
 /* ---------- headline count-up ---------- */
 export function FailHeadline({ value, label }: { value: number; label?: string }) {
   const still = useReducedMotion()
-  // A good plan counts up to "96% you make it", a shaky one to its risk; both start from zero.
+  // Counts up from 0% to the chance of making every change (the animated value is the risk, from 1 down).
   const outlook = journeyOutlook(value)
-  const start = outlook.level === "low" ? 1 : 0
-  const [shown, setShown] = useState(still ? value : start)
-  const prev = useRef(start)
+  const [shown, setShown] = useState(still ? value : 1)
+  const prev = useRef(1)
   useEffect(() => {
     if (still) {
       setShown(value)
@@ -25,7 +24,7 @@ export function FailHeadline({ value, label }: { value: number; label?: string }
     prev.current = value
     return () => controls.stop()
   }, [value, still])
-  const shownPercent = Math.round((outlook.level === "low" ? 1 - shown : shown) * 100)
+  const shownPercent = Math.round((1 - shown) * 100)
   return (
     <div className="rounded-2xl border border-border bg-white p-4">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label ?? outlook.unit}</div>

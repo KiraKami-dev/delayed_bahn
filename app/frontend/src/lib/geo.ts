@@ -32,21 +32,15 @@ export function riskLevel(p: number): "low" | "mid" | "high" {
 }
 
 /**
- * How a plan-fail probability is shown to a traveller. A good plan is framed
- * positively (green, "96% you make every change"); a shaky one names the risk
- * (amber, then red) so the number always reads in the direction of the colour.
+ * How a plan-fail probability is shown to a traveller: always as the chance of
+ * making every change, 100% green down to red for a plan that is likely to break.
+ * The colour and heading follow the risk level.
  */
 export type Outlook = { level: "low" | "mid" | "high"; colour: string; percent: number; short: string; unit: string; heading: string }
+const HEADING = { low: "This connection looks good.", mid: "Give your day a backup plan.", high: "Plan for a missed connection." } as const
 export function journeyOutlook(p: number): Outlook {
   const level = riskLevel(p)
-  const colour = RISK_COLOUR[level]
-  if (level === "low") {
-    return { level, colour, percent: Math.round((1 - p) * 100), short: "you will make it", unit: "chance you will make it", heading: "This connection looks good." }
-  }
-  if (level === "mid") {
-    return { level, colour, percent: Math.round(p * 100), short: "risk", unit: "estimated risk of missing a change", heading: "Give your day a backup plan." }
-  }
-  return { level, colour, percent: Math.round(p * 100), short: "risk", unit: "estimated risk of missing a change", heading: "Plan for a missed connection." }
+  return { level, colour: RISK_COLOUR[level], percent: Math.round((1 - p) * 100), short: "you will make it", unit: "chance you will make it", heading: HEADING[level] }
 }
 
 /** A direct journey has no change to miss: colour its arrival delay instead. */

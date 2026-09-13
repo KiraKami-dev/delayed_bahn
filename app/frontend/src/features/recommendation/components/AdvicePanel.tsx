@@ -65,7 +65,7 @@ export function AdvicePanel() {
   const v = VERDICT[rec.verdict]
   const share = async () => {
     const kind = journey.source === "seed" ? "EXAMPLE TRIP — not live travel advice. " : s.prediction?.modelId.includes("mock") ? "Illustrative prior — no live delay data. " : "Advisory estimate, not a guarantee. "
-    const text = `${kind}${fmtDate(journey.legs[0].plannedDeparture)}: ${journey.legs[0].from.name} → ${journey.legs.at(-1)!.to.name}. Estimated plan-failure risk: ${pct(s.prediction?.planFailProbability.value ?? 0)}. ${travelerAdvice(rec)} Confirm current trains in DB Navigator.`
+    const text = `${kind}${fmtDate(journey.legs[0].plannedDeparture)}: ${journey.legs[0].from.name} → ${journey.legs.at(-1)!.to.name}. Chance of making every change: ${journeyOutlook(s.prediction?.planFailProbability.value ?? 0).percent}%. ${travelerAdvice(rec)} Confirm current trains in DB Navigator.`
     setShareStatus("")
     try {
       if (navigator.share) { await navigator.share({ title: "delayedBahn journey outlook", text }); setShareStatus("Result shared.") }
