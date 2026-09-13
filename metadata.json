@@ -4,9 +4,7 @@
   "strategy": "manual-commit",
   "branch": "feat/db-route-multiscale",
   "checkpoints_count": 4,
-  "files_touched": [
-    "app/agents/src/features/db_route/train_route.py"
-  ],
+  "files_touched": null,
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -17,17 +15,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 492,
-    "cache_creation_tokens": 87048,
-    "cache_read_tokens": 12538005,
-    "output_tokens": 36051,
-    "api_call_count": 20,
-    "subagent_tokens": {
-      "input_tokens": 0,
-      "cache_creation_tokens": 0,
-      "cache_read_tokens": 0,
-      "output_tokens": 0,
-      "api_call_count": 0
-    }
+    "input_tokens": 5422,
+    "cache_creation_tokens": 2152026,
+    "cache_read_tokens": 403578698,
+    "output_tokens": 777758,
+    "api_call_count": 703
   }
 }
