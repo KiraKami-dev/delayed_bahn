@@ -146,6 +146,7 @@ examples).
 | XGBoost (combined features) | 2.745 | 2.175 | |
 | TSLM, stacked, 2k | 2.689 | 2.136 | -0.039 (-0.076 to -0.015) real; median error -0.056 (-0.107 to -0.023) real; within 15 min -0.068 (-0.148 to -0.025) real |
 | Lead-time blend of that (weights from May) | | | -0.040 (-0.075 to -0.019) real |
+| TSLM, stacked, encoder only (no numbers in the text), 2k | 2.715 | 2.150 | -0.025 (-0.051 to -0.006) real; median error -0.030 real; within 15 min -0.055 real |
 | TSLM, stacked, 5k | 2.741 | 2.161 | -0.014 (-0.058 to +0.019); within 15 min -0.086 real |
 | Lead-time blend of that (weights from May) | | | -0.040 (-0.082 to -0.011) real |
 | TSLM, text + encoder, combined data without the forecast, 2k | 2.711 | 2.148 | -0.028 (-0.072 to +0.005); within 15 min -0.071 (-0.160 to -0.023) real |

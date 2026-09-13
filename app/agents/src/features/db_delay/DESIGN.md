@@ -706,6 +706,9 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
   (-0.072 to +0.005), no clear difference; within 15 minutes -0.071 (-0.160 to -0.023) and the
   blind lead-time blend -0.044 (-0.086 to -0.018) are real. The stacked sentence is what turns
   the model into one that beats XGBoost on its own out of time.
+- **The stacked encoder-only model holds out of time (05:55):** 2.715 / 2.150 on the same September
+  examples, CRPS -0.025 (-0.051 to -0.006) and median error -0.030 against XGBoost alone, real;
+  within 15 minutes -0.055, real. Half the prompt, still ahead of the tabular model.
 - **More steps do not carry out of time (05:10):** the 5,000-step stacked text model on the same
   September examples scores 2.741 / 2.161: CRPS -0.014 (-0.058 to +0.019) against XGBoost, no clear
   difference, where the 2,000-step model had -0.039 real. Within 15 minutes -0.086 (-0.175 to
@@ -754,7 +757,9 @@ summary numbers.
 | Not at all | 365 | 3.677 | 2.957 | +0.054 (+0.023 to +0.085), worse |
 | As numbers in the text | 844 | 3.621 | 2.903 | |
 | Through the encoder only | 365 + 45 soft | 3.693 | 2.956 | +0.052 (+0.025 to +0.083), worse; vs not at all -0.002 (-0.014 to +0.011) |
-| Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | no-series partner at 12,000 steps *running* |
+| Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | vs not at all at 12,000 steps -0.005 (-0.026 to +0.016), no difference |
+| Not at all, 12,000 steps (06:00) | 365 | 3.623 | 2.894 | against XGBoost -0.077 (-0.131 to -0.033), real |
+| Text plus encoder, plain loss, 12,000 steps (the first final) | 961 + 45 soft | | | vs not at all at 12,000 steps -0.051 (-0.093 to -0.015), real |
 | Through the encoder only, one value per patch (`z4`) | 365 + about 230 soft | 3.689 | 2.959 | vs the encoder with patches of four +0.003 (-0.010 to +0.016) |
 | Text plus encoder | 961 + 45 soft | 3.617 | 2.898 | -0.005 (-0.023 to +0.011); vs not at all -0.059 (-0.092 to -0.028), real |
 | Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | 3.647 | 2.925 | vs text plus encoder +0.027 (+0.003 to +0.052), worse |
@@ -763,9 +768,12 @@ summary numbers.
   -0.073 to +0.035); with them it beats it. The series are worth 0.101 CRPS beyond 30 minutes
   (-0.169 to -0.041) and 0.012 within 15 minutes, where the current delay in the rationale
   already says most.
-- **At 2,000 steps the encoder reads nothing yet.** Encoder only equals no series on the test set;
-  at 12,000 steps the same route reaches the text level (third wave). Whether that gain is the
-  series or just longer training is what the 12,000-step no-series run decides.
+- **The encoder alone does not read the series, even at 12,000 steps.** Encoder only equals no
+  series at 2,000 steps (-0.002) and at 12,000 steps (-0.005, -0.026 to +0.016, also beyond 30
+  minutes): its gain from 2,000 to 12,000 steps is longer training, not the series. With the
+  numbers in the prompt the series stay worth 0.05 at 12,000 steps (text plus encoder -0.051,
+  real). After long training the language model beats XGBoost by 0.077 from the timetable and
+  the rationale's summary numbers alone.
 - **Forcing the model to read the encoder does not help.** Hiding the numbers from the text in half
   the training rows (modality dropout) costs 0.027 against plain text plus encoder, and splitting
   the inputs so the encoder alone carries the long history costs 0.023 on the stacked data. One
