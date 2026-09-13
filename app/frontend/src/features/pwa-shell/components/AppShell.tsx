@@ -64,6 +64,7 @@ function ModelReasoning({ index }: { index: number }) {
 function JourneyPanel() {
   const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)
   const leg = journey.legs[index], forecast = s.prediction?.legs[index], next = journey.legs[index + 1]
+  const offline = !!forecast?.expectedDelayMinutes.sources.some(source => source.includes('offline estimate'))
   const change = next ? (Date.parse(next.plannedDeparture) - Date.parse(leg.plannedArrival)) / 60000 : null
   const left = change != null && forecast ? Math.round(change - forecast.expectedDelayMinutes.value) : null
   const risk = s.prediction?.planFailProbability.value
@@ -72,7 +73,7 @@ function JourneyPanel() {
     <div className="travel-verdict"><div><span className="travel-kicker">YOUR WHOLE JOURNEY</span><h2>{risk == null ? s.error ? 'Forecast unavailable.' : 'Checking your connections…' : journey.legs.length === 1 ? 'One train. A simpler journey.' : risk < .15 ? 'This connection looks good.' : 'Give your day a backup plan.'}</h2></div><strong>{risk == null ? '—' : direct ? `+${Math.round(forecast?.expectedDelayMinutes.value ?? 0)}` : `${Math.round(risk * 100)}%`}<small>{direct ? 'minutes estimated arrival delay' : 'estimated plan-failure risk'}</small></strong></div>
     <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />
     <button type="button" className="travel-train-card" onClick={() => s.dispatch({ type: 'selectLeg', index })} aria-label={`Focus map on ${leg.trainId}`}>
-      <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small><TrainTake index={index} /></div>
+      <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small>{offline && <span className="mt-1 block text-[10px] text-[#9a7b4f]">Offline estimate · DB live data unavailable, based on timetable and history</span>}<TrainTake index={index} /></div>
     </button>
     {!!leg.disruptions?.length && <details className="travel-fine"><summary>Reported service notice</summary><TextPages text={leg.disruptions.map(n => `${n.text} Source: ${n.source}.`).join(' ')} /></details>}    <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
     <ModelReasoning index={index} />

@@ -16,6 +16,11 @@ v7 layout of build.py, computed at t0 = now:
 A cold leg costs about 30 to 40 calls; station lookups and plan hours are cached for the process,
 change feeds for a minute. A sliding window keeps the client under one key's 60 calls per minute.
 
+When the API fails, a change feed fetched earlier is reused and the sources say from when. Without
+any live data, ``offline_example`` builds the row from the latest recorded run of the train (route,
+history) with no live delays, previous trains or corridor. After an outage every call fails at once
+for a minute, so these fallbacks answer quickly.
+
     python trip/live.py --stored september_test.parquet --xgb out/trip/xgb_v7 --env .env \\
         --train "RE 1" --from "Hamm (Westf) Hbf" --to "Dortmund Hbf" \\
         --departure 2026-09-13T09:05 --arrival 2026-09-13T09:24
@@ -29,6 +34,8 @@ import re
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -54,6 +61,8 @@ CORRIDOR_HOURS = 3
 CORRIDOR_TRAINS = 8
 RUN_STOPS_BACK = 4  # stops before the boarding station whose departures are fetched, plus the origin
 SEARCH_HOURS = 8  # how many plan hours back a previous stop is searched
+API_TIMEOUT = 8  # seconds per call; a slow API should fall back, not stall the app
+DOWN_SECONDS = 60  # after an outage, calls fail at once for this long
 LONG_DISTANCE = ("ICE", "IC", "EC")
 HIST = ["hist_series", "hist_level", "hist_n", "hist_cancel_share", "hist_median", "hist_p90", "hist_mean",
         "hist_days", "hist_median_long", "hist_p90_long", "hist_median_7", "hist_window_days"]
@@ -141,14 +150,19 @@ def leg_keys(leg: dict) -> set[str]:
 
 
 class Client(dbx.TimetablesClient):
-    """Timetables with a sliding one-minute window instead of a fixed pause between calls."""
+    """Timetables with a sliding one-minute window, short timeouts and a pause after the API fails.
 
-    def __init__(self, creds: dbx.Credentials, per_minute: int = 55):
+    After an outage, a timeout or a refused key every call fails at once for ``DOWN_SECONDS``, so a
+    journey reaches its fallback in milliseconds instead of waiting on each of its 20 to 40 calls.
+    ``offline`` switches the API off entirely (demos without network, tests)."""
+
+    def __init__(self, creds: dbx.Credentials, per_minute: int = 55, offline: bool = False):
         super().__init__(creds, min_interval=0.0)
-        self.per_minute = per_minute
+        self.per_minute, self.offline = per_minute, offline
         self.stamps: collections.deque[float] = collections.deque()
         self.lock = threading.Lock()
         self.calls = 0
+        self.down_until = 0.0
 
     def _throttle(self) -> None:
         with self.lock:
@@ -162,15 +176,43 @@ class Client(dbx.TimetablesClient):
                     return
                 time.sleep(60.05 - (now - self.stamps[0]))
 
+    def get(self, path: str, attempts: int = 2) -> bytes:
+        if self.offline:
+            raise dbx.DBError("offline mode, DB live data switched off")
+        wait = self.down_until - time.monotonic()
+        if wait > 0:
+            raise dbx.DBError(f"DB API unavailable, next try in {wait:.0f} s")
+        url = f"{dbx.MARKETPLACE}/{path}"
+        request = urllib.request.Request(url, headers=self.creds.headers(self.accept))
+        for attempt in range(1, attempts + 1):
+            self._throttle()
+            try:
+                with urllib.request.urlopen(request, timeout=API_TIMEOUT) as response:
+                    return response.read()
+            except urllib.error.HTTPError as error:
+                if error.code in (429, 500, 502, 503, 504) and attempt < attempts:
+                    time.sleep(2)
+                    continue
+                if error.code in (401, 403, 429, 500, 502, 503, 504):
+                    self.down_until = time.monotonic() + DOWN_SECONDS
+                raise dbx.DBError(f"HTTP {error.code} for {path}") from error
+            except (urllib.error.URLError, TimeoutError, OSError) as error:
+                self.down_until = time.monotonic() + DOWN_SECONDS
+                raise dbx.DBError(f"DB API unreachable ({error})") from error
+        raise dbx.DBError(f"gave up on {path}")
+
 
 class Feeds:
-    """Station lookups and plan hours cached for the process, change feeds for ``change_ttl`` seconds."""
+    """Station lookups and plan hours cached for the process, change feeds for ``change_ttl`` seconds.
+
+    A change feed that cannot be refreshed is served from its last copy; ``stale`` records since when."""
 
     def __init__(self, client: Client, change_ttl: float = 60.0):
         self.client, self.change_ttl = client, change_ttl
         self.stations: dict[str, tuple[str, str, list[str]] | None] = {}
         self.plans: dict[tuple[str, str], ET.Element | None] = {}
-        self.changes: dict[str, tuple[float, ET.Element]] = {}
+        self.changes: dict[str, tuple[float, ET.Element, datetime]] = {}
+        self.stale: dict[str, datetime] = {}
 
     def station(self, name: str) -> tuple[str, str, list[str]] | None:
         """EVA number, Timetables name and the EVA numbers of its sub-stations for a station name."""
@@ -203,8 +245,15 @@ class Feeds:
     def change(self, eva: str) -> ET.Element:
         hit = self.changes.get(eva)
         if hit is None or time.monotonic() - hit[0] > self.change_ttl:
-            hit = (time.monotonic(), self.client.full_changes(eva))
-            self.changes[eva] = hit
+            try:
+                fresh = (time.monotonic(), self.client.full_changes(eva), now_local())
+            except dbx.DBError:
+                if hit is None:
+                    raise
+                self.stale[eva] = hit[2]  # the API failed: keep the last known changes, and say from when
+                return hit[1]
+            self.changes[eva] = hit = fresh
+            self.stale.pop(eva, None)
         return hit[1]
 
     def stops(self, eva: str, plan_hours: list[datetime]) -> list[dict]:
@@ -238,6 +287,14 @@ def same_hour_share(late: np.ndarray, counts: np.ndarray, t0: datetime, arrival:
     return float(np.nansum(late * weights) / max(weights.sum(), 1)) if weights.sum() > 0 else 0.0
 
 
+def run_columns(run_delays: list[float]) -> dict:
+    """The scalar columns build.py derives from the run's departure delays."""
+    return {"run_delays": run_delays, "run_plan_next": [], "run_plan_dwell": [], "run_plan_left": [],
+            "current_delay": run_delays[-1] if run_delays else 0.0, "max_delay_so_far": max(run_delays) if run_delays else 0.0,
+            "delay_change_3": run_delays[-1] - run_delays[max(0, len(run_delays) - 4)] if run_delays else 0.0,
+            "run_len": float(len(run_delays))}
+
+
 class Live:
     """Builds example rows for journey legs from the API, stored examples and the refitted forecast."""
 
@@ -249,6 +306,8 @@ class Live:
         stored["_train"] = (stored["train_type"].astype(str) + stored["train_number"].astype(str)).map(norm)
         start = np.where(stored["pre_departure"].astype(bool) | stored["j_station"].isna(), stored["first_station"], stored["j_station"])
         stored["_start"] = pd.Series(start, index=stored.index).map(norm)
+        identity = stored[["train_type", "train_number", "line_number"]].astype(object).where(lambda f: f.notna(), "")
+        stored["_keys"] = [row_keys(r) for r in identity.to_dict("records")]
         self.stored = stored
         self.station_names = stored["_k"].unique()
         self.data_end = stored["t0"].max()
@@ -277,6 +336,62 @@ class Live:
             raise LookupError(f"station {stop.get('name')!r} not found in the Timetables API")
         return list(dict.fromkeys(evas))
 
+    def _stored_parts(self, k_station: str, train: str, train_type: str, start: str | None, cls: str,
+                      now: datetime, arrival: datetime, live_hours: dict[datetime, list[float]] | None) -> dict:
+        """History, same-train days and the hourly series from stored rows; the target's last hours from
+        ``live_hours`` when the API supplied them, else like the older hours by hour of day."""
+        at_k = self._at_station(k_station)
+        hist = self._latest(at_k & (self.stored["_train"] == train))
+        if hist is None:
+            hist = self._latest(at_k & (self.stored["train_type"] == train_type))
+        same = None if start is None else self._latest(at_k & (self.stored["_train"] == train) & (self.stored["_start"] == norm(start)))
+        k_latest = self._latest(at_k)
+        n_latest = self._latest(self.stored["cls"] == cls)
+
+        t0_hour = floor_hour(now)
+        stored_station = by_hour_of_day(k_latest["station_series"], k_latest["t0"]) if k_latest is not None else {}
+        typical = float(k_latest["station_stops_24h"]) / 24 if k_latest is not None else 1.0
+        st_late, st_n = np.zeros(SERIES_HOURS), np.zeros(SERIES_HOURS)
+        for i in range(SERIES_HOURS):
+            hour = t0_hour - (SERIES_HOURS - i) * HOUR
+            if live_hours is not None and SERIES_HOURS - i <= LIVE_STATION_HOURS:
+                values = live_hours.get(hour, [])
+                st_late[i], st_n[i] = (float(np.mean(values)), len(values)) if values else (0.0, 0.0)
+            else:
+                st_late[i], st_n[i] = stored_station.get(hour.hour, 0.0), typical
+        stored_network = by_hour_of_day(n_latest["network_series"], n_latest["t0"]) if n_latest is not None else {}
+        nw_late = np.array([stored_network.get((t0_hour - (SERIES_HOURS - i) * HOUR).hour, 0.0) for i in range(SERIES_HOURS)])
+        nw_n = np.ones(SERIES_HOURS)
+
+        parts = {
+            "station_series": st_late, "network_series": nw_late,
+            "station_late_3h": weighted_share(st_late, st_n, 3), "station_late_24h": weighted_share(st_late, st_n, 24),
+            "station_late_72h": weighted_share(st_late, st_n, 72), "station_stops_24h": float(st_n[-24:].sum()),
+            "network_late_3h": weighted_share(nw_late, nw_n, 3), "network_late_24h": weighted_share(nw_late, nw_n, 24),
+            "network_late_72h": weighted_share(nw_late, nw_n, 72),
+            "station_late_same_hour": same_hour_share(st_late, st_n, now, arrival),
+            "network_late_same_hour": same_hour_share(nw_late, nw_n, now, arrival),
+        }
+        if hist is not None:
+            parts |= {c: hist[c] for c in HIST}
+        else:
+            parts |= {"hist_series": np.zeros(HISTORY_DAYS), "hist_level": "none", "hist_n": 0.0, "hist_cancel_share": 0.0,
+                      "hist_median": 0.0, "hist_p90": 0.0, "hist_mean": 0.0, "hist_days": 0.0, "hist_median_long": 0.0,
+                      "hist_p90_long": 0.0, "hist_median_7": 0.0, "hist_window_days": HISTORY_DAYS}
+        if same is not None and same["same_train_days"] > 0:
+            parts |= {c: same[c] for c in ("same_train_gains", "same_train_days", "same_train_gain_median", "same_train_gain_median_7")}
+        else:
+            parts |= {"same_train_gains": np.zeros(SAME_TRAIN_DAYS), "same_train_days": 0.0,
+                      "same_train_gain_median": np.nan, "same_train_gain_median_7": np.nan}
+        return parts
+
+    def _finish(self, row: dict) -> pd.Series:
+        """The same-train expectation and the statistical forecast, once the rest of the row is there."""
+        row["same_train_expected"] = max(0.0, row["current_delay"] + row["same_train_gain_median"]) \
+            if np.isfinite(row["same_train_gain_median"]) else np.nan
+        row |= self.forecast.columns_for(pd.DataFrame([row])).iloc[0].to_dict()
+        return pd.Series(row)
+
     def example(self, leg: dict, now: datetime | None = None) -> tuple[pd.Series, list[str]]:
         """One v7 example row for the leg at t0 = now, and the sources of its parts."""
         now = now or now_local()
@@ -296,12 +411,12 @@ class Live:
             raise LookupError(f"{leg.get('trainId')} does not leave {f_name} at {departure:%H:%M} in the live timetable")
         run = f["run"]
         k_hours = hours(arrival - PREV_HOURS * HOUR, min(arrival, now)) + [arrival] + hours(now - LIVE_STATION_HOURS * HOUR, now)
-        k = k_rows = None
+        k = k_rows = k_eva = None
         for eva in self._candidates(leg.get("to")):
             rows = self.feeds.stops(eva, k_hours)
             k = next((r for r in rows if r["run"] == run and r["arr_pt"]), None)
             if k is not None:
-                k_rows = rows
+                k_rows, k_eva = rows, eva
                 break
         if k is None:
             raise LookupError(f"{leg.get('trainId')} has no planned arrival at {k_name} at {arrival:%H:%M}")
@@ -361,17 +476,6 @@ class Live:
                     corridor.append((b["arr_ct"], a["run"], float(b["arr_delay"] - a["dep_delay"]), float(b["arr_delay"])))
             corridor = sorted(sorted(corridor, key=lambda c: c[1]), key=lambda c: c[0], reverse=True)[:CORRIDOR_TRAINS][::-1]
 
-        # Stored parts: history at the target, the same train number's earlier days, older hours.
-        at_k = self._at_station(k["station"])
-        train = norm(f"{f['train_type']}{f['train_number']}")
-        hist = self._latest(at_k & (self.stored["_train"] == train))
-        if hist is None:
-            hist = self._latest(at_k & (self.stored["train_type"] == f["train_type"]))
-        same = self._latest(at_k & (self.stored["_train"] == train) & (self.stored["_start"] == norm(start_name)))
-        k_latest = self._latest(at_k)
-        cls = train_class(f["train_type"])
-        n_latest = self._latest(self.stored["cls"] == cls)
-
         t0_hour = floor_hour(now)
         live_hours: dict[datetime, list[float]] = collections.defaultdict(list)
         for r in k_rows:
@@ -379,61 +483,25 @@ class Live:
                 hour = floor_hour(r["event_time"])
                 if t0_hour - LIVE_STATION_HOURS * HOUR <= hour < t0_hour:
                     live_hours[hour].append(float(r["delay"] >= LATE_MINUTES))
-        stored_station = by_hour_of_day(k_latest["station_series"], k_latest["t0"]) if k_latest is not None else {}
-        typical = float(k_latest["station_stops_24h"]) / 24 if k_latest is not None else 1.0
-        st_late, st_n = np.zeros(SERIES_HOURS), np.zeros(SERIES_HOURS)
-        for i in range(SERIES_HOURS):
-            hour = t0_hour - (SERIES_HOURS - i) * HOUR
-            if SERIES_HOURS - i <= LIVE_STATION_HOURS:
-                values = live_hours.get(hour, [])
-                st_late[i], st_n[i] = (float(np.mean(values)), len(values)) if values else (0.0, 0.0)
-            else:
-                st_late[i], st_n[i] = stored_station.get(hour.hour, 0.0), typical
-        stored_network = by_hour_of_day(n_latest["network_series"], n_latest["t0"]) if n_latest is not None else {}
-        nw_late = np.array([stored_network.get((t0_hour - (SERIES_HOURS - i) * HOUR).hour, 0.0) for i in range(SERIES_HOURS)])
-        nw_n = np.ones(SERIES_HOURS)
 
+        cls = train_class(f["train_type"])
+        train = norm(f"{f['train_type']}{f['train_number']}")
         k_arrival = k["arr_pt"]
         row = {
             "example_id": -1, "split": "live", "run": run, "cls": cls, "train_type": f["train_type"],
             "train_number": f["train_number"], "line_number": f["line_number"], "origin": origin, "dest": dest,
             "first_station": origin, "j_station": None if pre else j["station"], "k_station": k["station"],
             "k_num": k["num"], "j_num": None if pre else j["num"], "first_num": first_num, "t0": now, "k_arr_pt": k_arrival,
-            "pre_departure": pre, "run_delays": run_delays, "run_plan_next": [], "run_plan_dwell": [], "run_plan_left": [],
-            "via": via, "prev_arr_delays": prev_delays, "prev_gaps": prev_gaps, "prev_n": float(len(prev)),
+            "pre_departure": pre, "via": via, "prev_arr_delays": prev_delays, "prev_gaps": prev_gaps, "prev_n": float(len(prev)),
             "prev_last": prev_delays[-1] if prev else 0.0, "prev_mean": float(np.mean(prev_delays)) if prev else 0.0,
             "prev_gap_last": prev_gaps[-1] if prev else 0.0,
             "corridor_gains": [c[2] for c in corridor], "corridor_arr_delays": [c[3] for c in corridor],
             "corridor_n": float(len(corridor)), "corridor_gain_mean": float(np.mean([c[2] for c in corridor])) if corridor else np.nan,
             "corridor_gain_last": corridor[-1][2] if corridor else np.nan,
-            "station_series": st_late, "network_series": nw_late,
-            "station_late_3h": weighted_share(st_late, st_n, 3), "station_late_24h": weighted_share(st_late, st_n, 24),
-            "station_late_72h": weighted_share(st_late, st_n, 72), "station_stops_24h": float(st_n[-24:].sum()),
-            "network_late_3h": weighted_share(nw_late, nw_n, 3), "network_late_24h": weighted_share(nw_late, nw_n, 24),
-            "network_late_72h": weighted_share(nw_late, nw_n, 72),
-            "station_late_same_hour": same_hour_share(st_late, st_n, now, k_arrival),
-            "network_late_same_hour": same_hour_share(nw_late, nw_n, now, k_arrival),
-            "current_delay": run_delays[-1] if run_delays else 0.0, "max_delay_so_far": max(run_delays) if run_delays else 0.0,
-            "delay_change_3": run_delays[-1] - run_delays[max(0, len(run_delays) - 4)] if run_delays else 0.0,
-            "run_len": float(len(run_delays)), "lead_minutes": (k_arrival - now).total_seconds() / 60,
-            "stops_ahead": float(k["num"] - from_num), "arr_hour": float(k_arrival.hour), "arr_weekday": float(k_arrival.weekday()),
-            "target_minutes": 0.0, "cancelled": False,
-        }
-        if hist is not None:
-            row |= {c: hist[c] for c in HIST}
-        else:
-            row |= {"hist_series": np.zeros(HISTORY_DAYS), "hist_level": "none", "hist_n": 0.0, "hist_cancel_share": 0.0,
-                    "hist_median": 0.0, "hist_p90": 0.0, "hist_mean": 0.0, "hist_days": 0.0, "hist_median_long": 0.0,
-                    "hist_p90_long": 0.0, "hist_median_7": 0.0, "hist_window_days": HISTORY_DAYS}
-        if same is not None and same["same_train_days"] > 0:
-            row |= {c: same[c] for c in ("same_train_gains", "same_train_days", "same_train_gain_median", "same_train_gain_median_7")}
-        else:
-            row |= {"same_train_gains": np.zeros(SAME_TRAIN_DAYS), "same_train_days": 0.0,
-                    "same_train_gain_median": np.nan, "same_train_gain_median_7": np.nan}
-        row["same_train_expected"] = max(0.0, row["current_delay"] + row["same_train_gain_median"]) \
-            if np.isfinite(row["same_train_gain_median"]) else np.nan
-        frame = pd.DataFrame([row])
-        row |= self.forecast.columns_for(frame).iloc[0].to_dict()
+            "lead_minutes": (k_arrival - now).total_seconds() / 60, "stops_ahead": float(k["num"] - from_num),
+            "arr_hour": float(k_arrival.hour), "arr_weekday": float(k_arrival.weekday()), "target_minutes": 0.0, "cancelled": False,
+        } | run_columns(run_delays) | self._stored_parts(k["station"], train, f["train_type"], start_name, cls, now, k_arrival, live_hours)
+        row = self._finish(row)
 
         where = "not departed yet" if pre else f"left {j['station']} {row['current_delay']:.0f} min late"
         sources = [
@@ -444,26 +512,83 @@ class Live:
             f"same train number on {int(row['same_train_days'])} days, older station and nationwide hours by hour of day",
             "statistical forecast refitted on the v7 training split",
         ]
-        return pd.Series(row), sources
+        used = set(stations_of.values()) | {k_eva, start_eva}
+        stale = [t for eva, t in self.feeds.stale.items() if eva in used]
+        if stale:
+            sources.insert(1, f"DB API unavailable: change feeds from {min(stale):%H:%M} used for {len(stale)} stations")
+        return row, sources
+
+    def offline_example(self, leg: dict, now: datetime | None = None, reason: str = "") -> tuple[pd.Series, list[str]]:
+        """An example row without the API, for when DB live data is unreachable.
+
+        The route comes from the latest recorded run of the same train to the target, else of a train
+        of its type there; history, same-train days and the hourly series come from stored rows as in
+        ``example``. There are no live delays, previous trains or corridor trains, so the row reads as
+        a train that has not departed yet."""
+        now = now or now_local()
+        arrival = local_naive(leg["plannedArrival"])
+        to_name, from_name = (leg.get("to") or {}).get("name") or "", (leg.get("from") or {}).get("name") or ""
+        prefix = re.match(r"[A-Za-z]+", str(leg.get("trainId") or ""))
+        kind = prefix.group(0).upper() if prefix else ""
+        at_k = self._at_station(to_name)
+        wanted = leg_keys(leg)
+        template = self._latest(at_k & self.stored["_keys"].map(lambda keys: bool(keys & wanted)))
+        same_train = template is not None
+        if template is None:
+            template = self._latest(at_k & (self.stored["train_type"] == kind))
+        if template is None:
+            raise LookupError(f"no recorded {leg.get('trainId')} or {kind or 'train'} run to {to_name} for an offline estimate")
+
+        train_type = template["train_type"]
+        train_number = template["train_number"] if same_train else str(leg.get("trainNumber") or "")
+        cls = template["cls"]
+        first = template["first_station"] if same_train else from_name
+        row = {
+            "example_id": -1, "split": "offline", "run": "", "cls": cls, "train_type": train_type, "train_number": train_number,
+            "line_number": template["line_number"] if same_train else None,
+            "origin": template["origin"] if same_train else from_name, "dest": template["dest"] if same_train else to_name,
+            "first_station": first, "j_station": None, "k_station": template["k_station"], "k_num": template["k_num"],
+            "j_num": None, "first_num": template["first_num"], "t0": now, "k_arr_pt": arrival, "pre_departure": True,
+            "via": list(template["via"]) if same_train and template["via"] is not None else [],
+            "prev_arr_delays": [], "prev_gaps": [], "prev_n": 0.0, "prev_last": 0.0, "prev_mean": 0.0, "prev_gap_last": 0.0,
+            "corridor_gains": [], "corridor_arr_delays": [], "corridor_n": 0.0, "corridor_gain_mean": np.nan, "corridor_gain_last": np.nan,
+            "lead_minutes": (arrival - now).total_seconds() / 60, "stops_ahead": float(template["k_num"] - template["first_num"]),
+            "arr_hour": float(arrival.hour), "arr_weekday": float(arrival.weekday()), "target_minutes": 0.0, "cancelled": False,
+        } | run_columns([]) | self._stored_parts(template["k_station"], norm(f"{train_type}{train_number}"), train_type,
+                                                first if same_train else None, cls, now, arrival, None)
+        row = self._finish(row)
+        route = (f"route of the latest recorded {train_type} {train_number} to {template['k_station']} ({template['t0']:%d %b})"
+                 if same_train else f"no recorded run of {leg.get('trainId')}: a {train_type} train to {template['k_station']} as the template")
+        sources = [
+            f"offline estimate at {now:%H:%M}: DB live data unavailable ({reason or 'no live data'}), so no live delays, "
+            "previous trains or corridor trains",
+            route,
+            f"stored until {self.data_end:%d %b %H:%M}: {row['hist_level']} history over {HISTORY_DAYS} days, "
+            f"same train number on {int(row['same_train_days'])} days, station and nationwide hours by hour of day",
+            "statistical forecast refitted on the v7 training split",
+        ]
+        return row, sources
 
 
-def create(stored: str, xgb_dir: str, env: str | None = None, per_minute: int = 55) -> Live:
+def create(stored: str, xgb_dir: str, env: str | None = None, per_minute: int = 55, offline: bool = False) -> Live:
     """A live example builder with credentials from the .env file."""
     import live_xgb  # noqa: PLC0415  (xgboost only when live examples are wanted)
 
     dbx.load_dotenv(env or str(ROOT / ".env"))
-    client = Client(dbx.Credentials.from_env(), per_minute)
+    creds = dbx.Credentials("", "") if offline else dbx.Credentials.from_env()
+    client = Client(creds, per_minute, offline)
     return Live(Feeds(client), pd.read_parquet(stored), live_xgb.Forecast(Path(xgb_dir)))
 
 
 def main() -> None:
-    """Build and print one live example: the prompt text, the sources and the API calls it took."""
+    """Build and print one live (or offline) example: the prompt text, the sources and the API calls it took."""
     import prompts  # noqa: PLC0415
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--stored", required=True)
     parser.add_argument("--xgb", required=True)
     parser.add_argument("--env")
+    parser.add_argument("--offline", action="store_true")
     parser.add_argument("--train", required=True)
     parser.add_argument("--number")
     parser.add_argument("--from", dest="origin", required=True)
@@ -471,11 +596,14 @@ def main() -> None:
     parser.add_argument("--departure", required=True)
     parser.add_argument("--arrival", required=True)
     args = parser.parse_args()
-    live = create(args.stored, args.xgb, args.env)
+    live = create(args.stored, args.xgb, args.env, offline=args.offline)
     leg = {"trainId": args.train, "trainNumber": args.number, "from": {"name": args.origin}, "to": {"name": args.to},
            "plannedDeparture": args.departure, "plannedArrival": args.arrival}
     started = time.time()
-    row, sources = live.example(leg)
+    try:
+        row, sources = live.example(leg)
+    except (LookupError, RuntimeError, OSError) as error:
+        row, sources = live.offline_example(leg, reason=str(error))
     sample = prompts.sample(row, mode="text")
     print(sample["pre_prompt"], "\n", sample["prefix"], "\n", "\n".join(sources), sep="")
     print(f"{live.feeds.client.calls} calls in {time.time() - started:.0f}s")

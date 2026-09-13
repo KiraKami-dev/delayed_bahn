@@ -45,6 +45,9 @@ MATCH_MINUTES = 1  # planned arrival may differ by this much between the app and
 MIN_PRIOR = 200  # rows needed before a train type gets its own prior instead of its class
 LIVE_CACHE_SECONDS = 60  # a live leg forecast is reused this long (app retries, the recommendation's re-check)
 EXPLAIN_TOKENS = 400  # a generated rationale and answer take about 360 tokens
+# What a failed live example may raise: the API (DBError is a RuntimeError), the network, a train the
+# timetable does not have, or a row the feeds could not complete. Each falls back to the offline estimate.
+LIVE_ERRORS = (LookupError, RuntimeError, OSError, ValueError, KeyError, TypeError)
 LONG_DISTANCE = {"ICE", "IC", "EC", "ECE", "TGV", "RJ", "RJX", "NJ", "FLX"}
 SOURCES = ["delays at the stops so far", "previous trains on the route today",
            "90-day route history", "72 h of hourly late shares at the station and nationwide"]
@@ -257,8 +260,20 @@ class Forecaster:
             return self.frame.loc[self.pick(rows, None)]
         if self.live is None or self.model is None:
             raise LookupError(f"no recorded trip matches {leg.get('trainId')} and live data is off")
-        self.cached_live_forecast(leg)
+        try:
+            self.cached_live_forecast(leg)
+        except LIVE_ERRORS as error:
+            self.offline_forecast(leg, str(error))
         return self.live_cache[leg_key(leg)][2]
+
+    def offline_forecast(self, leg: dict, reason: str) -> dict:
+        """The leg forecast from an offline example (no DB live data), kept like a live one for a minute."""
+        row, sources = self.live.offline_example(leg, reason=reason)
+        out = self.row_forecast(leg, row, sources)
+        out["sources"][0] = f"{self.model_id} (offline estimate)"
+        out["confidence"], out["offline"] = "low", True
+        self.live_cache[leg_key(leg)] = (time.monotonic(), out, row)
+        return out
 
     def explain(self, leg: dict) -> dict:
         """The model's own rationale and answer for a leg, generated freely (about 15 s on a laptop).
@@ -325,9 +340,12 @@ class Forecaster:
         if self.live is not None and self.model is not None:
             try:
                 return self.cached_live_forecast(leg)
-            except (LookupError, RuntimeError, OSError, ValueError, KeyError) as error:
-                live_failure = f" Live data could not be used: {error}."
+            except LIVE_ERRORS as error:
                 print(f"live example failed for {leg.get('trainId')}: {error!r}", flush=True)
+                try:
+                    return self.offline_forecast(leg, str(error))
+                except LIVE_ERRORS as offline_error:
+                    live_failure = f" Live data could not be used ({error}), and no offline estimate was possible ({offline_error})."
         prefix = re.match(r"[A-Za-z]+", str(leg.get("trainId") or ""))
         kind = prefix.group(0).upper() if prefix else ""
         probs, p_cancel = self.priors.get(kind) or self.priors.get(train_class(leg.get("trainId")), (None, None))
@@ -384,7 +402,10 @@ def make_handler(forecaster: Forecaster):
             self._reply(200, {"ok": True, "modelId": forecaster.model_id, "examples": len(forecaster.frame),
                               "savedForecasts": len(forecaster.saved), "live": forecaster.model is not None,
                               "liveData": forecaster.live is not None,
-                              "apiCalls": forecaster.live.feeds.client.calls if forecaster.live is not None else 0})
+                              "apiCalls": forecaster.live.feeds.client.calls if forecaster.live is not None else 0,
+                              "offline": bool(forecaster.live and forecaster.live.feeds.client.offline),
+                              "apiDownForSeconds": round(max(0.0, forecaster.live.feeds.client.down_until - time.monotonic()))
+                              if forecaster.live is not None else 0})
 
         def do_POST(self) -> None:  # noqa: N802
             try:
@@ -424,6 +445,7 @@ def main() -> None:
     parser.add_argument("--xgb", help="saved statistical forecast (live_xgb.py): enables live examples from the Timetables API")
     parser.add_argument("--env", help=".env with DB_CLIENT_ID and DB_API_KEY (default: the repo root's)")
     parser.add_argument("--calls-per-minute", type=int, default=55)
+    parser.add_argument("--offline", action="store_true", help="never call the API: offline estimates only (with --xgb)")
     args = parser.parse_args()
 
     frame = pd.read_parquet(args.examples)
@@ -434,7 +456,7 @@ def main() -> None:
     if args.xgb:
         import live  # noqa: PLC0415  (xgboost and the API client only when live examples are wanted)
 
-        live_builder = live.create(args.examples, args.xgb, args.env, args.calls_per_minute)
+        live_builder = live.create(args.examples, args.xgb, args.env, args.calls_per_minute, args.offline)
     forecaster = Forecaster(frame, [Path(p) for p in args.predictions], model, args.prompt_mode, args.series_scaling,
                             args.model_id, live_builder)
     print(f"{len(forecaster.frame)} recorded trips, {len(forecaster.saved)} saved forecasts, live model: {model is not None}, "

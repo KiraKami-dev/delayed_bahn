@@ -69,6 +69,9 @@ PY
     live_args=()
     if [ -d "$dir/xgb" ]; then
       live_args=(--xgb "$dir/xgb" --env "${ENV_FILE:-$ROOT/.env}" --calls-per-minute "${CALLS_PER_MINUTE:-55}")
+      if [ "${OFFLINE:-0}" = 1 ]; then
+        live_args+=(--offline)  # no API calls at all: offline estimates from the stored runs
+      fi
     fi
     DYLD_LIBRARY_PATH="$(torch_lib "$dir")" "$dir/.venv/bin/python" "$HERE/serve.py" \
       --examples "$dir/data/september_test.parquet" --checkpoint "$dir/model/checkpoint.pt" \
