@@ -83,13 +83,25 @@ def signed(minutes: float) -> str:
     return f"{round(float(minutes)):+d}"
 
 
+RATIONALE = "full"  # "bare": timetable facts only, so the series are the only source of delay information
+
+
 def rationale(row: pd.Series) -> str:
-    """Facts read off the inputs, in the order a dispatcher would weigh them."""
+    """Facts read off the inputs, in the order a dispatcher would weigh them.
+
+    With ``RATIONALE = "bare"`` only the timetable remains (where the train is, stops and minutes to
+    the target): no delays, no history summaries and no statistical forecast, so an ablation can
+    tell whether the series themselves, through the encoder or as text, carry the signal.
+    """
     stop = name(row["k_station"])
     stops = int(row["stops_ahead"])
     lead = float(row["lead_minutes"])
     # Lead time counts to the planned arrival, which a late train may already have passed.
     due = f"planned to arrive in {lead:.0f} minutes" if lead >= 1 else f"its planned arrival was {abs(lead):.0f} minutes ago"
+    if RATIONALE == "bare":
+        if row["pre_departure"]:
+            return f"The train has not departed yet; {stop} is {stops} stops away, {due}."
+        return f"The train has left {name(row['j_station'])}; {stop} is {stops} stops ahead, {due}."
     parts = []
     if row["pre_departure"]:
         parts.append(f"The train has not departed yet; {stop} is {stops} stops away, {due}.")
