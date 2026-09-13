@@ -15,7 +15,7 @@
 # API (live.py) with DB_CLIENT_ID and DB_API_KEY from ENV_FILE (default: the repo root's .env),
 # at most CALLS_PER_MINUTE (default 55) calls per minute.
 #
-# Default: v7 text, 2k steps (bucket key models/db-trip-delay-v7-text-2k.pt) with
+# Default: the submitted model, stacked text on v7 after 12k steps (bucket key models/db-trip-delay-final.pt) with
 # september_v7_test.parquet. Its prompt carries XGBoost's forecast, so the xgb_* columns stay.
 # For an unstacked model such as final-v2-text, set DROP_XGB=1 at setup so its prompt matches
 # training. PROMPT_MODE (default text) must be the mode the checkpoint was trained with.
@@ -26,7 +26,7 @@ ROOT="$(git -C "$HERE" rev-parse --show-toplevel)"
 MODEL_PORT="${MODEL_PORT:-8502}"
 PORT="${PORT:-8000}"
 PROMPT_MODE="${PROMPT_MODE:-text}"
-MODEL_ID="${MODEL_ID:-OpenTSLM db-trip-delay v7-text (2k, local MPS)}"
+MODEL_ID="${MODEL_ID:-OpenTSLM db-trip-delay final (v7 stacked text, 12k, local MPS)}"
 
 # xgboost needs an OpenMP runtime; torch ships one, so no system install is needed.
 torch_lib() {
