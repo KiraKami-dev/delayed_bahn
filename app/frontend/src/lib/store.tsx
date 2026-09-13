@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useReducer, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useMemo, useReducer, useRef, type ReactNode } from "react"
 import { api, loadFixture } from "./api"
 import type { Causes, Journey, Prediction, Recommendation, Reroute, Station } from "./contract"
 import { hydrateCoords } from "./stations"
@@ -33,6 +33,7 @@ export type State = {
 type Action =
   | { type: "tab"; tab: Tab }
   | { type: "stage"; stage: Stage }
+  | { type: "draft"; text: string }
   | { type: "share"; text: string }
   | { type: "journey"; journey: Journey }
   | { type: "prediction"; prediction: Prediction }
@@ -53,33 +54,25 @@ type Action =
   | { type: "reset" }
 
 const initial: State = {
-  tab: "plan",
-  stage: "idle",
-  offline: false,
-  selectedLeg: null,
-  bufferExtra: 0,
-  doorToStationMin: 20,
-  acceptableRisk: 0.15,
-  overlay: "none",
-  rerouteChoice: 0,
-  stageMode: false,
-  stageStep: 0,
-  busy: false,
+  tab: "plan", stage: "idle", offline: false, selectedLeg: null,
+  bufferExtra: 0, doorToStationMin: 20, acceptableRisk: 0.15,
+  overlay: "none", rerouteChoice: 0, stageMode: false, stageStep: 0, busy: false,
 }
 
 function reducer(s: State, a: Action): State {
   switch (a.type) {
     case "tab": return { ...s, tab: a.tab }
     case "stage": return { ...s, stage: a.stage }
-    case "share": return { ...s, sharedText: a.text, stage: "parsing", error: undefined }
-    case "journey": return { ...s, journey: a.journey, prediction: undefined, recommendation: undefined, reroute: undefined, missedLeg: undefined, overlay: "none", bufferExtra: 0, selectedLeg: null, stage: "journey", error: undefined }
+    case "draft": return { ...s, sharedText: a.text }
+    case "share": return { ...initial, stageMode: s.stageMode, sharedText: a.text, stage: "parsing", busy: true }
+    case "journey": return { ...s, tab: "plan", journey: a.journey, prediction: undefined, recommendation: undefined, reroute: undefined, missedLeg: undefined, causes: undefined, causesFor: undefined, overlay: "none", bufferExtra: 0, selectedLeg: null, stage: "journey", error: undefined }
     case "prediction": return { ...s, prediction: a.prediction, stage: "predicted" }
-    case "recommendation": return { ...s, recommendation: a.recommendation, stage: "done" }
-    case "reroute": return { ...s, reroute: a.reroute, missedLeg: a.missedLeg, overlay: "reroute", rerouteChoice: 0 }
+    case "recommendation": return { ...s, recommendation: a.recommendation, stage: "done", error: undefined }
+    case "reroute": return { ...s, reroute: a.reroute, missedLeg: a.missedLeg, overlay: "reroute", rerouteChoice: 0, error: undefined }
     case "causes": return { ...s, causes: a.causes, causesFor: a.causesFor }
     case "error": return { ...s, error: a.error, stage: "error", busy: false }
     case "offline": return { ...s, offline: a.offline }
-    case "selectLeg": return { ...s, selectedLeg: a.index }
+    case "selectLeg": return { ...s, selectedLeg: a.index, causes: undefined, causesFor: undefined }
     case "buffer": return { ...s, bufferExtra: a.minutes }
     case "door": return { ...s, doorToStationMin: a.minutes }
     case "risk": return { ...s, acceptableRisk: a.risk }
@@ -88,7 +81,7 @@ function reducer(s: State, a: Action): State {
     case "stageMode": return { ...s, stageMode: a.on, stageStep: a.on ? s.stageStep : 0 }
     case "stageStep": return { ...s, stageStep: a.step }
     case "busy": return { ...s, busy: a.busy }
-    case "reset": return { ...initial, offline: s.offline, stageMode: s.stageMode }
+    case "reset": return { ...initial, stageMode: s.stageMode }
   }
 }
 
@@ -103,137 +96,119 @@ type Actions = {
 }
 
 const Ctx = createContext<(State & Actions) | null>(null)
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const validProbability = (p: number) => Number.isFinite(p) && p >= 0 && p <= 1
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initial)
+  const [state, rawDispatch] = useReducer(reducer, initial)
+  const generation = useRef(0)
+  const causesRequest = useRef(0)
+  const rerouteRequest = useRef(0)
+  const dispatch = useCallback((action: Action) => {
+    if (action.type === "reset") generation.current++
+    if (action.type === "selectLeg") causesRequest.current++
+    rawDispatch(action)
+  }, [])
 
-  const pipeline = useCallback(
-    async (journey: Journey, opts?: { door?: number; risk?: number }) => {
-      const j = hydrateCoords(journey)
-      dispatch({ type: "journey", journey: j })
-      dispatch({ type: "busy", busy: true })
-      let offline = false
-      let prediction: Prediction
-      dispatch({ type: "stage", stage: "predicting" })
-      try {
-        prediction = await api.predict(j)
-      } catch {
-        offline = true
-        prediction = await loadFixture<Prediction>("prediction")
-        prediction = { ...prediction, journeyId: j.id }
-      }
-      await sleep(250)
-      dispatch({ type: "prediction", prediction })
-      dispatch({ type: "stage", stage: "recommending" })
-      let recommendation: Recommendation
-      try {
-        if (offline) throw new Error("offline")
-        recommendation = await api.recommend(j, prediction, opts?.door, opts?.risk)
-      } catch {
-        offline = true
-        recommendation = await loadFixture<Recommendation>("recommendation")
-      }
+  const pipeline = useCallback(async (journey: Journey, requestId: number) => {
+    if (!journey?.legs?.length || !journey.legs.every(l => l.trainId && l.from?.name && l.to?.name && Number.isFinite(Date.parse(l.plannedDeparture)) && Date.parse(l.plannedArrival) > Date.parse(l.plannedDeparture))) throw new Error("The journey has incomplete train details. Please check its stations and times.")
+    if (requestId !== generation.current) return
+    const j = hydrateCoords(journey)
+    const demo = j.source === "seed"
+    dispatch({ type: "journey", journey: j })
+    dispatch({ type: "busy", busy: true })
+    dispatch({ type: "stage", stage: "predicting" })
+    const prediction = demo ? await loadFixture<Prediction>("prediction") : await api.predict(j)
+    if (requestId !== generation.current) return
+    if (prediction.journeyId !== j.id || prediction.legs?.length !== j.legs.length || !validProbability(prediction.planFailProbability?.value) || !prediction.legs.every((l, i) => l.trainId === j.legs[i].trainId && Number.isFinite(l.expectedDelayMinutes?.value) && validProbability(l.missProbability?.value))) throw new Error("The forecast did not match your journey. Please try again.")
+    dispatch({ type: "prediction", prediction })
+    dispatch({ type: "stage", stage: "recommending" })
+    try {
+      let recommendation = demo ? await loadFixture<Recommendation>("recommendation") : await api.recommend(j, prediction)
+      if (requestId !== generation.current) return
       if (recommendation.alternative) recommendation = { ...recommendation, alternative: hydrateCoords(recommendation.alternative) }
-      dispatch({ type: "offline", offline })
       dispatch({ type: "recommendation", recommendation })
-      dispatch({ type: "busy", busy: false })
-    },
-    [],
-  )
+    } catch {
+      if (requestId === generation.current) dispatch({ type: "error", error: "Your forecast is available, but travel advice could not be loaded. Please retry, or check alternatives in DB Navigator." })
+    } finally {
+      if (requestId === generation.current) dispatch({ type: "busy", busy: false })
+    }
+  }, [dispatch])
 
-  const runJourney = useCallback((journey: Journey) => pipeline(journey), [pipeline])
+  const runJourney = useCallback(async (journey: Journey) => {
+    const id = ++generation.current
+    try { await pipeline(journey, id) }
+    catch { if (id === generation.current) dispatch({ type: "error", error: "We couldn’t get a forecast for this trip. No example forecast has been substituted. Please try again." }) }
+  }, [pipeline, dispatch])
 
-  const runFromText = useCallback(
-    async (text: string) => {
-      dispatch({ type: "share", text })
-      dispatch({ type: "busy", busy: true })
-      try {
-        const journey = await api.parseJourney(text)
-        await pipeline(journey)
-      } catch (e) {
-        const err = e as { status?: number; message?: string }
-        if (err.status === 400 || err.status === 422) {
-          dispatch({ type: "error", error: err.message || "Could not find a connection in that text." })
-          return
-        }
-        // Backend unreachable: fall back to the seed so the app still works.
-        dispatch({ type: "offline", offline: true })
-        try {
-          const journey = await loadFixture<Journey>("journey")
-          await pipeline(journey)
-        } catch {
-          dispatch({ type: "error", error: "The forecast service is unreachable and no offline seed is bundled." })
-        }
-      }
-    },
-    [pipeline],
-  )
+  const runFromText = useCallback(async (text: string) => {
+    const id = ++generation.current
+    dispatch({ type: "share", text })
+    try {
+      const journey = await api.parseJourney(text)
+      if (id === generation.current) await pipeline({ ...journey, source: "db-share" }, id)
+    } catch (e) {
+      if (id !== generation.current) return
+      const err = e as { status?: number; message?: string }
+      dispatch({ type: "error", error: err.status === 400 || err.status === 422 ? err.message || "Paste the full journey text, including train names, stations and times." : "The trip-checking service is unavailable. Your text is still here. Try again, or explore the clearly labelled example trip." })
+    }
+  }, [pipeline, dispatch])
 
   const runFromSeed = useCallback(async () => {
+    const id = ++generation.current
     dispatch({ type: "busy", busy: true })
-    let journey: Journey
     try {
-      journey = await api.seedDemo()
+      // Backend unreachable: fall back to the seed so the app still works.
+      const journey = await loadFixture<Journey>("journey")
+      if (id === generation.current) await pipeline({ ...journey, source: "seed" }, id)
     } catch {
-      dispatch({ type: "offline", offline: true })
-      journey = await loadFixture<Journey>("journey")
+      if (id === generation.current) dispatch({ type: "error", error: "The example trip could not be loaded. Check your connection and try again." })
     }
-    await pipeline(journey)
-  }, [pipeline])
+  }, [pipeline, dispatch])
 
-  const refreshRecommendation = useCallback(
-    async (door?: number, risk?: number) => {
-      if (!state.journey || !state.prediction) return
-      if (door != null) dispatch({ type: "door", minutes: door })
-      if (risk != null) dispatch({ type: "risk", risk })
-      try {
-        let rec = await api.recommend(state.journey, state.prediction, door ?? state.doorToStationMin, risk ?? state.acceptableRisk)
-        if (rec.alternative) rec = { ...rec, alternative: hydrateCoords(rec.alternative) }
-        dispatch({ type: "recommendation", recommendation: rec })
-      } catch {
-        /* keep the current recommendation; LeaveHomeBy computes locally */
-      }
-    },
-    [state.journey, state.prediction, state.doorToStationMin, state.acceptableRisk],
-  )
+  const refreshRecommendation = useCallback(async (door?: number, risk?: number) => {
+    if (!state.journey || !state.prediction) return
+    const id = generation.current
+    if (door != null) dispatch({ type: "door", minutes: door })
+    if (risk != null) dispatch({ type: "risk", risk })
+    if (state.journey.source === "seed") return
+    try {
+      let rec = await api.recommend(state.journey, state.prediction, door ?? state.doorToStationMin, risk ?? state.acceptableRisk)
+      if (id !== generation.current) return
+      if (rec.alternative) rec = { ...rec, alternative: hydrateCoords(rec.alternative) }
+      dispatch({ type: "recommendation", recommendation: rec })
+    } catch {
+      /* keep the current recommendation; LeaveHomeBy computes locally */
+    }
+  }, [state.journey, state.prediction, state.doorToStationMin, state.acceptableRisk, dispatch])
 
-  const fetchReroute = useCallback(
-    async (missedLeg: number) => {
-      if (!state.journey) return
-      let reroute: Reroute
-      try {
-        reroute = await api.reroute(state.journey, missedLeg)
-      } catch {
-        reroute = await loadFixture<Reroute>("reroute")
-      }
-      reroute = { ...reroute, options: reroute.options.map((o) => ({ ...o, journey: hydrateCoords(o.journey) })) }
+  const fetchReroute = useCallback(async (missedLeg: number) => {
+    if (!state.journey || state.busy) return
+    const id = generation.current
+    const attempt = ++rerouteRequest.current
+    try {
+      let reroute = state.journey.source === "seed" ? await loadFixture<Reroute>("reroute") : await api.reroute(state.journey, missedLeg)
+      if (id !== generation.current || attempt !== rerouteRequest.current) return
+      reroute = { ...reroute, options: reroute.options.map(o => ({ ...o, journey: hydrateCoords(o.journey) })) }
       dispatch({ type: "reroute", reroute, missedLeg })
-    },
-    [state.journey],
-  )
+    } catch {
+      if (id === generation.current && attempt === rerouteRequest.current) dispatch({ type: "error", error: "Alternatives are unavailable. Check the next departures in DB Navigator; we have not substituted sample trains." })
+    }
+  }, [state.journey, state.busy, dispatch])
 
-  const fetchCauses = useCallback(
-    async (station: Station) => {
-      const key = station.evaNumber || station.name
-      if (state.causesFor === key && state.causes) return
-      let causes: Causes
-      try {
-        causes = await api.causes(station.evaNumber, station.name)
-      } catch {
-        causes = await loadFixture<Causes>("causes")
-        causes = { ...causes, station }
-      }
-      dispatch({ type: "causes", causes, causesFor: key })
-    },
-    [state.causesFor, state.causes],
-  )
+  const fetchCauses = useCallback(async (station: Station) => {
+    const key = station.evaNumber || station.name
+    if (state.causesFor === key && state.causes) return
+    const id = generation.current
+    const attempt = ++causesRequest.current
+    try {
+      const causes = await api.causes(station.evaNumber, station.name)
+      if (id === generation.current && attempt === causesRequest.current) dispatch({ type: "causes", causes, causesFor: key })
+    } catch {
+      if (id === generation.current && attempt === causesRequest.current) dispatch({ type: "error", error: "Station background data is unavailable. Your journey forecast has not changed." })
+    }
+  }, [state.causesFor, state.causes, dispatch])
 
-  const value = useMemo(
-    () => ({ ...state, dispatch, runFromText, runFromSeed, runJourney, refreshRecommendation, fetchReroute, fetchCauses }),
-    [state, runFromText, runFromSeed, runJourney, refreshRecommendation, fetchReroute, fetchCauses],
-  )
+  const value = useMemo(() => ({ ...state, dispatch, runFromText, runFromSeed, runJourney, refreshRecommendation, fetchReroute, fetchCauses }), [state, dispatch, runFromText, runFromSeed, runJourney, refreshRecommendation, fetchReroute, fetchCauses])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

@@ -77,7 +77,7 @@ export function CausesPanel() {
             key={i}
             type="button"
             onClick={() => s.dispatch({ type: "selectLeg", index: i })}
-            className={`rounded-full border px-3 py-1 text-xs ${i === idx ? "border-ring bg-primary/20 text-white" : "border-border text-muted-foreground hover:bg-white/5"}`}
+            className={`rounded-full border px-3 py-1 text-xs ${i === idx ? "border-ring bg-secondary text-primary" : "border-border text-muted-foreground hover:bg-white/5"}`}
           >
             {l.to.name}
           </button>
@@ -87,13 +87,13 @@ export function CausesPanel() {
         <div className="h-24 animate-pulse rounded-2xl bg-white/5" />
       ) : (
         <>
-          <div className="rounded-2xl border border-border bg-black/30 p-4">
+          <div className="rounded-2xl border border-border bg-white p-4">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Delay minutes by cause family</div>
             <div className="mt-2">
               <CauseStack families={c.families} />
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-black/30 p-3">
+          <div className="rounded-xl border border-border bg-white p-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Top named causes (DB IRIS text)</div>
             <ul className="mt-1.5 space-y-1 text-sm">
               {c.top.map((t) => (
@@ -105,7 +105,7 @@ export function CausesPanel() {
               ))}
             </ul>
           </div>
-          <div className="rounded-xl border border-border bg-black/30 p-3">
+          <div className="rounded-xl border border-border bg-white p-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Mean delay, last 7 days</div>
             <DelaySparkline points={c.sparkline7d} />
           </div>

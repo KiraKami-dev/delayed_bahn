@@ -29,7 +29,7 @@ export function WhyDisclosure({ item, label = "Why?" }: { item: Explained<unknow
         <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-black/30 p-3 text-muted-foreground">
+        <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-white p-3 text-muted-foreground">
           <p className="text-foreground/90">{item.reasoning}</p>
           <p>
             <span className="text-foreground/60">Sources:</span> {item.sources.join(" · ")}

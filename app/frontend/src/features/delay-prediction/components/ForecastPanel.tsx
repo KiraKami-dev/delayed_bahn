@@ -24,7 +24,7 @@ export function FailHeadline({ value, label = "Probability your plan fails" }: {
   }, [value, still])
   const colour = riskColour(value)
   return (
-    <div className="rounded-2xl border border-border bg-black/30 p-4">
+    <div className="rounded-2xl border border-border bg-white p-4">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="headline-number mt-1 text-6xl font-semibold" style={{ color: colour }}>
         {Math.round(shown * 100)}
@@ -41,7 +41,7 @@ export function DelayBars({ leg }: { leg: LegDelay }) {
   const max = Math.max(...d.probs, 0.01)
   const colours = ["#34d399", "#a3e635", "#fbbf24", "#f87171", "#9ca3af"]
   return (
-    <svg viewBox="0 0 220 64" className="mt-2 h-16 w-full" role="img" aria-label="Delay probability by bucket">
+    <svg viewBox="0 0 220 64" className="mt-2 h-16 w-full" role="img" aria-label={`Delay probability: ${d.bins.map((bin, i) => `${bin} minutes: ${pct(d.probs[i] ?? 0)}`).join(", ")}`}>
       {d.bins.map((bin, i) => {
         const p = d.probs[i] ?? 0
         const h = Math.max(2, (p / max) * 40)
@@ -49,7 +49,7 @@ export function DelayBars({ leg }: { leg: LegDelay }) {
         return (
           <g key={bin}>
             <rect x={x} y={44 - h} width={36} height={h} rx={3} fill={colours[i] ?? "#999"} opacity={0.9} />
-            <text x={x + 18} y={44 - h - 3} textAnchor="middle" fontSize="9" fill="#e5e5ea">
+            <text x={x + 18} y={44 - h - 3} textAnchor="middle" fontSize="9" fill="#44543e">
               {Math.round(p * 100)}%
             </text>
             <text x={x + 18} y={58} textAnchor="middle" fontSize="9" fill="#9a9aa8">
@@ -74,7 +74,7 @@ export function ChainStrip({ journey, prediction, missOverride }: { journey: Jou
         const left = Math.max(0, buffer - delay)
         return (
           <div key={i} className="flex items-center gap-1">
-            <div className="rounded-lg border border-border bg-black/30 px-2 py-1.5 text-center">
+            <div className="rounded-lg border border-border bg-white px-2 py-1.5 text-center">
               <div className="font-mono text-[11px] font-semibold">{leg.trainId}</div>
               <div className="text-[10px] text-muted-foreground">+{delay} min</div>
             </div>
@@ -102,7 +102,7 @@ export function BufferSlider({ journey, prediction }: { journey: Journey; predic
   const result = useMemo(() => rechain(journey, prediction, s.bufferExtra), [journey, prediction, s.bufferExtra])
   if (journey.legs.length < 2) return null
   return (
-    <div className="rounded-xl border border-border bg-black/30 p-3">
+    <div className="rounded-xl border border-border bg-white p-3">
       <div className="flex items-center justify-between text-sm">
         <span>
           What if I had <b>+{s.bufferExtra} min</b> at every change?
@@ -118,10 +118,10 @@ export function BufferSlider({ journey, prediction }: { journey: Journey; predic
         step={5}
         value={s.bufferExtra}
         onChange={(e) => s.dispatch({ type: "buffer", minutes: Number(e.target.value) })}
-        className="mt-2 w-full accent-[#8b8bff]"
+        className="mt-2 w-full accent-primary"
         aria-label="Extra minutes at each change"
       />
-      <p className="mt-1 text-[11px] text-muted-foreground">Re-chained in your browser with the same transfer math as the forecast.</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">A what-if estimate, not a confirmed alternative. Extra buffer does not change your booked trains.</p>
     </div>
   )
 }
@@ -135,15 +135,14 @@ export function ForecastPanel() {
   if (!prediction)
     return (
       <div className="space-y-3">
-        <div className="h-24 animate-pulse rounded-2xl bg-white/5" />
-        <p className="text-sm text-muted-foreground">Forecasting each train…</p>
+        <div className="h-24 animate-pulse rounded-2xl bg-secondary" />
+        <p className="text-sm text-muted-foreground">{s.error ? "Your forecast is unavailable. Retry your check above; we won’t substitute an example result." : "Forecasting each train…"}</p>
       </div>
     )
   const live = s.bufferExtra > 0 ? rechain(journey, prediction, s.bufferExtra) : null
   return (
     <div className="space-y-3">
-      <FailHeadline value={live ? live.planFail : prediction.planFailProbability.value} />
-      <WhyDisclosure item={prediction.planFailProbability} label="Why this number?" />
+      {journey.legs.length > 1 && <><FailHeadline value={live ? live.planFail : prediction.planFailProbability.value} /><WhyDisclosure item={prediction.planFailProbability} label="Why this number?" /></>}
       <ChainStrip journey={journey} prediction={prediction} missOverride={live?.legs} />
       <div className="space-y-2">
         {journey.legs.map((leg, i) => {

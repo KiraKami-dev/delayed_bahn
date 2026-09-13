@@ -7,13 +7,7 @@ export const HOME = { center: [10.5, 48] as LngLat, zoom: 1.35, pitch: 0, bearin
 
 /** Padding that keeps the route clear of the overlay panel. */
 export function panelPadding(): { top: number; bottom: number; left: number; right: number } {
-  const w = window.innerWidth
-  const h = window.innerHeight
-  if (w >= 1024) {
-    const panel = Math.min(w * 0.36, Math.max(380, Math.min(520, w * 0.32)))
-    return { top: 90, bottom: 60, left: 60, right: panel + 48 }
-  }
-  return { top: 80, bottom: Math.round(h * 0.55), left: 36, right: 36 }
+  return { top: 50, bottom: 50, left: 45, right: 75 }
 }
 
 const dur = (ms: number) => (motionOff() ? 0 : ms)

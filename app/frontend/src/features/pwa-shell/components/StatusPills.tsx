@@ -1,6 +1,5 @@
 import { Download, WifiOff } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useStore } from "@/lib/store"
 
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
 
@@ -30,7 +29,7 @@ export function InstallButton({ big = false }: { big?: boolean }) {
       className={
         big
           ? "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
-          : "inline-flex items-center gap-1.5 rounded-full border border-border bg-black/40 px-3 py-1 text-xs text-foreground backdrop-blur"
+          : "inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs text-foreground backdrop-blur"
       }
     >
       <Download className="size-4" /> Install app
@@ -39,11 +38,17 @@ export function InstallButton({ big = false }: { big?: boolean }) {
 }
 
 export function OfflinePill() {
-  const s = useStore()
-  if (!s.offline) return null
+  const [offline, setOffline] = useState(!navigator.onLine)
+  useEffect(() => {
+    const update = () => setOffline(!navigator.onLine)
+    window.addEventListener("online", update)
+    window.addEventListener("offline", update)
+    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update) }
+  }, [])
+  if (!offline) return null
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">
-      <WifiOff className="size-3.5" /> offline · seed data
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs text-amber-800">
+      <WifiOff className="size-3.5" /> You’re offline
     </span>
   )
 }

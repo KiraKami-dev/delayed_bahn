@@ -15,7 +15,7 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "icons/*.png", "seed/*.json", "proof.json"],
       manifest: {
         id: "/",
-        name: "error404 — will my DB plan hold?",
+        name: "error404 — A clearer way to travel",
         short_name: "error404",
         description:
           "Share a Deutsche Bahn connection and see the probability your plan fails, plus what to do about it.",
@@ -23,8 +23,8 @@ export default defineConfig({
         scope: "/",
         display: "standalone",
         orientation: "any",
-        background_color: "#07070c",
-        theme_color: "#07070c",
+        background_color: "#f7f8f2",
+        theme_color: "#f7f8f2",
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },

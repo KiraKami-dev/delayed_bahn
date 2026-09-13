@@ -1,4 +1,6 @@
+import { LocateFixed, Minus, Plus } from "lucide-react"
 import * as maplibregl from "maplibre-gl"
+import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "@/lib/store"
 import { riskColour } from "@/lib/geo"
@@ -15,25 +17,25 @@ const RASTER_STYLE: maplibregl.StyleSpecification = {
   sources: {
     base: {
       type: "raster",
-      tiles: [`${ESRI}/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`],
+      tiles: [`${ESRI}/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`],
       tileSize: 256,
       maxzoom: 16,
       attribution: "Esri, HERE, Garmin, © OpenStreetMap contributors",
     },
     labels: {
       type: "raster",
-      tiles: [`${ESRI}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`],
+      tiles: [`${ESRI}/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}`],
       tileSize: 256,
       maxzoom: 16,
     },
   },
   layers: [
-    { id: "bg", type: "background", paint: { "background-color": "#07070c" } },
+    { id: "bg", type: "background", paint: { "background-color": "#edf1e7" } },
     { id: "base", type: "raster", source: "base", paint: { "raster-opacity": 0.92, "raster-fade-duration": 200 } },
     { id: "labels", type: "raster", source: "labels", minzoom: 5, paint: { "raster-opacity": 0.85, "raster-fade-duration": 200 } },
   ],
 }
-const VECTOR_STYLE = "https://tiles.openfreemap.org/styles/dark"
+const VECTOR_STYLE = "https://tiles.openfreemap.org/styles/positron"
 
 function pickStyle(): maplibregl.StyleSpecification | string {
   try {
@@ -50,6 +52,8 @@ export function GlobeMap() {
   const s = useStore()
 
   const [failed, setFailed] = useState<string | null>(null)
+  const [tileError, setTileError] = useState(false)
+  const [tilted, setTilted] = useState(false)
 
   // Create the map once. WebGL can be missing (old device, headless run):
   // the app must keep working without the globe.
@@ -57,14 +61,18 @@ export function GlobeMap() {
     if (!ref.current) return
     let m: maplibregl.Map
     try {
+      maplibregl.setWorkerUrl(mapWorkerUrl)
       m = new maplibregl.Map({
         container: ref.current,
         style: pickStyle(),
         center: HOME.center,
         zoom: HOME.zoom,
         attributionControl: { compact: true },
-        dragRotate: false,
-        pitchWithRotate: false,
+        dragRotate: true,
+        pitchWithRotate: true,
+        scrollZoom: false,
+        cooperativeGestures: true,
+        maxPitch: 65,
         fadeDuration: 200,
       })
     } catch (e) {
@@ -72,7 +80,8 @@ export function GlobeMap() {
       return
     }
     m.touchZoomRotate.disableRotation()
-    m.on("error", (e) => console.warn("[map]", e.error?.message ?? e))
+    m.on("error", () => setTileError(true))
+    m.on("moveend", () => setTilted(m.getPitch() > 10))
     m.on("load", () => {
       try {
         m.setProjection({ type: "globe" })
@@ -193,15 +202,20 @@ export function GlobeMap() {
       map.resize()
       if (journey && s.overlay === "none") fitJourney(map, [journey], { duration: 0 })
     }
-    window.addEventListener("resize", onResize)
-    return () => window.removeEventListener("resize", onResize)
+    const observer = new ResizeObserver(onResize)
+    observer.observe(map.getContainer())
+    return () => observer.disconnect()
   }, [map, journey, s.overlay])
 
-  if (failed)
-    return (
-      <div className="map-root flex items-center justify-center bg-[radial-gradient(circle_at_30%_30%,#15152a,#07070c_60%)] text-center text-sm text-muted-foreground">
-        <p className="max-w-xs px-6">The 3D map needs WebGL, which this browser does not provide. Everything else works.</p>
-      </div>
-    )
-  return <div ref={ref} className="map-root" aria-label="Map of the journey" />
+  if (failed) return <div className="map-placeholder"><p>The interactive map isn’t supported by this browser. Your train details and forecast are still available below and beside the map.</p></div>
+  return <>
+    <div ref={ref} className="map-root" aria-label="Interactive map of the journey" />
+    {map && <div className="map-controls" aria-label="Map controls">
+      <button type="button" aria-label="Zoom in" onClick={() => map.zoomIn({ duration: motionOff() ? 0 : 250 })}><Plus size={16} /></button>
+      <button type="button" aria-label="Zoom out" onClick={() => map.zoomOut({ duration: motionOff() ? 0 : 250 })}><Minus size={16} /></button>
+      <button type="button" aria-label="Fit whole journey" onClick={() => { if (journey) { s.dispatch({ type: "selectLeg", index: null }); fitJourney(map, [journey]) } }}><LocateFixed size={16} /></button>
+      <button type="button" aria-label={tilted ? "Switch to flat map" : "Switch to 3D map"} aria-pressed={tilted} onClick={() => map.easeTo({ pitch: tilted ? 0 : 50, bearing: tilted ? 0 : -15, duration: motionOff() ? 0 : 700 })}>{tilted ? "2D" : "3D"}</button>
+    </div>}
+    {tileError && <div className="map-warning" role="status">Map tiles are unavailable. Station positions and your trip summary are still available.</div>}
+  </>
 }

@@ -110,12 +110,21 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
       el.className = "station-marker"
       el.setAttribute("aria-label", st.name)
       const colour = end === "to" ? (opts.colours?.[i] ?? base) : (opts.colours?.[i - 1] ?? base)
-      el.innerHTML = `<span class="dot" style="--c:${colour}"></span>${opts.labels === false ? "" : `<span class="label">${st.name}</span>`}`
+      const dot = document.createElement("span")
+      dot.className = "dot"
+      dot.style.setProperty("--c", colour)
+      el.append(dot)
+      if (opts.labels !== false) {
+        const label = document.createElement("span")
+        label.className = "label"
+        label.textContent = st.name
+        el.append(label)
+      }
       el.addEventListener("click", (e) => {
         e.stopPropagation()
         opts.onStationClick?.(i, end)
       })
-      const m = new maplibregl.Marker({ element: el, anchor: "left", offset: [10, 0] }).setLngLat([st.lon, st.lat]).addTo(map)
+      const m = new maplibregl.Marker({ element: el, anchor: "left", offset: [-10, 0] }).setLngLat([st.lon, st.lat]).addTo(map)
       h.markers.push(m)
     }
   })
@@ -145,7 +154,10 @@ function animateDraw(map: maplibregl.Map, kind: RouteKind, journey: Journey) {
 export function recolourRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey, colours: (string | undefined)[]) {
   const h = handles(map, kind)
   cancelAnimationFrame(h.anim)
-  journey.legs.forEach((_, i) => {
+  journey.legs.forEach((leg, i) => {
+    const line = legLine(leg)
+    const source = map.getSource(`route-${kind}-${i}`) as maplibregl.GeoJSONSource | undefined
+    if (line && source) source.setData({ type: "Feature", properties: { leg: i }, geometry: { type: "LineString", coordinates: line } })
     const colour = colours[i] ?? RISK_COLOUR.none
     for (const suffix of ["glow", "line"]) {
       const id = `route-${kind}-${i}-${suffix}`

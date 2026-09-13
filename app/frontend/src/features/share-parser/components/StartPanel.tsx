@@ -1,4 +1,4 @@
-import { ClipboardPaste, Loader2, Share2, Sparkles, Wrench } from "lucide-react"
+import { ArrowRight, Check, ClipboardPaste, Loader2, PenLine, Share2, TrainFront } from "lucide-react"
 import { useState } from "react"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -18,96 +18,42 @@ type Mode = "paste" | "build"
 export function StartPanel() {
   const s = useStore()
   const [mode, setMode] = useState<Mode>("paste")
-  const [text, setText] = useState("")
-  const drop = useDropText((t) => {
-    setText(t)
-    void s.runFromText(t)
-  })
+  const text = s.sharedText ?? ""
+  const setText = (text: string) => s.dispatch({ type: "draft", text })
+  const drop = useDropText((t) => { if (!s.busy) setText(t) })
 
   return (
-    <div className="space-y-4" {...drop.handlers}>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Will my plan hold?</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Share a connection from the DB app, paste it, or build one. You get the chance your plan fails and what to do about it.
-        </p>
+    <section className="start-card" id="trip-form" aria-labelledby="trip-form-title" {...drop.handlers}>
+      <div className="form-heading">
+        <span className="icon-tile"><TrainFront size={21} /></span>
+        <div><h2 id="trip-form-title">Let’s check your journey.</h2><p>No account. Just your travel plans.</p></div>
       </div>
-
-      <div className="flex gap-1 rounded-lg bg-black/30 p-1 text-sm">
-        {(
-          [
-            ["paste", "Paste or drop", ClipboardPaste],
-            ["build", "Build", Wrench],
-          ] as const
-        ).map(([id, label, Icon]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setMode(id)}
-            className={cn("flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5", mode === id ? "bg-white/10 text-white" : "text-muted-foreground")}
-          >
-            <Icon className="size-4" /> {label}
-          </button>
-        ))}
+      <div className="input-modes" aria-label="How to enter your trip">
+        <button type="button" aria-pressed={mode === "paste"} onClick={() => setMode("paste")} disabled={s.busy}><ClipboardPaste size={16} /> Paste DB journey</button>
+        <button type="button" aria-pressed={mode === "build"} onClick={() => setMode("build")} disabled={s.busy}><PenLine size={16} /> Enter train details</button>
       </div>
-
       {mode === "paste" ? (
-        <form
-          className="space-y-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (text.trim()) void s.runFromText(text)
-          }}
-        >
+        <form onSubmit={(e) => { e.preventDefault(); if (text.trim() && !s.busy) void s.runFromText(text) }}>
+          <label className="field-label" htmlFor="journey-text">Your journey from DB Navigator</label>
           <textarea
+            id="journey-text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            rows={6}
-            placeholder={"Paste what the DB app shared, e.g.\n" + SAMPLE_SHARE.split("\n").slice(0, 4).join("\n") + "\n…"}
-            className={cn(
-              "w-full resize-none rounded-xl border border-input bg-black/30 p-3 font-mono text-[13px] leading-snug outline-none placeholder:text-muted-foreground/60 focus:border-ring",
-              drop.over && "border-ring bg-primary/10",
-            )}
+            disabled={s.busy}
+            rows={5}
+            maxLength={20000}
+            aria-describedby="paste-hint"
+            placeholder={"Paste the shared journey text here…\n\nNürnberg Hbf → München Hbf\nRB 16 · 04:34 – 07:25"}
+            className={cn("journey-input", drop.over && "is-dragging")}
           />
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="submit"
-              disabled={!text.trim() || s.busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white disabled:opacity-50"
-            >
-              {s.busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Check my plan
-            </button>
-            <button
-              type="button"
-              disabled={s.busy}
-              onClick={() => {
-                setText(SAMPLE_SHARE)
-                void s.runFromText(SAMPLE_SHARE)
-              }}
-              className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-white/5"
-            >
-              Use a real share text
-            </button>
-            <button
-              type="button"
-              disabled={s.busy}
-              onClick={() => void s.runFromSeed()}
-              className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-white/5"
-            >
-              Demo journey
-            </button>
-          </div>
+          <p id="paste-hint" className="field-hint"><Share2 size={14} /> In DB Navigator: open your journey → Share → Copy.</p>
+          <button type="submit" disabled={!text.trim() || s.busy} className="primary-button check-button">
+            {s.busy ? <><Loader2 size={18} className="animate-spin" /> Checking your journey…</> : <>Check my trip <ArrowRight size={18} /></>}
+          </button>
         </form>
-      ) : (
-        <JourneyBuilder />
-      )}
-
-      {s.error && <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-red-200">{s.error}</p>}
-
-      <p className="flex items-start gap-2 text-xs text-muted-foreground">
-        <Share2 className="mt-0.5 size-3.5 shrink-0" />
-        In the DB app, open a connection, press <b className="text-foreground/80">Share</b> and pick <b className="text-foreground/80">error404</b>. The journey lands here with no typing.
-      </p>
-    </div>
+      ) : <JourneyBuilder />}
+      <div className="example-row"><span>Just having a look?</span><button type="button" disabled={s.busy} onClick={() => void s.runFromSeed()}>Try an example trip <ArrowRight size={14} /></button></div>
+      <div className="form-reassurance"><Check size={13} /> Your journey stays in this session. No sign-up needed.</div>
+    </section>
   )
 }

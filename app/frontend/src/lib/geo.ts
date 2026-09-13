@@ -29,7 +29,7 @@ export function riskLevel(p: number): "low" | "mid" | "high" {
   return "high"
 }
 
-export const RISK_COLOUR = { low: "#34d399", mid: "#fbbf24", high: "#f87171", none: "#8b8bff" } as const
+export const RISK_COLOUR = { low: "#26704c", mid: "#916019", high: "#b54534", none: "#52794a" } as const
 
 export function riskColour(p: number | undefined): string {
   if (p == null) return RISK_COLOUR.none
