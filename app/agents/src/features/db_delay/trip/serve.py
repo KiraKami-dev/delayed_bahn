@@ -114,6 +114,17 @@ def rounded(probs: np.ndarray) -> list[float]:
     return [round(float(p), 6) for p in probs]
 
 
+def short_explanation(text: str) -> str:
+    """Up to three of the model's own sentences a traveller needs: where the train is, how the trains
+    before it did today, and how late the target ran in the last hours. The rationale follows a fixed
+    order, so they are found by their openings; without a match the first two sentences are used."""
+    sentences = [s.strip() for s in re.split(r"(?<=\.)\s+(?=[A-Z])", text.strip()) if s.strip()]
+    chosen = {s for s in sentences if s.startswith(("The train", "Today the previous", "No earlier train"))}
+    chosen |= {s for s in sentences if re.match(r"At .+ of stops ran", s)}
+    picked = [s for s in sentences if s in chosen][:3]
+    return " ".join(picked or sentences[:2])
+
+
 def leg_key(leg: dict) -> str:
     """One leg's identity for the caches: train, planned times and station names."""
     return json.dumps([leg.get(k) for k in ("trainId", "trainNumber", "plannedDeparture", "plannedArrival")]
@@ -272,7 +283,8 @@ class Forecaster:
                                                    max_new_tokens=EXPLAIN_TOKENS)[0]
             reasoning, _, answer = text.partition("Answer:")
             words = answer.split()
-            out = {"trainId": leg.get("trainId"), "text": reasoning.strip(), "answer": words[0].rstrip(".") if words else None,
+            out = {"trainId": leg.get("trainId"), "text": reasoning.strip(), "summary": short_explanation(reasoning),
+                   "answer": words[0].rstrip(".") if words else None,
                    "generatedBy": self.model_id, "seconds": round(time.monotonic() - started, 1)}
             self.explanations[key] = out
             return out

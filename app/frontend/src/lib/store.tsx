@@ -9,7 +9,7 @@ export type Stage = "idle" | "parsing" | "journey" | "predicting" | "predicted" 
 /** The model's own words for one leg: requested after the forecast, shown when ready. */
 export type ExplanationState =
   | { status: "loading" }
-  | { status: "done"; text: string; answer: string | null; seconds: number }
+  | { status: "done"; text: string; summary: string; answer: string | null; seconds: number }
   | { status: "error"; error: string }
 
 export type State = {
@@ -125,7 +125,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (requestId !== generation.current) return
       try {
         const e = await api.explain(leg)
-        if (requestId === generation.current) dispatch({ type: "explanation", index: i, value: { status: "done", text: e.text, answer: e.answer, seconds: e.seconds } })
+        if (requestId === generation.current) dispatch({ type: "explanation", index: i, value: { status: "done", text: e.text, summary: e.summary || e.text, answer: e.answer, seconds: e.seconds } })
       } catch (err) {
         if (requestId === generation.current) dispatch({ type: "explanation", index: i, value: { status: "error", error: (err as Error).message || "no response" } })
       }

@@ -1,6 +1,6 @@
 import { trainVisual } from '@/lib/train-service'
 import type { Leg } from '@/lib/contract'
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, CircleHelp, Clock3, Info, Loader2, Pause, Play, Route, ShieldCheck, TrainFront, Umbrella, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, CircleHelp, Clock3, Info, Loader2, Pause, Play, Route, ShieldCheck, Sparkles, TrainFront, Umbrella, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore, type Tab } from '@/lib/store'
 import { fmtDate, fmtTime } from '@/lib/geo'
@@ -31,12 +31,16 @@ function TextPages({ text }: { text: string }) {
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
 function ModelWords({ index }: { index: number }) {
-  // The model's own rationale for this train, generated after the estimate (about 15 s per train).
+  // The model's own short take on this train, generated after the estimate (about 15 s per train).
   const e = useStore().explanations[index]
   if (!e) return null
-  if (e.status === 'loading') return <p className="travel-fine" role="status"><Loader2 size={12} className="animate-spin" /> The model is writing its own explanation for this train…</p>
-  if (e.status === 'error') return <p className="travel-fine">The model’s own explanation is unavailable. The estimate above is unaffected.</p>
-  return <details className="travel-fine"><summary>In the model’s own words{e.answer ? ` · its guess: ${e.answer === 'cancelled' ? 'cancelled' : `+${e.answer} min`}` : ''}</summary><TextPages text={`${e.text} Written freely by the model, so it can misstate numbers; the estimate reads the exact inputs.`} /></details>
+  const guess = e.status === 'done' && e.answer ? ` · its guess ${e.answer === 'cancelled' ? 'cancelled' : `+${e.answer} min`}` : ''
+  return <section className="rounded-2xl border border-[#d9e2d6] bg-[#f3f6ef] px-3.5 py-3 text-[#2f4035]" aria-live="polite">
+    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6b7f5f]">{e.status === 'loading' ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}The model’s take{guess}</div>
+    {e.status === 'loading' && <p className="mt-1.5 text-[13px] leading-snug text-[#78806e]">Reading this train… its short explanation follows in about 15 seconds.</p>}
+    {e.status === 'error' && <p className="mt-1.5 text-[13px] leading-snug text-[#78806e]">Unavailable right now. The estimate above is unaffected.</p>}
+    {e.status === 'done' && <><p className="mt-1.5 text-[13px] leading-snug">{e.summary}</p><details className="travel-fine mt-1"><summary>Full text · written freely, may misstate numbers</summary><TextPages text={e.text} /></details></>}
+  </section>
 }
 function JourneyPanel() {
   const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)

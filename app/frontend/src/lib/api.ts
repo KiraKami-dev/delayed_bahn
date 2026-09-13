@@ -1,7 +1,7 @@
 import type { Causes, Journey, Leg, Prediction, Recommendation, Reroute } from "./contract"
 
 /** The model's own rationale for one leg, generated freely after the forecast. */
-export type Explanation = { trainId: string; text: string; answer: string | null; generatedBy: string; seconds: number }
+export type Explanation = { trainId: string; text: string; summary: string; answer: string | null; generatedBy: string; seconds: number }
 
 // Serverless cold starts and slow mobile links need patience: 20 s per try,
 // one retry on network failure, timeout or 5xx. 4xx is returned immediately.
