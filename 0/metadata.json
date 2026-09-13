@@ -1,0 +1,116 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CBH372B454AAKXXAKKB05S",
+  "session_id": "08b27428-84e8-4f05-a359-bfa800d53b0f",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T03:03:47.29447Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "save_step_count": 3,
+  "files_touched": [
+    ".gitignore",
+    ".vercelignore",
+    "api/[[...path]].js",
+    "package-lock.json",
+    "package.json",
+    "vercel.json"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "717e4e55b9a9",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 6326,
+    "cache_creation_tokens": 1100779,
+    "cache_read_tokens": 67423582,
+    "output_tokens": 206466,
+    "api_call_count": 219,
+    "subagent_tokens": {
+      "input_tokens": 1432,
+      "cache_creation_tokens": 556567,
+      "cache_read_tokens": 11553582,
+      "output_tokens": 183662,
+      "api_call_count": 100
+    }
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-13T03:03:46.99418Z",
+    "agent_lines": 107,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 107,
+    "total_lines_changed": 107,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 128,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/frontend/cache-rail-routes.mjs": 35,
+        "app/frontend/src/lib/contract.ts": 3,
+        "app/frontend/src/lib/osm-route.ts": 90
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 209,
+      "user_lines_removed": 73,
+      "agent_lines_added": 406,
+      "agent_lines_removed": 14,
+      "user_added_per_file": {
+        "app/frontend/AGENTS.md": 4,
+        "app/frontend/HOMEPAGE-REVIEW.md": 14,
+        "app/frontend/camera.smoke.mjs": 6,
+        "app/frontend/src/features/globe-map/camera.ts": 2,
+        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 13,
+        "app/frontend/src/features/globe-map/train-layer.ts": 60,
+        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 1,
+        "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx": 15,
+        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 1,
+        "app/frontend/src/lib/contract.ts": 1,
+        "app/frontend/src/lib/journey-search.ts": 5,
+        "app/frontend/src/lib/osm-route.ts": 12,
+        "app/frontend/src/lib/train-story.ts": 22,
+        "app/frontend/src/single-screen.css": 4,
+        "app/frontend/train-visual.smoke.mjs": 43,
+        "team-setup/state/decisions.md": 6
+      },
+      "user_removed_per_file": {
+        "app/frontend/AGENTS.md": 1,
+        "app/frontend/camera.smoke.mjs": 1,
+        "app/frontend/src/features/globe-map/camera.ts": 32,
+        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 11,
+        "app/frontend/src/features/globe-map/train-layer.ts": 8,
+        "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx": 10,
+        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 1,
+        "app/frontend/src/lib/journey-search.ts": 5,
+        "app/frontend/src/lib/osm-route.ts": 3,
+        "app/frontend/train-visual.smoke.mjs": 1
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 34,
+      "user_lines_removed": 3,
+      "agent_lines_added": 674,
+      "agent_lines_removed": 107,
+      "user_added_per_file": {
+        "app/frontend/src/lib/osm-route.ts": 12,
+        "app/frontend/src/lib/train-story.ts": 22
+      },
+      "user_removed_per_file": {
+        "app/frontend/src/lib/osm-route.ts": 3
+      }
+    }
+  ]
+}
