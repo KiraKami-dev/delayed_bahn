@@ -2,7 +2,7 @@
   "cli_version": "0.10.6",
   "checkpoint_id": "01M2CJJPA6QGZWBZW6YCQYJ3Z2",
   "strategy": "manual-commit",
-  "branch": "feat/db-route-multiscale",
+  "branch": "main",
   "checkpoints_count": 13,
   "files_touched": [
     ".gitignore",
@@ -29,15 +29,15 @@
       "transcript": "/2/full.jsonl",
       "compact_transcript": "/2/transcript.jsonl",
       "content_hash": "/2/content_hash.txt",
-      "prompt": "/2/prompt.txt"
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 1088,
-    "cache_creation_tokens": 170400,
-    "cache_read_tokens": 3723754,
-    "output_tokens": 26042,
-    "api_call_count": 46,
+    "input_tokens": 1150,
+    "cache_creation_tokens": 124866,
+    "cache_read_tokens": 3876066,
+    "output_tokens": 27711,
+    "api_call_count": 47,
     "subagent_tokens": {
       "input_tokens": 68,
       "cache_creation_tokens": 219312,
