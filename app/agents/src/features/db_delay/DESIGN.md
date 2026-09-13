@@ -574,10 +574,54 @@ Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against X
   model; blending takes P(cancelled) mostly from XGBoost.
 - **Free generation works:** 16 of 16 generated answers parse, with a median error of about 2 minutes.
 
+### Second wave, 01:00 to 02:15: teach the encoder, give it more, use the data better
+
+All plain loss, 2,000 steps on an H100, scored on the same 5,000 test examples; the partner for
+each row is named. An identical repeat of the best recipe (text plus plain) scored 3.635 / 2.913
+against 3.635 / 2.907, so two identical trainings differ by about 0.006 CRPS.
+
+| Change | Partner | Median error | CRPS | Verdict |
+|---|---|---|---|---|
+| Encoder only, series keep their scale (no z-normalisation) | encoder only 3.702 / 2.954 | 3.719 | 2.966 | no gain |
+| Encoder only, 30% series-reading questions mixed in | same | 3.756 | 3.000 | worse |
+| Encoder only, both of the above | same | 3.756 | 2.992 | worse |
+| Encoder only, 720 hourly points instead of 72 | same | 3.709 | 2.959 | no gain |
+| Text plus encoder, 720 hourly points | text plus encoder 3.641 / 2.912 | 3.657 | 2.924 | no gain |
+| Text plus encoder, scale kept plus questions | same | 3.647 | 2.913 | no gain |
+| Text, multi-scale history summaries in the rationale | text 3.635 / 2.907 | 3.635 | 2.912 | better on validation (2.219 vs 2.233), no gain on test |
+| Text plus encoder, multi-scale summaries | text plus encoder | 3.630 | 2.914 | no gain |
+| Text, exact-minute loss plus 0.1 CRPS term | text 3.635 / 2.907 | 3.621 | 2.903 | best validation (2.192 vs 2.233); test gain inside noise |
+| Text, 5,000 steps | text 2,000 steps | 3.614 | 2.883 | more training helps |
+| Text, previous trains on the route (combined data) | text 3.635 / 2.907 | 3.616 | 2.889 | helps; XGBoost gains as much |
+
+- **Nothing aimed at the encoder worked.** Keeping the level of the series, teaching it to read
+  with exact-answer questions (OpenTSLM's curriculum idea folded into training), and ten times
+  more hourly history all leave the encoder-only model where it was or make it worse, and none of
+  it adds anything on top of the text channel. On short operational series the language model
+  reads the numbers itself; the encoder buys context length this task does not need.
+- **Richer data helps both models.** The arrival delays of the previous trains of the same type
+  towards the same destination at the target stop (up to five, within six hours, arrived by the
+  prediction moment; 77% of examples have at least one) improve the text model by 0.018 CRPS and
+  XGBoost retrained on the same columns by 0.036 on the full test set (3.462 / 2.759 to 3.413 /
+  2.723). Against that fairer XGBoost on the shared 5,000 examples the text model is ahead by
+  0.048 CRPS (interval -0.121 to +0.010), its lead-time blend significantly (-0.049, -0.100 to
+  -0.015), and it keeps its significant edge within 15 minutes of arrival (-0.084).
+- **Multi-scale summaries as text** (90-day and 7-day route history, same-time-of-day lateness)
+  improve validation but not the test examples.
+- **The exact-minute loss plus a CRPS term** is the best single 2,000-step model on both splits,
+  with the test gain over plain inside the noise; it rewards near misses through a proper score
+  instead of blurred targets, so it is the loss of the long runs.
+- **The September forward test** (10,000 examples the training never saw, XGBoost retrained
+  through August): XGBoost 3.244 / 2.586; the original recipe at 12,000 steps 3.257 / 2.611; text
+  plus plain at 2,000 steps 3.281 / 2.626. Overall the tabular model is ahead there; the per-lead
+  and blend results and the long runs' forward scores follow.
+
 ### Pending at the time of writing
 
-- The long run of the chosen recipe (12,000 steps, text plus encoder, plain loss) on the full
-  test set, started 00:50 on 13 September.
+- Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text
+  with the plain loss, 24,000 steps (01:06); text on the combined data and text plus encoder on
+  the combined data with 72-hour series, both with the exact-minute plus CRPS loss (02:15).
+- The September forward test of the 2,000-step text models and of the long runs.
 - The plain 2,000-step checkpoint on the full 93,738-example test set.
 - The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
   forward test.
