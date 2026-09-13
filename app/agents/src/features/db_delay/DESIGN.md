@@ -734,6 +734,7 @@ features (3.462 / 2.759 on the original features).
 | same, against text plus encoder with the plain loss | | | -0.054 (-0.062 to -0.047), real |
 | Stacked text, v4 data, exact-minute plus CRPS loss (06:05) | 3.331 | 2.647 | -0.073 (-0.084 to -0.063) against XGBoost on the combined features, real; within 15 min -0.091, beyond 30 min -0.066; against the unstacked text final +0.003 (-0.002 to +0.008), no difference |
 | Text plus encoder, combined data, 72-hour series, exact-minute plus CRPS loss (06:55) | 3.319 | 2.643 | -0.077 (-0.089 to -0.066) against XGBoost on the combined features, real; within 15 min -0.093, beyond 30 min -0.073; against the text final -0.001 (-0.004 to +0.002), no difference; against XGBoost-v7 +0.027 |
+| Stacked text plus encoder, v4 data, exact-minute plus CRPS loss (08:00) | 3.327 | 2.646 | level with the other finals on the combined features (2.643 to 2.647, XGBoost 2.720); validation 2.685 / 2.143 |
 | XGBoost with the new series (v7), for reference | 3.278 | 2.616 | ahead of both text finals: +0.031 (+0.019 to +0.042) and +0.028 (+0.015 to +0.040) |
 
 - **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
