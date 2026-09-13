@@ -39,6 +39,7 @@ SIGNALS: tuple[str, ...] = (
     "station_cancel_rate",  # cancellation rate at this station
     "service_at_station_delay",  # this service AT this station -- the specific habit
     "station_throughput",  # stop-event count at this station
+    "service_throughput",  # stop-event count for this service group network-wide
     "works_share",  # share of attributed delay minutes from the `works` family
 )
 
@@ -121,11 +122,17 @@ class Layer:
 
 # 7 days at hourly: the operational week. Daily and weekly rush-hour cycle.
 # Index i has hour-of-day i mod 24, so the model gets that alignment for free.
+# `service_at_station_delay` is deliberately absent here. One service calling at
+# one station appears a handful of times a day, so at hourly resolution it is
+# ~93% empty by construction -- measured median imputation 0.42 even counting
+# only service hours. That is a fact about the timetable, not a data gap, and no
+# amount of imputation makes 12 observations into 168. The channel is dense at
+# 6-hourly and daily, so it lives at those layers instead.
 WEEK = Layer(
     layer_id="week",
     bucket="1 hour",
     n_steps=168,  # 42 patches
-    signals=SIGNALS + ("attributed_share",),
+    signals=tuple(x for x in SIGNALS if x != "service_at_station_delay") + ("attributed_share",),
 )
 
 # 60 days at 6-hourly: the regime layer. Construction that appeared last month
@@ -134,7 +141,15 @@ QUARTER = Layer(
     layer_id="quarter",
     bucket="6 hours",
     n_steps=240,  # 60 patches
-    signals=("service_delay", "station_delay", "works_share") + CAUSE_SIGNALS,
+    signals=(
+        "service_delay",
+        "station_delay",
+        "service_at_station_delay",
+        "station_throughput",
+        "service_throughput",
+        "works_share",
+    )
+    + CAUSE_SIGNALS,
 )
 
 # 120 days at daily: the seasonal / structural layer.
@@ -156,7 +171,15 @@ SEASON = Layer(
     layer_id="season",
     bucket="1 day",
     n_steps=120,  # 30 patches
-    signals=("service_delay", "station_delay", "works_share") + CAUSE_SIGNALS,
+    signals=(
+        "service_delay",
+        "station_delay",
+        "service_at_station_delay",
+        "station_throughput",
+        "service_throughput",
+        "works_share",
+    )
+    + CAUSE_SIGNALS,
 )
 
 
@@ -202,7 +225,19 @@ L = TimelineProfile("L", "error404/db-route-season", (SEASON,))
 # At the coarse layers XM keeps only the channels a regime clause actually cites:
 # the trend in this service's delay, the station's, whether works are active, and
 # how much of the delay is attributable at all.
-_XM_COARSE = ("service_delay", "station_delay", "works_share", "attributed_share")
+# The two count channels ride every layer of every profile. They are not there
+# for the model's sake (though service frequency is a real feature): they are
+# each grain's imputation denominator -- see resample.Window.service_buckets.
+# Measured before they were here: 91 of 150 XM windows rejected, every one of
+# them for a "gap" at a coarse layer that had no denominator to judge it by.
+_XM_COARSE = (
+    "service_delay",
+    "station_delay",
+    "station_throughput",
+    "service_throughput",
+    "works_share",
+    "attributed_share",
+)
 XM = TimelineProfile(
     "XM",
     "error404/db-route-multiscale",

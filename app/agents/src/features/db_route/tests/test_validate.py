@@ -38,6 +38,8 @@ from validate import (  # noqa: E402
     check_imputed_fraction,
     check_no_basis_step,
     check_phase_alignment,
+    check_phase_consensus,
+    PHASE_CONSENSUS_MIN_RECORDS,
     check_planned_vs_actual,
     check_rationale_numbers,
     check_series_shape,
@@ -145,8 +147,16 @@ def test_rejects_a_phase_shifted_pair(profile):
         service_values=daily_cycle(shift=-1, level=6.0, amp=2.5),
     )
     findings = check_phase_alignment(shifted, profile)
-    assert "phase_alignment" in checks(findings)
+    assert [f.check for f in findings] == ["phase_alignment"]
     assert findings[0].detail["peak_lag"] != 0
+    # One record off-phase is a warning: a station and its network-wide service
+    # genuinely lead or lag each other. The bug signature is the whole corpus
+    # leaning one way, and that is the error.
+    assert findings[0].severity == "warning"
+    assert check_phase_consensus(findings) == []
+    consensus = check_phase_consensus(findings * PHASE_CONSENSUS_MIN_RECORDS)
+    assert [f.check for f in consensus] == ["phase_consensus"]
+    assert consensus[0].is_error
     # ...and it is invisible to every other check.
     assert check_series_shape(shifted, profile) == []
     assert check_imputed_fraction(shifted) == []
@@ -216,10 +226,31 @@ def test_rejects_an_answer_line_that_does_not_match_the_target(profile):
 
 def test_rejects_an_imputed_fraction_over_the_cap():
     ds = make_dataset()
-    record, _ = add_sample(ds, "gappy", imputed_fraction=0.4)
+    record, _ = add_sample(ds, "gappy", imputed_fraction=0.6)
     findings = check_imputed_fraction(record)
     assert "imputed_fraction" in checks(findings)
-    assert "over the 20% cap" in findings[0].message
+    assert "sanity cap" in findings[0].message
+
+
+def test_a_quarter_of_the_context_overnight_is_not_a_gap():
+    """The overall share is descriptive; a small station's week is ~25% overnight."""
+    ds = make_dataset()
+    record, _ = add_sample(ds, "small-station", imputed_fraction=0.3)
+    assert check_imputed_fraction(record) == []
+
+
+def test_reapplies_the_per_grain_budget_from_the_record():
+    from timenet.types import Annotation
+
+    ds = make_dataset()
+    record, _ = add_sample(ds, "over-budget", imputed_fraction=0.1)
+    record.annotations = (
+        *record.annotations,
+        Annotation(key="imputed_station", value=0.3, id="over-budget-imputed_station"),
+    )
+    findings = check_imputed_fraction(record)
+    assert [f.detail.get("grain") for f in findings] == ["station"]
+    assert findings[0].is_error
 
 
 def test_an_unstated_imputation_is_an_error_not_a_zero():

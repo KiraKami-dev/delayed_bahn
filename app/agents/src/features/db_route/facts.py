@@ -30,6 +30,7 @@ import concurrent.futures as futures
 import datetime as dt
 import hashlib
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -527,19 +528,28 @@ def month_sources(months: list[str], cache_dir: Path) -> list[str]:
     return out
 
 
-def build_facts(months: list[str], universe: list[str], cache_dir: Path) -> None:
-    """Join events to causes and write the three hourly fact tables."""
+def build_facts(
+    months: list[str], universe: list[str], cache_dir: Path, *, evas: list[str] | None = None
+) -> None:
+    """Join events to causes and write the three hourly fact tables.
+
+    ``evas`` selects which cause shards to read. Shards are keyed by a
+    fingerprint of the EVA set they were extracted for, so passing the wrong one
+    would quietly join a narrower catchment's causes onto a wider corpus.
+    """
     months = available_months(months)
     if not months:
         raise SystemExit("no published months in the requested range")
-    con = connect(memory_limit="8GB")
+    # 8 GB suits a laptop; the all-Germany build on a 768 GB box wants more or
+    # DuckDB spills the pair-grain aggregation to disk for no reason.
+    con = connect(memory_limit=os.environ.get("DB_ROUTE_MEMORY", "8GB"))
     try:
         con.execute(
             "CREATE TEMP TABLE universe (station_name VARCHAR)"
         )
         con.executemany("INSERT INTO universe VALUES (?)", [(s,) for s in universe])
 
-        cause_files = sorted((cache_dir / "causes").rglob("*.parquet"))
+        cause_files = sorted((cache_dir / "causes" / catchment_fingerprint(evas)).glob("*.parquet"))
         if not cause_files:
             raise SystemExit(
                 f"no cause shards in {cache_dir / 'causes'} -- run `facts.py causes` first"

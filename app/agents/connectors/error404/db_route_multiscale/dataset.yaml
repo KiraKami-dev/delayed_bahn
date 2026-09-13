@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://docs.timenet.ai/schemas/dataset-card-v1.schema.json
+# Dataset card for error404/db-route-multiscale: one of four sibling profiles built by one connector body
+# (see ../db_route/pipeline.py). Same entities, anchors, labels and split in all four; only the
+# history preceding each anchor differs. Every record carries artifact_bundle_sha to prove it.
+yaml_schema_version: 1
+dataset_id: error404/db-route-multiscale
+dataset_version: 0.1.0
+name: DB Route (multiscale)
+description: >-
+  The operational week at hourly resolution plus the same service and station at six-hourly over sixty days and daily over 120, on one record with three time axes. One record is one Deutsche Bahn service group at one station on one
+  travel date; targets are next-week departure delay, a five-minute lateness flag,
+  the dominant IRIS cause family, and a one-sentence traveller action. Dated
+  disruption notices are attached as interval annotations. Profile XM, bucket 1h+6h+1d, span 7d+60d+120d.
+license: CC-BY-4.0
+domains:
+  - transport
+tags:
+  - rail
+  - delay
+  - deutsche-bahn
+  - cause-attribution
+  - profile:XM
+  - bucket:1h+6h+1d
+  - span:7d+60d+120d
+source_url: https://huggingface.co/datasets/piebro/deutsche-bahn-data
+citation: >-
+  Derived from piebro/deutsche-bahn-data (CC BY 4.0), an archive of the Deutsche
+  Bahn Timetables API. Cause codes and disruption notices are parsed from the
+  archived raw IRIS XML.
