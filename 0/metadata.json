@@ -1,0 +1,64 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CRKQFXQY4TYGR70PY23CCJ",
+  "session_id": "2789895c-ac88-4875-820a-269d681efb1c",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T06:52:24.749918Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "app/backend/src/features/journey-search/README.md",
+    "app/backend/src/features/journey-search/journey-search.test.js",
+    "app/backend/src/features/journey-search/routes/journey-search.js",
+    "app/backend/src/features/training-jobs/README.md",
+    "app/backend/src/features/training-jobs/cli.js",
+    "app/backend/src/features/training-jobs/nebius/spec.js",
+    "app/backend/src/features/training-jobs/training-jobs.test.js",
+    "app/backend/src/server.js",
+    "app/frontend/index.html",
+    "app/frontend/src/features/evidence/components/EvidencePanel.tsx",
+    "app/frontend/src/features/pwa-shell/components/AppShell.tsx",
+    "app/frontend/src/features/pwa-shell/components/StatusPills.tsx",
+    "app/frontend/src/features/recommendation/components/AdvicePanel.tsx",
+    "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx",
+    "app/frontend/src/lib/journey-search.ts",
+    "app/frontend/src/single-screen.css",
+    "app/frontend/vite.config.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "0c9d3c439486",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 450,
+    "cache_creation_tokens": 69629,
+    "cache_read_tokens": 1217228,
+    "output_tokens": 16582,
+    "api_call_count": 15
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-13T06:52:24.733095Z",
+    "agent_lines": 400,
+    "agent_removed": 109,
+    "human_added": 19,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 419,
+    "total_lines_changed": 606,
+    "agent_percentage": 83.993399339934,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

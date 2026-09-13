@@ -1,0 +1,3 @@
+can we do this for nebuis
+Did you try pre-emptible ones?
+Or go for H100, they have ~ the same compute with less VRAM.

@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CRKQFXQY4TYGR70PY23CCJ",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/backend/src/features/journey-search/README.md",
+    "app/backend/src/features/journey-search/journey-search.test.js",
+    "app/backend/src/features/journey-search/routes/journey-search.js",
+    "app/backend/src/features/training-jobs/README.md",
+    "app/backend/src/features/training-jobs/cli.js",
+    "app/backend/src/features/training-jobs/nebius/spec.js",
+    "app/backend/src/features/training-jobs/training-jobs.test.js",
+    "app/backend/src/server.js",
+    "app/frontend/index.html",
+    "app/frontend/src/features/evidence/components/EvidencePanel.tsx",
+    "app/frontend/src/features/pwa-shell/components/AppShell.tsx",
+    "app/frontend/src/features/pwa-shell/components/StatusPills.tsx",
+    "app/frontend/src/features/recommendation/components/AdvicePanel.tsx",
+    "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx",
+    "app/frontend/src/lib/journey-search.ts",
+    "app/frontend/src/single-screen.css",
+    "app/frontend/vite.config.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 450,
+    "cache_creation_tokens": 69629,
+    "cache_read_tokens": 1217228,
+    "output_tokens": 16582,
+    "api_call_count": 15
+  }
+}
