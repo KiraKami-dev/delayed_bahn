@@ -36,3 +36,4 @@ app/backend/secrets/*
 #   .entire/          — self-managed via .entire/.gitignore; settings.json is shared team config
 #   .agents/ .claude/ — vendored skills + agent hooks, shared with the team
 .vercel
+.vercel/

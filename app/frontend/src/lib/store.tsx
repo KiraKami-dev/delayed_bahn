@@ -149,7 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       if (id !== generation.current) return
       const err = e as { status?: number; message?: string }
-      dispatch({ type: "error", error: err.status === 400 || err.status === 422 ? err.message || "Paste the full journey text, including train names, stations and times." : "The trip-checking service is unavailable. Your text is still here. Try again, or explore the clearly labelled example trip." })
+      dispatch({ type: "error", error: err.status === 400 || err.status === 422 ? err.message || "Paste the full journey text, including train names, stations and times." : `The trip-checking service is unavailable (${err.message || "no response"}). Your text is still here. Try again, or explore the clearly labelled example trip.` })
     }
   }, [pipeline, dispatch])
 
