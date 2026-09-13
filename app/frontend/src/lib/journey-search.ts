@@ -1,6 +1,7 @@
 import { parseRouteGeometry, routeMatches } from './route-geometry'
 import { applyMappedRoute, fetchMappedRoute, matchesMappedRoute, type MappedRoute } from './osm-route'
 import { validTrack } from './track-path'
+import { fetchRailRoute } from './rail-router'
 import type { Journey, Station } from './contract'
 
 type Stop = { id?: string; name?: string; location?: { latitude?: number; longitude?: number } }
@@ -45,15 +46,18 @@ export async function resolveJourneyGeometry(journey: Journey, signal: AbortSign
     if (validTrack(leg.routeGeometry) || signal.aborted) return leg
     const saved = cached.find(route => matchesMappedRoute(leg, route))
     if (journey.source === 'seed' && saved) return applyMappedRoute(leg, saved)
-    if (journey.source !== 'seed') {
-      try {
-        const options = await searchTransportRest(leg.from, leg.to, AbortSignal.any([signal, AbortSignal.timeout(6000)]), leg.plannedDeparture)
-        const match = options.flatMap(option => option.legs).find(candidate => routeMatches(candidate, leg) && validTrack(candidate.routeGeometry))
-        if (match) return { ...leg, routeGeometry: match.routeGeometry, routeGeometrySource: 'timetable' as const, serviceCategory: match.serviceCategory ?? leg.serviceCategory, serviceProduct: match.serviceProduct ?? leg.serviceProduct, operatorName: match.operatorName ?? leg.operatorName }
-      } catch {}
-    }
+    // Timetable polyline (the real service path) and the rail-network router run together;
+    // the timetable wins when it answers, the router keeps the route on the tracks otherwise.
+    const timetable = journey.source === 'seed' ? Promise.resolve(undefined) : searchTransportRest(leg.from, leg.to, AbortSignal.any([signal, AbortSignal.timeout(6000)]), leg.plannedDeparture)
+      .then(options => options.flatMap(option => option.legs).find(candidate => routeMatches(candidate, leg) && validTrack(candidate.routeGeometry)))
+      .catch(() => undefined)
+    const routed = fetchRailRoute(leg, AbortSignal.any([signal, AbortSignal.timeout(15000)])).catch(() => undefined)
+    const match = await timetable
+    if (match) return { ...leg, routeGeometry: match.routeGeometry, routeGeometrySource: 'timetable' as const, serviceCategory: match.serviceCategory ?? leg.serviceCategory, serviceProduct: match.serviceProduct ?? leg.serviceProduct, operatorName: match.operatorName ?? leg.operatorName }
     if (signal.aborted) return leg
     if (saved) return applyMappedRoute(leg, saved)
+    const track = await routed
+    if (track && !signal.aborted) return { ...leg, routeGeometry: track, routeGeometrySource: 'router' as const }
     try {
       const route = await fetchMappedRoute(leg, AbortSignal.any([signal, AbortSignal.timeout(20000)]))
       if (route && !signal.aborted) return applyMappedRoute(leg, route)

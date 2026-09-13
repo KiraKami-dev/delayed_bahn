@@ -20,7 +20,10 @@
 .travel-app:has([data-basemap="earth"]) .travel-map-title > div { padding: 10px 14px 12px; border-radius: 16px; background: #071b2ec4; border: 1px solid #ffffff2b; box-shadow: 0 6px 26px #03101c66; backdrop-filter: blur(12px); }
 .travel-app:has([data-basemap="earth"]) .travel-map-title h1 span { color: #d2e8c4; }
 .travel-app:has([data-basemap="earth"]) .travel-map-title .travel-kicker { color: #d2e0d8; }
-.travel-app:has([data-basemap="earth"]) .geometry-note { background: #f9fcf1ed; }
+.travel-app:has([data-basemap="earth"]) .station-marker { color: #f2f7ee; }
+.travel-app:has([data-basemap="earth"]) .station-marker .label { background: #0b1c27e8; border-color: #ffffff30; box-shadow: 0 3px 12px #03101c80; }
+.travel-app:has([data-basemap="earth"]) .station-factor { background: #2a1d0ce8; color: #ffd9a3; box-shadow: 0 3px 12px #03101c80; }
+.travel-app .map-controls button.follow[aria-pressed="true"] { background: #285b43; color: #fff; border-color: #285b43; }
 .travel-map .map-controls { top: 18px; right: 12px; bottom: auto; }
 .travel-map .map-controls button { width: 40px; height: 42px; }
 .travel-map-title { position: absolute; z-index: 2; top: 80px; left: 22px; right: 75px; pointer-events: none; text-shadow: 0 2px 16px #fff; }

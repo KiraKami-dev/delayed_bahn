@@ -92,7 +92,6 @@ export function AppShell() {
   return <div className="travel-app" data-map-only={mapOnly}>
     <header className="travel-header"><a href="/" className="travel-brand" aria-label="delayedBahn home"><TrainFront size={21} /><span><b>delayed<span>Bahn</span></b><small>made by error404</small></span></a><div><OfflinePill /><InstallButton icon /></div></header>
     <div className="travel-map"><Suspense fallback={<div className="map-placeholder"><Loader2 className="animate-spin" /> Opening Germany…</div>}><GlobeMap /></Suspense></div>
-    {journey && <div className="travel-map-title"><div><span className="travel-kicker">GERMANY, WITH A LITTLE LESS GUESSWORK</span><h1>{journey.legs[0].from.name}<span>to {journey.legs.at(-1)!.to.name}</span></h1></div></div>}
     <button type="button" className="travel-map-toggle" onClick={() => setMapOnly(v => !v)} aria-expanded={!mapOnly} aria-controls="trip-panel">{mapOnly ? 'Show my plan' : 'Explore map'} <Route size={14} /></button>
     <main id="trip-panel" className="travel-sheet" hidden={mapOnly}>
       <div className="travel-sheet-heading">{journey && <button type="button" aria-label="Start a new journey" onClick={() => s.dispatch({ type: 'reset' })}><ArrowLeft size={18} /></button>}<div><h2>{panelTitle}</h2><p>{badge}</p></div>{!journey && <Art />}</div>

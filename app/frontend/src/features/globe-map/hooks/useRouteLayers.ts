@@ -10,6 +10,7 @@ type Handles = {
   layerIds: string[]
   sourceIds: string[]
   anim: number
+  flow: number
 }
 
 const registry = new WeakMap<maplibregl.Map, Record<RouteKind, Handles>>()
@@ -17,7 +18,7 @@ const registry = new WeakMap<maplibregl.Map, Record<RouteKind, Handles>>()
 function handles(map: maplibregl.Map, kind: RouteKind): Handles {
   let r = registry.get(map)
   if (!r) {
-    r = { main: { markers: [], layerIds: [], sourceIds: [], anim: 0 }, alt: { markers: [], layerIds: [], sourceIds: [], anim: 0 } }
+    r = { main: { markers: [], layerIds: [], sourceIds: [], anim: 0, flow: 0 }, alt: { markers: [], layerIds: [], sourceIds: [], anim: 0, flow: 0 } }
     registry.set(map, r)
   }
   return r[kind]
@@ -26,6 +27,8 @@ function handles(map: maplibregl.Map, kind: RouteKind): Handles {
 export function clearRoute(map: maplibregl.Map, kind: RouteKind) {
   const h = handles(map, kind)
   cancelAnimationFrame(h.anim)
+  window.clearInterval(h.flow)
+  h.flow = 0
   for (const id of h.layerIds) if (map.getLayer(id)) map.removeLayer(id)
   for (const id of h.sourceIds) if (map.getSource(id)) map.removeSource(id)
   for (const m of h.markers) m.remove()
@@ -58,6 +61,7 @@ export type DrawOptions = {
   onStationClick?: (legIndex: number, end: "from" | "to") => void
   labels?: boolean
   width?: number
+  satellite?: boolean
 }
 
 /** Draw a journey's legs as glowing lines plus station markers. Idempotent per kind. */
@@ -76,19 +80,23 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
     const sourceId = `route-${kind}-${i}`
     map.addSource(sourceId, {
       type: "geojson",
-      ...(leg.routeGeometrySource === "osm" ? { attribution: 'Track routes © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL)' } : {}),
+      ...(leg.routeGeometrySource === "osm" || leg.routeGeometrySource === "router" ? { attribution: 'Track routes © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL)' } : {}),
       data: { type: "Feature", properties: { leg: i }, geometry: { type: "LineString", coordinates: animate ? partial(line, 0) : line } },
     })
     h.sourceIds.push(sourceId)
     const glowId = `${sourceId}-glow`
     const lineId = `${sourceId}-line`
     const casingId = `${sourceId}-casing`
+    const sheenId = `${sourceId}-sheen`
+    const tiesId = `${sourceId}-ties`
+    const dashed = opts.dashed || (leg.routeGeometry?.length ?? 0) < 2
+    const satellite = opts.satellite ?? false
     map.addLayer({
       id: glowId,
       type: "line",
       source: sourceId,
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": colour, "line-width": lineWidth(width * 3.2), "line-opacity": 0.35, "line-blur": 8 },
+      paint: { "line-color": colour, "line-width": lineWidth(width * (satellite ? 3.6 : 3.2)), "line-opacity": satellite ? 0.3 : 0.35, "line-blur": satellite ? 10 : 8 },
     }, beforeLabels)
     // Dark casing under the coloured line so it reads on satellite imagery, sea and snow alike.
     map.addLayer({
@@ -96,7 +104,7 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
       type: "line",
       source: sourceId,
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": "#0b1020", "line-width": lineWidth(width * 1.9), "line-opacity": 0.85 },
+      paint: { "line-color": satellite ? "#06131f" : "#0b1020", "line-width": lineWidth(width * (satellite ? 2.15 : 1.9)), "line-opacity": satellite ? 0.92 : 0.85 },
     }, beforeLabels)
     map.addLayer({
       id: lineId,
@@ -107,10 +115,29 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
         "line-color": colour,
         "line-width": lineWidth(width),
         "line-opacity": 1,
-        ...((opts.dashed || (leg.routeGeometry?.length ?? 0) < 2) ? { "line-dasharray": [1.5, 1.5] } : {}),
+        ...(dashed ? { "line-dasharray": [1.5, 1.5] } : {}),
       },
     }, beforeLabels)
     h.layerIds.push(glowId, casingId, lineId)
+    if (!dashed) {
+      // Glossy centre line plus sleeper ticks: reads as a railway on photographic ground.
+      map.addLayer({
+        id: sheenId,
+        type: "line",
+        source: sourceId,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#ffffff", "line-width": lineWidth(width * 0.32), "line-opacity": satellite ? 0.55 : 0.45 },
+      }, beforeLabels)
+      map.addLayer({
+        id: tiesId,
+        type: "line",
+        source: sourceId,
+        minzoom: 7,
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: { "line-color": satellite ? "#f6fbff" : "#10203a", "line-width": lineWidth(width * 1.35), "line-opacity": satellite ? 0.42 : 0.28, "line-dasharray": TIE_PHASES[0] },
+      }, beforeLabels)
+      h.layerIds.push(sheenId, tiesId)
+    }
   })
 
   // Station markers: HTML so they work without glyph fonts and offline.
@@ -147,7 +174,23 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
   })
 
   if (animate) animateDraw(map, kind, journey)
+  if (!motionOff()) {
+    // Sleeper ticks drift along the line in the direction of travel.
+    let phase = 0
+    h.flow = window.setInterval(() => {
+      if (document.hidden) return
+      phase = (phase + 1) % TIE_PHASES.length
+      for (const id of h.layerIds) if (id.endsWith("-ties") && map.getLayer(id)) map.setPaintProperty(id, "line-dasharray", TIE_PHASES[phase])
+    }, 140)
+  }
 }
+
+// Dash patterns are [dash, gap, ...] starting with a dash, so a phase shift is a zero dash plus an offset gap.
+const TIE_DASH = 0.35, TIE_GAP = 1.95
+const TIE_PHASES: number[][] = [0, 1, 2, 3, 4, 5].map(step => {
+  const offset = (TIE_GAP + TIE_DASH) * (1 - step / 6)
+  return step === 0 ? [TIE_DASH, TIE_GAP] : [0, offset, TIE_DASH, TIE_GAP + TIE_DASH - offset - TIE_DASH]
+})
 
 function animateDraw(map: maplibregl.Map, kind: RouteKind, journey: Journey) {
   const h = handles(map, kind)

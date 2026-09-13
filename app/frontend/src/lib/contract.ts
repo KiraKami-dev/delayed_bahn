@@ -11,7 +11,7 @@ export type Station = {
 export type Leg = {
   // Optional frontend map metadata from the timetable provider; never inferred.
   routeGeometry?: [number, number][]
-  routeGeometrySource?: 'timetable' | 'osm'
+  routeGeometrySource?: 'timetable' | 'osm' | 'router'
   routeRelationId?: number
   routeDataTimestamp?: string
   serviceCategory?: string
