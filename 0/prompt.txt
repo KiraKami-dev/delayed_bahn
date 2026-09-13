@@ -4341,3 +4341,123 @@ If this event is something the user would act on now, send a PushNotification. R
 <event>jonas-h100-v4-series: COMPLETED</event>
 If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
 </task-notification>
+
+---
+
+<task-notification>
+<task-id>a25b93f9fdf550522</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/abdb3068-b181-45de-82c2-0cdd5152ab32/tasks/a25b93f9fdf550522.output</output-file>
+<status>completed</status>
+<summary>Agent "Build v7 series and test jobs" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Nothing else can run until the OOF stacking finishes: the upload, both job submissions and the job check all need `examples_v7.parquet`. The background wait will notify me when it's done.</result>
+<usage><subagent_tokens>174101</subagent_tokens><tool_uses>55</tool_uses><duration_ms>717599</duration_ms></usage>
+<worktree><worktreePath>/Users/jonasstenglein/OtherProjects/EHL_Zurich/temporal_ai_error404.ai/.claude/worktrees/agent-a25b93f9fdf550522</worktreePath><worktreeBranch>worktree-agent-a25b93f9fdf550522</worktreeBranch></worktree>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-v4-split | [custom] step 1000/2000 {'loss': 0.3384, 'token_ce': 0.122, 'crps': 2.1646} 538s (0.54s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-final-v4-both | [custom] step 7000/12000 {'loss': 0.3594, 'token_ce': 0.0897, 'crps': 2.6975} 7512s (1.07s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-none-12k | [custom] step 1000/12000 {'loss': 0.426, 'token_ce': 0.1947, 'crps': 2.3126} 194s (0.19s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-v6-causes | [custom] step 1000/2000 {'loss': 0.3425, 'token_ce': 0.1243, 'crps': 2.1821} 871s (0.87s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a25b93f9fdf550522</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-jonasstenglein-OtherProjects-EHL-Zurich-temporal-ai-error404-ai/abdb3068-b181-45de-82c2-0cdd5152ab32/tasks/a25b93f9fdf550522.output</output-file>
+<status>completed</status>
+<summary>Agent "Build v7 series and test jobs" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I didn't hit any blockers: both jobs are submitted and were provisioning at 05:23 Zurich.
+
+**Branch and commit:** `v7-series` at `40f0d00`, one commit on top of `1ff911e`. Not pushed. All 8 build tests pass, including 2 new leakage tests.
+
+**The new inputs as implemented:** the start station is `first_station` before departure, otherwise `j_station`. A gain is the arrival delay at the target minus the departure delay at the start.
+1. **Same train, last 28 days:** same train type and number at the start station on each of the previous 28 days. The run's later stop at the target must be not cancelled and must have arrived before t0. Columns: `same_train_gains` (28 values, gaps forward-filled), `same_train_days`, `same_train_gain_median`, `same_train_gain_median_7` and `same_train_expected` (current delay plus the median gain, clipped at 0).
+2. **Corridor:** other runs whose actual departure from the start station fell in the 3 h before t0 and that reached the target before t0; the last 8 by arrival. Columns: `corridor_gains`, `corridor_arr_delays`, `corridor_n`, `corridor_gain_mean`, `corridor_gain_last`.
+
+I skipped the optional per-stop channel. Only the two gain lists go into the prompt series, under a new unit that split mode sends to the encoder only.
+
+**Coverage (share with a non-empty series, same-train / corridor):** train 98.7% / 82.0%, validation 99.0% / 82.4%, test 98.4% / 81.3%; September test 98.4% / 84.0%.
+
+**Build times:** examples_v7 115 s, forward_v7 93 s, XGBoost 112 s, out-of-fold stacking 6 min. Example ids and rows match v4 and forward_v3 exactly (298,430 and 274,410). About 0.2% of rows differ in `hist_median` or `prev_last`, in code this change doesn't touch; probably ties that DuckDB breaks differently between runs.
+
+**XGBoost-v7 vs XGBoost-v3, shared 5,000 test (4,729 that ran), median error / CRPS:**
+
+| Lead | v3 | v7 | CRPS difference (95% interval) |
+|---|---|---|---|
+| All | 3.650 / 2.935 | 3.507 / 2.824 | -0.111 (-0.149 to -0.077) |
+| Under 15 min | | | -0.103 |
+| 15 to 30 min | | | -0.127 |
+| 30 min or more | | | -0.113 |
+
+The gain holds at every lead time. On the full test XGBoost goes from 3.414 / 2.720 to 3.278 / 2.616, and on September from 2.786 / 2.207 to 2.645 / 2.100. The stacked v4 TSLM (3.573 / 2.860) is now behind XGBoost-v7 alone, so the new jobs need to beat 2.824.
+
+**Devbox paths** (under `~/Jonas/db_delay_v7/`):
+- `data/trip/examples_v7.parquet`
+- `data/trip/forward_v7.parquet`: only its test split has `xgb_*` columns, taken from XGBoost trained on May.
+- `out/trip/baselines_v7f/`: validation, test and `xgboost_forward.npz`. `baselines_v7/` links to it.
+- Base files without the forecast columns: `data/trip/*_v7_base.parquet`.
+
+**Jobs** (bucket keys `data/examples_v7.parquet` and `code/trip-v7-40f0d00.tar.gz`, timeout 150m):
+- `jonas-h100-v7-text`: `aijob-e00nsh8pqwd6vgb1pg`
+- `jonas-h100-v7-split`: `aijob-e00r72fkez606s43c6`
+
+Rough ETA about 06:35 to 06:50 Zurich, going by the earlier 2,000-step runs; the timeout stops them by 07:53.
+
+**Leakage:** I found none. Every counted arrival is strictly before t0, and same-train start departures are strictly before t0's date.</result>
+<usage><subagent_tokens>173154</subagent_tokens><tool_uses>64</tool_uses><duration_ms>1072095</duration_ms></usage>
+<worktree><worktreePath>/Users/jonasstenglein/OtherProjects/EHL_Zurich/temporal_ai_error404.ai/.claude/worktrees/agent-a25b93f9fdf550522</worktreePath><worktreeBranch>worktree-agent-a25b93f9fdf550522</worktreeBranch></worktree>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-v7-split: PROVISIONING
+jonas-h100-v7-text: PROVISIONING</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b30zkpqh1</task-id>
+<summary>Monitor event: "All jonas- Nebius jobs: state changes, progress, eval results, crashes"</summary>
+<event>jonas-h100-none-12k | [custom] step 2000/12000 {'loss': 0.3642, 'token_ce': 0.1929, 'crps': 1.713} 373s (0.19s/step)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
