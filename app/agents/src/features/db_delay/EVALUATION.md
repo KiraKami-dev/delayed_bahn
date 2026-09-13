@@ -193,6 +193,8 @@ The 5,000 shared test trains, by class (share within one minute / average miss):
 - **The average miss hides a heavy tail.** All models predict slightly too early on average and the
   spread of the error is 10 to 13 minutes for every one of them, driven by a few very long delays
   none of them foresees; the share within 1, 2 and 5 minutes is the honest summary.
+- **Every run in the same figures:** `trip/MINUTES.md` (34 runs and baselines on the same 4,729
+  test trains).
 - **The TSLM's range is a little too wide** (88 to 90% of true delays inside the 10 to 90% range,
   against 82% for XGBoost): cautious rather than overconfident.
 
