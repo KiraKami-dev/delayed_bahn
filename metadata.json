@@ -3,8 +3,11 @@
   "checkpoint_id": "01M2CW6S9RQH54219PTJQANV3P",
   "strategy": "manual-commit",
   "branch": "db-train-model",
-  "checkpoints_count": 1,
-  "files_touched": null,
+  "checkpoints_count": 4,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/prompts.py",
+    "app/agents/src/features/db_delay/trip/train.py"
+  ],
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -12,13 +15,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": "/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 66,
-    "cache_creation_tokens": 7389,
-    "cache_read_tokens": 2203602,
-    "output_tokens": 7637,
-    "api_call_count": 3
+    "input_tokens": 138,
+    "cache_creation_tokens": 18815,
+    "cache_read_tokens": 6038462,
+    "output_tokens": 16794,
+    "api_call_count": 9
   }
 }
