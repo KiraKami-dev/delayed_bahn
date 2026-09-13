@@ -1,0 +1,339 @@
+[
+  {
+    "id": "known:piebro/deutsche-bahn-data",
+    "kind": "events",
+    "first_plan": {
+      "months": [
+        "2025-11"
+      ],
+      "columns": [
+        "station_name",
+        "eva",
+        "train_number",
+        "line_number",
+        "final_destination_station",
+        "delay_in_min",
+        "time",
+        "arrival_is_canceled",
+        "departure_is_canceled",
+        "train_type",
+        "train_line_ride_id",
+        "train_line_station_num",
+        "arrival_planned_time",
+        "arrival_change_time",
+        "departure_planned_time",
+        "departure_change_time",
+        "id"
+      ],
+      "exclude_train_types": [],
+      "station_filter": null,
+      "row_limit_per_month": 400000,
+      "reasoning": "The dataset for November 2025 has a high row count (over 13 million), allowing us to fetch the maximum allowed rows (400,000) while ensuring we cover the necessary attributes for the training records. The selected columns directly correspond to the required inputs for the model, and no additional or irrelevant data is included, adhering to the specified needs."
+    },
+    "first_plan_problems": [],
+    "manifest": {
+      "path": "discover/results_v2/data/known_piebro_deutsche-bahn-data/events.parquet",
+      "rows": 400000,
+      "columns": 17,
+      "bytes": 17157464,
+      "seconds": 3.0,
+      "plan": {
+        "months": [
+          "2025-11"
+        ],
+        "columns": [
+          "station_name",
+          "eva",
+          "train_number",
+          "line_number",
+          "final_destination_station",
+          "delay_in_min",
+          "time",
+          "arrival_is_canceled",
+          "departure_is_canceled",
+          "train_type",
+          "train_line_ride_id",
+          "train_line_station_num",
+          "arrival_planned_time",
+          "arrival_change_time",
+          "departure_planned_time",
+          "departure_change_time",
+          "id"
+        ],
+        "exclude_train_types": [],
+        "station_filter": null,
+        "row_limit_per_month": 400000,
+        "reasoning": "The dataset for November 2025 has a high row count (over 13 million), allowing us to fetch the maximum allowed rows (400,000) while ensuring we cover the necessary attributes for the training records. The selected columns directly correspond to the required inputs for the model, and no additional or irrelevant data is included, adhering to the specified needs."
+      }
+    },
+    "status": "fetched"
+  },
+  {
+    "id": "known:openholidays",
+    "kind": "calendar",
+    "first_plan": {
+      "subdivisions": [
+        "DE-BY"
+      ],
+      "kinds": [
+        "public",
+        "school"
+      ],
+      "reasoning": "The source provides holiday data relevant to the federal state of Bavaria (DE-BY) and includes both public and school holidays. This is sufficient for the annotations needed for the training records without exceeding the budget constraints."
+    },
+    "first_plan_problems": [],
+    "manifest": {
+      "path": "discover/results_v2/data/known_openholidays/holidays.parquet",
+      "rows": 20,
+      "columns": 7,
+      "bytes": 1623,
+      "seconds": 0.3,
+      "plan": {
+        "subdivisions": [
+          "DE-BY"
+        ],
+        "kinds": [
+          "public",
+          "school"
+        ],
+        "reasoning": "The source provides holiday data relevant to the federal state of Bavaria (DE-BY) and includes both public and school holidays. This is sufficient for the annotations needed for the training records without exceeding the budget constraints."
+      }
+    },
+    "status": "fetched"
+  },
+  {
+    "id": "known:db-stations",
+    "kind": "reference",
+    "first_plan": {
+      "fields": [
+        "train_type",
+        "final_destination",
+        "station_name",
+        "station_id",
+        "event_time",
+        "delay_minutes",
+        "arrival_cancellation_flag",
+        "departure_cancellation_flag",
+        "ride_id",
+        "stop_sequence_number"
+      ],
+      "reasoning": "The selected fields provide the necessary information for each service group at a station on a travel date, including the required delay metrics and event details. This fetch is minimal yet sufficient to meet the training needs without including unnecessary data."
+    },
+    "first_plan_problems": [
+      "unknown field train_type",
+      "unknown field final_destination",
+      "unknown field station_name",
+      "unknown field station_id",
+      "unknown field event_time",
+      "unknown field delay_minutes",
+      "unknown field arrival_cancellation_flag",
+      "unknown field departure_cancellation_flag",
+      "unknown field ride_id",
+      "unknown field stop_sequence_number"
+    ],
+    "second_plan": {
+      "fields": [
+        "id",
+        "category",
+        "federalState"
+      ],
+      "reasoning": "The source only provides station-related information, which includes the station ID, category, and federal state. Since the dataset does not contain specific fields related to train types, final destinations, event times, delays, or cancellation flags, we can only retrieve the available station information. This minimal fetch aligns with the need to identify stations while adhering to the constraints of the source."
+    },
+    "second_plan_problems": [],
+    "manifest": {
+      "path": "discover/results_v2/data/known_db-stations/stations.parquet",
+      "rows": 5388,
+      "columns": 3,
+      "bytes": 29207,
+      "seconds": 0.3,
+      "plan": {
+        "fields": [
+          "id",
+          "category",
+          "federalState"
+        ],
+        "reasoning": "The source only provides station-related information, which includes the station ID, category, and federal state. Since the dataset does not contain specific fields related to train types, final destinations, event times, delays, or cancellation flags, we can only retrieve the available station information. This minimal fetch aligns with the need to identify stations while adhering to the constraints of the source."
+      }
+    },
+    "status": "fetched"
+  },
+  {
+    "id": "known:bright-sky",
+    "kind": "weather",
+    "first_plan": {
+      "variables": [
+        "mean_departure_delay_service",
+        "mean_departure_delay_station",
+        "cancellation_rate",
+        "stop_counts",
+        "shares_of_delay_minutes_IRIS_cause_family",
+        "public_holidays",
+        "school_holidays",
+        "station_category",
+        "federal_state",
+        "weight",
+        "dated_works_notices",
+        "temperature",
+        "precipitation",
+        "wind_speed",
+        "wind_gust_speed",
+        "visibility",
+        "condition",
+        "cloud_cover",
+        "relative_humidity",
+        "pressure_msl",
+        "dew_point",
+        "sunshine"
+      ],
+      "stations": [
+        {
+          "name": "München Hbf",
+          "lat": 48.1404,
+          "lon": 11.5591
+        },
+        {
+          "name": "Berlin Hbf",
+          "lat": 52.5294,
+          "lon": 13.3832
+        },
+        {
+          "name": "Hamburg Hbf",
+          "lat": 53.5525,
+          "lon": 9.9937
+        },
+        {
+          "name": "Köln Hbf",
+          "lat": 50.9413,
+          "lon": 6.9583
+        },
+        {
+          "name": "Frankfurt(Main)Hbf",
+          "lat": 50.1077,
+          "lon": 8.6682
+        },
+        {
+          "name": "Stuttgart Hbf",
+          "lat": 48.7823,
+          "lon": 9.177
+        },
+        {
+          "name": "Hannover Hbf",
+          "lat": 52.3759,
+          "lon": 9.7385
+        },
+        {
+          "name": "Leipzig Hbf",
+          "lat": 51.3397,
+          "lon": 12.3731
+        },
+        {
+          "name": "Nürnberg Hbf",
+          "lat": 49.4521,
+          "lon": 11.0772
+        },
+        {
+          "name": "Dresden Hbf",
+          "lat": 51.0509,
+          "lon": 13.7373
+        }
+      ],
+      "date_from": "2025-11-02",
+      "date_to": "2026-08-31",
+      "reasoning": "The selected variables and stations are directly relevant to the training records needed for route-planning TSLM. The variables include both the necessary aggregates for inputs and the weather context from the Bright Sky source. The stations listed are known and cover a range of major locations, ensuring a comprehensive dataset for the analysis."
+    },
+    "first_plan_problems": [
+      "unknown variable mean_departure_delay_service",
+      "unknown variable mean_departure_delay_station",
+      "unknown variable cancellation_rate",
+      "unknown variable stop_counts",
+      "unknown variable shares_of_delay_minutes_IRIS_cause_family",
+      "unknown variable public_holidays",
+      "unknown variable school_holidays",
+      "unknown variable station_category",
+      "unknown variable federal_state",
+      "unknown variable weight",
+      "unknown variable dated_works_notices",
+      "at most 3 stations under this budget",
+      "date span must be 0..7 days"
+    ],
+    "second_plan": {
+      "variables": [
+        "temperature",
+        "precipitation",
+        "wind_speed",
+        "wind_gust_speed",
+        "visibility",
+        "condition",
+        "cloud_cover",
+        "relative_humidity",
+        "pressure_msl",
+        "dew_point",
+        "sunshine"
+      ],
+      "stations": [
+        {
+          "name": "München Hbf",
+          "lat": 48.1404,
+          "lon": 11.5591
+        },
+        {
+          "name": "Berlin Hbf",
+          "lat": 52.5294,
+          "lon": 13.3846
+        },
+        {
+          "name": "Hamburg Hbf",
+          "lat": 53.5522,
+          "lon": 9.9937
+        }
+      ],
+      "date_from": "2025-11-02",
+      "date_to": "2025-11-08",
+      "reasoning": "The fetch is limited to 7 days to comply with the maximum weather days budget. Only three stations are selected to stay within the maximum rows per month limit while providing sufficient geographical coverage. The variables chosen are available in the Bright Sky source and relevant for the context of weather conditions affecting train delays."
+    },
+    "second_plan_problems": [],
+    "manifest": {
+      "path": "discover/results_v2/data/known_bright-sky/weather.parquet",
+      "rows": 435,
+      "columns": 13,
+      "bytes": 12708,
+      "seconds": 1.0,
+      "plan": {
+        "variables": [
+          "temperature",
+          "precipitation",
+          "wind_speed",
+          "wind_gust_speed",
+          "visibility",
+          "condition",
+          "cloud_cover",
+          "relative_humidity",
+          "pressure_msl",
+          "dew_point",
+          "sunshine"
+        ],
+        "stations": [
+          {
+            "name": "München Hbf",
+            "lat": 48.1404,
+            "lon": 11.5591
+          },
+          {
+            "name": "Berlin Hbf",
+            "lat": 52.5294,
+            "lon": 13.3846
+          },
+          {
+            "name": "Hamburg Hbf",
+            "lat": 53.5522,
+            "lon": 9.9937
+          }
+        ],
+        "date_from": "2025-11-02",
+        "date_to": "2025-11-08",
+        "reasoning": "The fetch is limited to 7 days to comply with the maximum weather days budget. Only three stations are selected to stay within the maximum rows per month limit while providing sufficient geographical coverage. The variables chosen are available in the Bright Sky source and relevant for the context of weather conditions affecting train delays."
+      }
+    },
+    "status": "fetched"
+  }
+]

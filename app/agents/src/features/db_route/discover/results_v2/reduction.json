@@ -1,0 +1,932 @@
+[
+  {
+    "id": "known:piebro/deutsche-bahn-data",
+    "kind": "events",
+    "profile": {
+      "rows": 400000,
+      "bytes": 17157464,
+      "columns": [
+        {
+          "name": "station_name",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 5256,
+          "sample": [
+            "Solingen Hbf",
+            "Cottbus Hbf",
+            "Halle (Saale) Hbf"
+          ]
+        },
+        {
+          "name": "eva",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 5297,
+          "sample": [
+            "08000087",
+            "08010073",
+            "08010159"
+          ]
+        },
+        {
+          "name": "train_number",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 37038,
+          "sample": [
+            "11884",
+            "68840",
+            "37595"
+          ]
+        },
+        {
+          "name": "line_number",
+          "type": "VARCHAR",
+          "null_rate": 0.048,
+          "n_distinct": 295,
+          "sample": [
+            "S1",
+            "65",
+            "5"
+          ]
+        },
+        {
+          "name": "final_destination_station",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 1646,
+          "sample": [
+            "Solingen Hbf",
+            "Cottbus Hbf",
+            "Leipzig Hbf (tief)"
+          ]
+        },
+        {
+          "name": "delay_in_min",
+          "type": "INTEGER",
+          "null_rate": 0.0,
+          "n_distinct": 197,
+          "sample": [
+            "-5",
+            "4",
+            "1"
+          ]
+        },
+        {
+          "name": "time",
+          "type": "TIMESTAMP_NS",
+          "null_rate": 0.0,
+          "n_distinct": 3760,
+          "sample": [
+            "2025-11-01 00:00:00",
+            "2025-11-01 00:00:00",
+            "2025-11-01 00:00:00"
+          ]
+        },
+        {
+          "name": "arrival_is_canceled",
+          "type": "BOOLEAN",
+          "null_rate": 0.0,
+          "n_distinct": 2,
+          "sample": [
+            "False",
+            "False",
+            "False"
+          ],
+          "corr_with_target": 0.052
+        },
+        {
+          "name": "departure_is_canceled",
+          "type": "BOOLEAN",
+          "null_rate": 0.0,
+          "n_distinct": 2,
+          "sample": [
+            "False",
+            "False",
+            "False"
+          ],
+          "corr_with_target": 0.053
+        },
+        {
+          "name": "train_type",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 68,
+          "sample": [
+            "Bus",
+            "RB",
+            "S"
+          ]
+        },
+        {
+          "name": "train_line_ride_id",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 42982,
+          "sample": [
+            "-1524938240322922162",
+            "-2235618267504824320",
+            "-2678885466088426112"
+          ]
+        },
+        {
+          "name": "train_line_station_num",
+          "type": "INTEGER",
+          "null_rate": 0.0,
+          "n_distinct": 74,
+          "sample": [
+            "9",
+            "17",
+            "1"
+          ],
+          "corr_with_target": 0.095
+        },
+        {
+          "name": "arrival_planned_time",
+          "type": "TIMESTAMP_NS",
+          "null_rate": 0.121,
+          "n_distinct": 3804,
+          "sample": [
+            "2025-11-01 00:05:00",
+            "2025-10-31 23:56:00",
+            "2025-10-31 23:54:00"
+          ]
+        },
+        {
+          "name": "arrival_change_time",
+          "type": "TIMESTAMP_NS",
+          "null_rate": 0.121,
+          "n_distinct": 3775,
+          "sample": [
+            "2025-11-01 00:00:00",
+            "2025-11-01 00:00:00",
+            "2025-10-31 23:59:00"
+          ]
+        },
+        {
+          "name": "departure_planned_time",
+          "type": "TIMESTAMP_NS",
+          "null_rate": 0.117,
+          "n_distinct": 3795,
+          "sample": [
+            "2025-10-31 23:59:00",
+            "2025-10-31 23:55:00",
+            "2025-11-01 00:00:00"
+          ]
+        },
+        {
+          "name": "departure_change_time",
+          "type": "TIMESTAMP_NS",
+          "null_rate": 0.117,
+          "n_distinct": 3760,
+          "sample": [
+            "2025-11-01 00:00:00",
+            "2025-11-01 00:00:00",
+            "2025-11-01 00:00:00"
+          ]
+        },
+        {
+          "name": "id",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 400000,
+          "sample": [
+            "-1524938240322922162-2510312302-9",
+            "-2235618267504824320-2510312204-17",
+            "-2678885466088426112-2510312359-1"
+          ]
+        }
+      ]
+    },
+    "first_proposal": {
+      "roles": {
+        "timestamp": "time",
+        "station": "station_name",
+        "train": "train_type",
+        "target": "delay_in_min",
+        "cancelled": [
+          "arrival_is_canceled",
+          "departure_is_canceled"
+        ]
+      },
+      "keep": [
+        "station_name",
+        "train_number",
+        "line_number",
+        "final_destination_station",
+        "delay_in_min",
+        "time",
+        "arrival_is_canceled",
+        "departure_is_canceled",
+        "train_type",
+        "train_line_ride_id"
+      ],
+      "drop": [
+        {
+          "column": "eva",
+          "reason": "Identifier with no reuse, not needed for the model."
+        },
+        {
+          "column": "arrival_planned_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "arrival_change_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "departure_planned_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "departure_change_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "train_line_station_num",
+          "reason": "Not relevant for the model's inputs or target."
+        },
+        {
+          "column": "id",
+          "reason": "Identifier with no reuse, not needed for the model."
+        }
+      ],
+      "row_filters": [
+        {
+          "sql": "train_type != 'Bus'",
+          "reason": "Buses are out of scope for the train-delay forecasting model."
+        }
+      ],
+      "reasoning": "The selected columns provide the necessary information for training the route-planning TSLM, while the dropped columns either carry no relevant information or are not needed for the model's inputs or outputs. The row filter ensures that only relevant train data is included.",
+      "normalisation": [
+        "role cancelled: 'arrival_is_canceled or departure_is_canceled' read as the columns ['arrival_is_canceled', 'departure_is_canceled']",
+        "filter: leading WHERE removed from 'WHERE train_type != 'Bus''",
+        "named in both keep and drop, dropped (the drop carries the reason): ['train_line_station_num']"
+      ]
+    },
+    "first_problems": [],
+    "applied": {
+      "path": "discover/results_v2/reduced/events.parquet",
+      "rows_before": 400000,
+      "rows_after": 386698,
+      "columns_before": 17,
+      "columns_after": 10,
+      "bytes_before": 17157464,
+      "bytes_after": 6494508,
+      "filters": [
+        {
+          "sql": "train_type != 'Bus'",
+          "reason": "Buses are out of scope for the train-delay forecasting model.",
+          "rows_removed_alone": 13302
+        }
+      ],
+      "dropped": [
+        {
+          "column": "eva",
+          "reason": "Identifier with no reuse, not needed for the model."
+        },
+        {
+          "column": "arrival_planned_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "arrival_change_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "departure_planned_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "departure_change_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "train_line_station_num",
+          "reason": "Not relevant for the model's inputs or target."
+        },
+        {
+          "column": "id",
+          "reason": "Identifier with no reuse, not needed for the model."
+        }
+      ],
+      "roles": {
+        "timestamp": "time",
+        "station": "station_name",
+        "train": "train_type",
+        "target": "delay_in_min",
+        "cancelled": [
+          "arrival_is_canceled",
+          "departure_is_canceled"
+        ]
+      },
+      "reasoning": "The selected columns provide the necessary information for training the route-planning TSLM, while the dropped columns either carry no relevant information or are not needed for the model's inputs or outputs. The row filter ensures that only relevant train data is included.",
+      "normalisation": [
+        "role cancelled: 'arrival_is_canceled or departure_is_canceled' read as the columns ['arrival_is_canceled', 'departure_is_canceled']",
+        "filter: leading WHERE removed from 'WHERE train_type != 'Bus''",
+        "named in both keep and drop, dropped (the drop carries the reason): ['train_line_station_num']"
+      ],
+      "seconds": 0.1
+    },
+    "status": "reduced"
+  },
+  {
+    "id": "known:openholidays",
+    "kind": "calendar",
+    "profile": {
+      "rows": 20,
+      "bytes": 1623,
+      "columns": [
+        {
+          "name": "subdivision",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 1,
+          "sample": [
+            "DE-BY",
+            "DE-BY",
+            "DE-BY"
+          ]
+        },
+        {
+          "name": "kind",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 2,
+          "sample": [
+            "public",
+            "public",
+            "public"
+          ]
+        },
+        {
+          "name": "start",
+          "type": "DATE",
+          "null_rate": 0.0,
+          "n_distinct": 20,
+          "sample": [
+            "2025-11-01",
+            "2025-12-25",
+            "2025-12-26"
+          ]
+        },
+        {
+          "name": "end",
+          "type": "DATE",
+          "null_rate": 0.0,
+          "n_distinct": 20,
+          "sample": [
+            "2025-11-01",
+            "2025-12-25",
+            "2025-12-26"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 20,
+          "sample": [
+            "Allerheiligen",
+            "1. Weihnachtsfeiertag",
+            "2. Weihnachtsfeiertag"
+          ]
+        },
+        {
+          "name": "nationwide",
+          "type": "BOOLEAN",
+          "null_rate": 0.0,
+          "n_distinct": 2,
+          "sample": [
+            "False",
+            "True",
+            "True"
+          ]
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 2,
+          "sample": [
+            "Public",
+            "Public",
+            "Public"
+          ]
+        }
+      ]
+    },
+    "first_proposal": {
+      "roles": {
+        "date_start": "start of the holiday",
+        "date_end": "end of the holiday",
+        "region": "subdivision code",
+        "kind": [
+          "public",
+          "school"
+        ]
+      },
+      "keep": [
+        "start",
+        "end",
+        "subdivision",
+        "kind"
+      ],
+      "drop": [
+        {
+          "column": "name",
+          "reason": "Contains free text that is not needed for the model inputs."
+        },
+        {
+          "column": "nationwide",
+          "reason": "Boolean flag does not provide necessary information for the model's requirements."
+        },
+        {
+          "column": "type",
+          "reason": "Redundant with 'kind' column, providing no additional information."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The columns 'name', 'nationwide', and 'type' do not contribute useful information for the route-planning TSLM model, as they either contain free text, are redundant, or do not align with the required inputs. The remaining columns provide essential data for understanding holidays relevant to the model.",
+      "normalisation": [
+        "role kind: 'public or school' read as the columns ['public', 'school']"
+      ]
+    },
+    "first_problems": [
+      "role date_start mapped to unknown column start of the holiday",
+      "role date_end mapped to unknown column end of the holiday",
+      "role region mapped to unknown column subdivision code",
+      "role kind mapped to unknown column public",
+      "role kind mapped to unknown column school"
+    ],
+    "second_proposal": {
+      "roles": {
+        "date_start": "start",
+        "date_end": "end",
+        "region": "subdivision",
+        "kind": "kind"
+      },
+      "keep": [
+        "start",
+        "end",
+        "subdivision",
+        "kind"
+      ],
+      "drop": [
+        {
+          "column": "name",
+          "reason": "Contains free text that is not needed for the model."
+        },
+        {
+          "column": "nationwide",
+          "reason": "Boolean column that does not provide relevant information for the model."
+        },
+        {
+          "column": "type",
+          "reason": "Duplicate information as 'kind'."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The columns 'start', 'end', 'subdivision', and 'kind' are necessary for the model's requirements. The 'name' column is dropped because it contains free text that does not contribute to the model's inputs. The 'nationwide' column is dropped as it is a boolean that does not provide relevant information for the model's needs. The 'type' column is redundant as it duplicates the information in 'kind'.",
+      "normalisation": []
+    },
+    "second_problems": [],
+    "applied": {
+      "path": "discover/results_v2/reduced/holidays.parquet",
+      "rows_before": 20,
+      "rows_after": 20,
+      "columns_before": 7,
+      "columns_after": 4,
+      "bytes_before": 1623,
+      "bytes_after": 871,
+      "filters": [],
+      "dropped": [
+        {
+          "column": "name",
+          "reason": "Contains free text that is not needed for the model."
+        },
+        {
+          "column": "nationwide",
+          "reason": "Boolean column that does not provide relevant information for the model."
+        },
+        {
+          "column": "type",
+          "reason": "Duplicate information as 'kind'."
+        }
+      ],
+      "roles": {
+        "date_start": "start",
+        "date_end": "end",
+        "region": "subdivision",
+        "kind": "kind"
+      },
+      "reasoning": "The columns 'start', 'end', 'subdivision', and 'kind' are necessary for the model's requirements. The 'name' column is dropped because it contains free text that does not contribute to the model's inputs. The 'nationwide' column is dropped as it is a boolean that does not provide relevant information for the model's needs. The 'type' column is redundant as it duplicates the information in 'kind'.",
+      "normalisation": [],
+      "seconds": 0.0
+    },
+    "status": "reduced"
+  },
+  {
+    "id": "known:db-stations",
+    "kind": "reference",
+    "profile": {
+      "rows": 5388,
+      "bytes": 29207,
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 5388,
+          "sample": [
+            "8000410",
+            "8000412",
+            "8000413"
+          ]
+        },
+        {
+          "name": "category",
+          "type": "BIGINT",
+          "null_rate": 0.0,
+          "n_distinct": 7,
+          "sample": [
+            "6",
+            "4",
+            "4"
+          ]
+        },
+        {
+          "name": "federalState",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 16,
+          "sample": [
+            "Bayern",
+            "Baden-Württemberg",
+            "Niedersachsen"
+          ]
+        }
+      ]
+    },
+    "first_proposal": {
+      "roles": {
+        "station_id": "id",
+        "region": "federalState"
+      },
+      "keep": [
+        "id",
+        "federalState"
+      ],
+      "drop": [
+        {
+          "column": "category",
+          "reason": "This column has limited distinct values and does not provide necessary information for the model's inputs or target."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The 'id' column is essential as it serves as the station identifier, while 'federalState' is necessary for regional context. The 'category' column is dropped as it does not contribute meaningful information for the route-planning model, given its limited distinct values and lack of relevance to the required inputs or target.",
+      "normalisation": []
+    },
+    "first_problems": [],
+    "applied": {
+      "path": "discover/results_v2/reduced/stations.parquet",
+      "rows_before": 5388,
+      "rows_after": 5388,
+      "columns_before": 3,
+      "columns_after": 2,
+      "bytes_before": 29207,
+      "bytes_after": 26822,
+      "filters": [],
+      "dropped": [
+        {
+          "column": "category",
+          "reason": "This column has limited distinct values and does not provide necessary information for the model's inputs or target."
+        }
+      ],
+      "roles": {
+        "station_id": "id",
+        "region": "federalState"
+      },
+      "reasoning": "The 'id' column is essential as it serves as the station identifier, while 'federalState' is necessary for regional context. The 'category' column is dropped as it does not contribute meaningful information for the route-planning model, given its limited distinct values and lack of relevance to the required inputs or target.",
+      "normalisation": [],
+      "seconds": 0.0
+    },
+    "status": "reduced"
+  },
+  {
+    "id": "known:bright-sky",
+    "kind": "weather",
+    "profile": {
+      "rows": 435,
+      "bytes": 12708,
+      "columns": [
+        {
+          "name": "station",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 3,
+          "sample": [
+            "München Hbf",
+            "München Hbf",
+            "München Hbf"
+          ]
+        },
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMP",
+          "null_rate": 0.0,
+          "n_distinct": 145,
+          "sample": [
+            "2025-11-02 00:00:00",
+            "2025-11-02 01:00:00",
+            "2025-11-02 02:00:00"
+          ]
+        },
+        {
+          "name": "temperature",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 145,
+          "sample": [
+            "14.6",
+            "13.7",
+            "12.9"
+          ]
+        },
+        {
+          "name": "precipitation",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 15,
+          "sample": [
+            "0.0",
+            "0.0",
+            "0.0"
+          ]
+        },
+        {
+          "name": "wind_speed",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 65,
+          "sample": [
+            "6.5",
+            "6.5",
+            "4.7"
+          ]
+        },
+        {
+          "name": "wind_gust_speed",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 96,
+          "sample": [
+            "11.9",
+            "10.8",
+            "12.6"
+          ]
+        },
+        {
+          "name": "visibility",
+          "type": "BIGINT",
+          "null_rate": 0.0,
+          "n_distinct": 298,
+          "sample": [
+            "69300",
+            "64250",
+            "44820"
+          ]
+        },
+        {
+          "name": "condition",
+          "type": "VARCHAR",
+          "null_rate": 0.0,
+          "n_distinct": 2,
+          "sample": [
+            "dry",
+            "rain",
+            "rain"
+          ]
+        },
+        {
+          "name": "cloud_cover",
+          "type": "BIGINT",
+          "null_rate": 0.0,
+          "n_distinct": 9,
+          "sample": [
+            "100",
+            "100",
+            "100"
+          ]
+        },
+        {
+          "name": "relative_humidity",
+          "type": "BIGINT",
+          "null_rate": 0.0,
+          "n_distinct": 54,
+          "sample": [
+            "66",
+            "72",
+            "80"
+          ]
+        },
+        {
+          "name": "pressure_msl",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 155,
+          "sample": [
+            "1014.3",
+            "1014.5",
+            "1014.4"
+          ]
+        },
+        {
+          "name": "dew_point",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 115,
+          "sample": [
+            "8.3",
+            "8.7",
+            "9.6"
+          ]
+        },
+        {
+          "name": "sunshine",
+          "type": "DOUBLE",
+          "null_rate": 0.0,
+          "n_distinct": 38,
+          "sample": [
+            "0.0",
+            "0.0",
+            "0.0"
+          ]
+        }
+      ]
+    },
+    "first_proposal": {
+      "roles": {
+        "timestamp": "hour",
+        "station": "station key",
+        "variable": "temperature"
+      },
+      "keep": [
+        "station",
+        "timestamp",
+        "temperature",
+        "wind_speed",
+        "wind_gust_speed",
+        "visibility",
+        "condition",
+        "relative_humidity",
+        "pressure_msl",
+        "dew_point"
+      ],
+      "drop": [
+        {
+          "column": "precipitation",
+          "reason": "Low variability (mostly 0.0) provides little predictive power."
+        },
+        {
+          "column": "cloud_cover",
+          "reason": "Constant value (100) does not contribute to variability."
+        },
+        {
+          "column": "sunshine",
+          "reason": "Low variability (mostly 0.0) provides little predictive power."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The selected columns provide necessary weather variables that can influence train delays. The dropped columns either carry no useful information due to low variability or are constant, which would not help in forecasting. All required roles are maintained.",
+      "normalisation": [
+        "named in both keep and drop, dropped (the drop carries the reason): ['precipitation', 'cloud_cover', 'sunshine']"
+      ]
+    },
+    "first_problems": [
+      "role timestamp mapped to unknown column hour",
+      "role station mapped to unknown column station key"
+    ],
+    "second_proposal": {
+      "roles": {
+        "timestamp": "timestamp",
+        "station": "station"
+      },
+      "keep": [
+        "timestamp",
+        "station",
+        "condition"
+      ],
+      "drop": [
+        {
+          "column": "temperature",
+          "reason": "While it is a weather variable, it may not be essential for the model's predictive capability compared to other variables."
+        },
+        {
+          "column": "precipitation",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "wind_speed",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "wind_gust_speed",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "visibility",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "cloud_cover",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "relative_humidity",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "pressure_msl",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "dew_point",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "sunshine",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The columns 'timestamp' and 'station' are retained as they are required roles. Other weather variables are kept for context but may not be essential for the model's predictive capability. The drop reasons focus on the lack of distinctiveness or relevance of certain weather variables.",
+      "normalisation": [
+        "named in both keep and drop, dropped (the drop carries the reason): ['temperature', 'precipitation', 'wind_speed', 'wind_gust_speed', 'visibility', 'cloud_cover', 'relative_humidity', 'pressure_msl', 'dew_point', 'sunshine']"
+      ]
+    },
+    "second_problems": [],
+    "applied": {
+      "path": "discover/results_v2/reduced/weather.parquet",
+      "rows_before": 435,
+      "rows_after": 435,
+      "columns_before": 13,
+      "columns_after": 3,
+      "bytes_before": 12708,
+      "bytes_after": 1843,
+      "filters": [],
+      "dropped": [
+        {
+          "column": "temperature",
+          "reason": "While it is a weather variable, it may not be essential for the model's predictive capability compared to other variables."
+        },
+        {
+          "column": "precipitation",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "wind_speed",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "wind_gust_speed",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "visibility",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "cloud_cover",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "relative_humidity",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "pressure_msl",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "dew_point",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "sunshine",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        }
+      ],
+      "roles": {
+        "timestamp": "timestamp",
+        "station": "station"
+      },
+      "reasoning": "The columns 'timestamp' and 'station' are retained as they are required roles. Other weather variables are kept for context but may not be essential for the model's predictive capability. The drop reasons focus on the lack of distinctiveness or relevance of certain weather variables.",
+      "normalisation": [
+        "named in both keep and drop, dropped (the drop carries the reason): ['temperature', 'precipitation', 'wind_speed', 'wind_gust_speed', 'visibility', 'cloud_cover', 'relative_humidity', 'pressure_msl', 'dew_point', 'sunshine']"
+      ],
+      "seconds": 0.0
+    },
+    "status": "reduced"
+  }
+]

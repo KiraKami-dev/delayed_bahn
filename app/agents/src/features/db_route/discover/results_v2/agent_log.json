@@ -1,0 +1,667 @@
+[
+  {
+    "purpose": "retrieval plan known:piebro/deutsche-bahn-data",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "2fd83cc9ff2a",
+    "usage": {
+      "prompt_tokens": 635,
+      "completion_tokens": 220,
+      "total_tokens": 855,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "months": [
+        "2025-11"
+      ],
+      "columns": [
+        "station_name",
+        "eva",
+        "train_number",
+        "line_number",
+        "final_destination_station",
+        "delay_in_min",
+        "time",
+        "arrival_is_canceled",
+        "departure_is_canceled",
+        "train_type",
+        "train_line_ride_id",
+        "train_line_station_num",
+        "arrival_planned_time",
+        "arrival_change_time",
+        "departure_planned_time",
+        "departure_change_time",
+        "id"
+      ],
+      "exclude_train_types": [],
+      "station_filter": null,
+      "row_limit_per_month": 400000,
+      "reasoning": "The dataset for November 2025 has a high row count (over 13 million), allowing us to fetch the maximum allowed rows (400,000) while ensuring we cover the necessary attributes for the training records. The selected columns directly correspond to the required inputs for the model, and no additional or irrelevant data is included, adhering to the specified needs."
+    }
+  },
+  {
+    "purpose": "retrieval plan known:openholidays",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "bbc6704e29ab",
+    "usage": {
+      "prompt_tokens": 403,
+      "completion_tokens": 72,
+      "total_tokens": 475,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "subdivisions": [
+        "DE-BY"
+      ],
+      "kinds": [
+        "public",
+        "school"
+      ],
+      "reasoning": "The source provides holiday data relevant to the federal state of Bavaria (DE-BY) and includes both public and school holidays. This is sufficient for the annotations needed for the training records without exceeding the budget constraints."
+    }
+  },
+  {
+    "purpose": "retrieval plan known:db-stations",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "fa15502c0f83",
+    "usage": {
+      "prompt_tokens": 460,
+      "completion_tokens": 114,
+      "total_tokens": 574,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "fields": [
+        "train_type",
+        "final_destination",
+        "station_name",
+        "station_id",
+        "event_time",
+        "delay_minutes",
+        "arrival_cancellation_flag",
+        "departure_cancellation_flag",
+        "ride_id",
+        "stop_sequence_number"
+      ],
+      "reasoning": "The selected fields provide the necessary information for each service group at a station on a travel date, including the required delay metrics and event details. This fetch is minimal yet sufficient to meet the training needs without including unnecessary data."
+    }
+  },
+  {
+    "purpose": "retrieval plan known:db-stations",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "47d5208cce8a",
+    "usage": {
+      "prompt_tokens": 535,
+      "completion_tokens": 96,
+      "total_tokens": 631,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "fields": [
+        "id",
+        "category",
+        "federalState"
+      ],
+      "reasoning": "The source only provides station-related information, which includes the station ID, category, and federal state. Since the dataset does not contain specific fields related to train types, final destinations, event times, delays, or cancellation flags, we can only retrieve the available station information. This minimal fetch aligns with the need to identify stations while adhering to the constraints of the source."
+    }
+  },
+  {
+    "purpose": "retrieval plan known:bright-sky",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "1a80a5dcea3a",
+    "usage": {
+      "prompt_tokens": 608,
+      "completion_tokens": 528,
+      "total_tokens": 1136,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "variables": [
+        "mean_departure_delay_service",
+        "mean_departure_delay_station",
+        "cancellation_rate",
+        "stop_counts",
+        "shares_of_delay_minutes_IRIS_cause_family",
+        "public_holidays",
+        "school_holidays",
+        "station_category",
+        "federal_state",
+        "weight",
+        "dated_works_notices",
+        "temperature",
+        "precipitation",
+        "wind_speed",
+        "wind_gust_speed",
+        "visibility",
+        "condition",
+        "cloud_cover",
+        "relative_humidity",
+        "pressure_msl",
+        "dew_point",
+        "sunshine"
+      ],
+      "stations": [
+        {
+          "name": "München Hbf",
+          "lat": 48.1404,
+          "lon": 11.5591
+        },
+        {
+          "name": "Berlin Hbf",
+          "lat": 52.5294,
+          "lon": 13.3832
+        },
+        {
+          "name": "Hamburg Hbf",
+          "lat": 53.5525,
+          "lon": 9.9937
+        },
+        {
+          "name": "Köln Hbf",
+          "lat": 50.9413,
+          "lon": 6.9583
+        },
+        {
+          "name": "Frankfurt(Main)Hbf",
+          "lat": 50.1077,
+          "lon": 8.6682
+        },
+        {
+          "name": "Stuttgart Hbf",
+          "lat": 48.7823,
+          "lon": 9.177
+        },
+        {
+          "name": "Hannover Hbf",
+          "lat": 52.3759,
+          "lon": 9.7385
+        },
+        {
+          "name": "Leipzig Hbf",
+          "lat": 51.3397,
+          "lon": 12.3731
+        },
+        {
+          "name": "Nürnberg Hbf",
+          "lat": 49.4521,
+          "lon": 11.0772
+        },
+        {
+          "name": "Dresden Hbf",
+          "lat": 51.0509,
+          "lon": 13.7373
+        }
+      ],
+      "date_from": "2025-11-02",
+      "date_to": "2026-08-31",
+      "reasoning": "The selected variables and stations are directly relevant to the training records needed for route-planning TSLM. The variables include both the necessary aggregates for inputs and the weather context from the Bright Sky source. The stations listed are known and cover a range of major locations, ensuring a comprehensive dataset for the analysis."
+    }
+  },
+  {
+    "purpose": "retrieval plan known:bright-sky",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "4b686627539c",
+    "usage": {
+      "prompt_tokens": 722,
+      "completion_tokens": 234,
+      "total_tokens": 956,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "variables": [
+        "temperature",
+        "precipitation",
+        "wind_speed",
+        "wind_gust_speed",
+        "visibility",
+        "condition",
+        "cloud_cover",
+        "relative_humidity",
+        "pressure_msl",
+        "dew_point",
+        "sunshine"
+      ],
+      "stations": [
+        {
+          "name": "München Hbf",
+          "lat": 48.1404,
+          "lon": 11.5591
+        },
+        {
+          "name": "Berlin Hbf",
+          "lat": 52.5294,
+          "lon": 13.3846
+        },
+        {
+          "name": "Hamburg Hbf",
+          "lat": 53.5522,
+          "lon": 9.9937
+        }
+      ],
+      "date_from": "2025-11-02",
+      "date_to": "2025-11-08",
+      "reasoning": "The fetch is limited to 7 days to comply with the maximum weather days budget. Only three stations are selected to stay within the maximum rows per month limit while providing sufficient geographical coverage. The variables chosen are available in the Bright Sky source and relevant for the context of weather conditions affecting train delays."
+    }
+  },
+  {
+    "purpose": "reduction known:piebro/deutsche-bahn-data",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "057a1ee9c5e2",
+    "usage": {
+      "prompt_tokens": 1491,
+      "completion_tokens": 435,
+      "total_tokens": 1926,
+      "prompt_tokens_details": {
+        "cached_tokens": 1024,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "roles": {
+        "timestamp": "time",
+        "station": "station_name",
+        "train": "train_type",
+        "target": "delay_in_min",
+        "cancelled": [
+          "arrival_is_canceled",
+          "departure_is_canceled"
+        ]
+      },
+      "keep": [
+        "station_name",
+        "train_number",
+        "line_number",
+        "final_destination_station",
+        "delay_in_min",
+        "time",
+        "arrival_is_canceled",
+        "departure_is_canceled",
+        "train_type",
+        "train_line_ride_id"
+      ],
+      "drop": [
+        {
+          "column": "eva",
+          "reason": "Identifier with no reuse, not needed for the model."
+        },
+        {
+          "column": "arrival_planned_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "arrival_change_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "departure_planned_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "departure_change_time",
+          "reason": "Not needed as planned vs changed timestamps are not inputs."
+        },
+        {
+          "column": "train_line_station_num",
+          "reason": "Not relevant for the model's inputs or target."
+        },
+        {
+          "column": "id",
+          "reason": "Identifier with no reuse, not needed for the model."
+        }
+      ],
+      "row_filters": [
+        {
+          "sql": "train_type != 'Bus'",
+          "reason": "Buses are out of scope for the train-delay forecasting model."
+        }
+      ],
+      "reasoning": "The selected columns provide the necessary information for training the route-planning TSLM, while the dropped columns either carry no relevant information or are not needed for the model's inputs or outputs. The row filter ensures that only relevant train data is included.",
+      "normalisation": [
+        "role cancelled: 'arrival_is_canceled or departure_is_canceled' read as the columns ['arrival_is_canceled', 'departure_is_canceled']",
+        "filter: leading WHERE removed from 'WHERE train_type != 'Bus''",
+        "named in both keep and drop, dropped (the drop carries the reason): ['train_line_station_num']"
+      ]
+    }
+  },
+  {
+    "purpose": "reduction known:openholidays",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "46c65924ac52",
+    "usage": {
+      "prompt_tokens": 759,
+      "completion_tokens": 233,
+      "total_tokens": 992,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "roles": {
+        "date_start": "start of the holiday",
+        "date_end": "end of the holiday",
+        "region": "subdivision code",
+        "kind": [
+          "public",
+          "school"
+        ]
+      },
+      "keep": [
+        "start",
+        "end",
+        "subdivision",
+        "kind"
+      ],
+      "drop": [
+        {
+          "column": "name",
+          "reason": "Contains free text that is not needed for the model inputs."
+        },
+        {
+          "column": "nationwide",
+          "reason": "Boolean flag does not provide necessary information for the model's requirements."
+        },
+        {
+          "column": "type",
+          "reason": "Redundant with 'kind' column, providing no additional information."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The columns 'name', 'nationwide', and 'type' do not contribute useful information for the route-planning TSLM model, as they either contain free text, are redundant, or do not align with the required inputs. The remaining columns provide essential data for understanding holidays relevant to the model.",
+      "normalisation": [
+        "role kind: 'public or school' read as the columns ['public', 'school']"
+      ]
+    }
+  },
+  {
+    "purpose": "reduction known:openholidays",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "893bb1f81435",
+    "usage": {
+      "prompt_tokens": 823,
+      "completion_tokens": 212,
+      "total_tokens": 1035,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "roles": {
+        "date_start": "start",
+        "date_end": "end",
+        "region": "subdivision",
+        "kind": "kind"
+      },
+      "keep": [
+        "start",
+        "end",
+        "subdivision",
+        "kind"
+      ],
+      "drop": [
+        {
+          "column": "name",
+          "reason": "Contains free text that is not needed for the model."
+        },
+        {
+          "column": "nationwide",
+          "reason": "Boolean column that does not provide relevant information for the model."
+        },
+        {
+          "column": "type",
+          "reason": "Duplicate information as 'kind'."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The columns 'start', 'end', 'subdivision', and 'kind' are necessary for the model's requirements. The 'name' column is dropped because it contains free text that does not contribute to the model's inputs. The 'nationwide' column is dropped as it is a boolean that does not provide relevant information for the model's needs. The 'type' column is redundant as it duplicates the information in 'kind'.",
+      "normalisation": []
+    }
+  },
+  {
+    "purpose": "reduction known:db-stations",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "44e3df7ff69c",
+    "usage": {
+      "prompt_tokens": 539,
+      "completion_tokens": 157,
+      "total_tokens": 696,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "roles": {
+        "station_id": "id",
+        "region": "federalState"
+      },
+      "keep": [
+        "id",
+        "federalState"
+      ],
+      "drop": [
+        {
+          "column": "category",
+          "reason": "This column has limited distinct values and does not provide necessary information for the model's inputs or target."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The 'id' column is essential as it serves as the station identifier, while 'federalState' is necessary for regional context. The 'category' column is dropped as it does not contribute meaningful information for the route-planning model, given its limited distinct values and lack of relevance to the required inputs or target.",
+      "normalisation": []
+    }
+  },
+  {
+    "purpose": "reduction known:bright-sky",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "8cca0e15c3ee",
+    "usage": {
+      "prompt_tokens": 1057,
+      "completion_tokens": 255,
+      "total_tokens": 1312,
+      "prompt_tokens_details": {
+        "cached_tokens": 1024,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "roles": {
+        "timestamp": "hour",
+        "station": "station key",
+        "variable": "temperature"
+      },
+      "keep": [
+        "station",
+        "timestamp",
+        "temperature",
+        "wind_speed",
+        "wind_gust_speed",
+        "visibility",
+        "condition",
+        "relative_humidity",
+        "pressure_msl",
+        "dew_point"
+      ],
+      "drop": [
+        {
+          "column": "precipitation",
+          "reason": "Low variability (mostly 0.0) provides little predictive power."
+        },
+        {
+          "column": "cloud_cover",
+          "reason": "Constant value (100) does not contribute to variability."
+        },
+        {
+          "column": "sunshine",
+          "reason": "Low variability (mostly 0.0) provides little predictive power."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The selected columns provide necessary weather variables that can influence train delays. The dropped columns either carry no useful information due to low variability or are constant, which would not help in forecasting. All required roles are maintained.",
+      "normalisation": [
+        "named in both keep and drop, dropped (the drop carries the reason): ['precipitation', 'cloud_cover', 'sunshine']"
+      ]
+    }
+  },
+  {
+    "purpose": "reduction known:bright-sky",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "a9aa8567049b",
+    "usage": {
+      "prompt_tokens": 1086,
+      "completion_tokens": 436,
+      "total_tokens": 1522,
+      "prompt_tokens_details": {
+        "cached_tokens": 1024,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "roles": {
+        "timestamp": "timestamp",
+        "station": "station"
+      },
+      "keep": [
+        "timestamp",
+        "station",
+        "condition"
+      ],
+      "drop": [
+        {
+          "column": "temperature",
+          "reason": "While it is a weather variable, it may not be essential for the model's predictive capability compared to other variables."
+        },
+        {
+          "column": "precipitation",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "wind_speed",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "wind_gust_speed",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "visibility",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "cloud_cover",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "relative_humidity",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "pressure_msl",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "dew_point",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        },
+        {
+          "column": "sunshine",
+          "reason": "This variable may not provide significant variation as it has a low number of distinct values."
+        }
+      ],
+      "row_filters": [],
+      "reasoning": "The columns 'timestamp' and 'station' are retained as they are required roles. Other weather variables are kept for context but may not be essential for the model's predictive capability. The drop reasons focus on the lack of distinctiveness or relevance of certain weather variables.",
+      "normalisation": [
+        "named in both keep and drop, dropped (the drop carries the reason): ['temperature', 'precipitation', 'wind_speed', 'wind_gust_speed', 'visibility', 'cloud_cover', 'relative_humidity', 'pressure_msl', 'dew_point', 'sunshine']"
+      ]
+    }
+  }
+]

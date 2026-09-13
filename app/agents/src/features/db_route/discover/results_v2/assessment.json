@@ -1,0 +1,4453 @@
+{
+  "generated": "2026-09-13T08:14:32+00:00",
+  "window": [
+    "2025-11-02",
+    "2026-08-31"
+  ],
+  "agent": {
+    "model": "gpt-4o-mini",
+    "proposed_queries": {
+      "huggingface": [
+        "German rail delays events 2025",
+        "Deutsche Bahn disruptions cause codes",
+        "German rail cancellations 2025",
+        "German weather hourly data 2025",
+        "German public holidays 2025",
+        "German school holidays 2025"
+      ],
+      "govdata": [
+        "Ereignisse Deutsche Bahn 2025",
+        "Störungen Bahn 2025",
+        "Wetterdaten stündlich 2025",
+        "Öffentliche Feiertage Bundesländer 2025",
+        "Schulferien Bundesländer 2025",
+        "Eisenbahninfrastruktur Daten 2025"
+      ],
+      "zenodo": [
+        "rail infrastructure Germany 2025",
+        "German rail event data 2025",
+        "weather data Germany hourly 2025",
+        "German public holidays dataset",
+        "school holidays Germany 2025",
+        "Deutsche Bahn disruption notices 2025"
+      ]
+    },
+    "calls": 65
+  },
+  "entries": [
+    {
+      "id": "known:piebro/deutsche-bahn-data",
+      "title": "DB Timetables API archive (piebro)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "events",
+      "probe": {
+        "columns": [
+          "station_name",
+          "xml_station_name",
+          "eva",
+          "train_number",
+          "line_number",
+          "final_destination_station",
+          "delay_in_min",
+          "time",
+          "arrival_is_canceled",
+          "departure_is_canceled",
+          "train_type",
+          "train_line_ride_id",
+          "train_line_station_num",
+          "arrival_planned_time",
+          "arrival_change_time",
+          "departure_planned_time",
+          "departure_change_time",
+          "id"
+        ],
+        "columns_typed": [
+          [
+            "station_name",
+            "VARCHAR"
+          ],
+          [
+            "xml_station_name",
+            "VARCHAR"
+          ],
+          [
+            "eva",
+            "VARCHAR"
+          ],
+          [
+            "train_number",
+            "VARCHAR"
+          ],
+          [
+            "line_number",
+            "VARCHAR"
+          ],
+          [
+            "final_destination_station",
+            "VARCHAR"
+          ],
+          [
+            "delay_in_min",
+            "INTEGER"
+          ],
+          [
+            "time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "departure_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "train_type",
+            "VARCHAR"
+          ],
+          [
+            "train_line_ride_id",
+            "VARCHAR"
+          ],
+          [
+            "train_line_station_num",
+            "INTEGER"
+          ],
+          [
+            "arrival_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "id",
+            "VARCHAR"
+          ]
+        ],
+        "n_columns": 18,
+        "per_month": {
+          "2025-10": {
+            "rows": 1989180,
+            "stations": 107
+          },
+          "2025-11": {
+            "rows": 13943561,
+            "stations": 5293
+          },
+          "2026-08": {
+            "rows": 14270628,
+            "stations": 5203
+          }
+        },
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_platform": false,
+        "has_cause_codes": false,
+        "coverage_step": {
+          "before": 107,
+          "after": 5293,
+          "ratio": 49.5
+        },
+        "notes": "cause codes live only in raw_data/ IRIS XML (measured 30.1% of stops carry one)",
+        "probed": true,
+        "seconds": 19.7
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "0.0166667 h",
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "primary series",
+        "notes": "processed monthly parquet + raw IRIS XML; ~100 stations to 2025-11-02, all stations after",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "primary series",
+          "covers_window": true,
+          "has_actual_times": true,
+          "has_cancellation": true,
+          "has_cause_codes": null,
+          "resolution": "high",
+          "confidence": 0.9,
+          "reasoning": "The dataset provides extensive per-stop event data for the specified window, including delays and cancellations, which are crucial for predicting rail delays."
+        },
+        "overruled_by_probe": {}
+      },
+      "schema_map": {
+        "proposed": {
+          "timestamp": "time",
+          "entity_id": "id",
+          "station": "station_name",
+          "value": "delay_in_min",
+          "cancellation_flag": "arrival_is_canceled",
+          "line_id": "line_number",
+          "sequence_index": "train_line_station_num",
+          "cause_code": null,
+          "planned_time": "departure_planned_time",
+          "changed_time": "departure_change_time",
+          "reasoning": "Mapped columns based on their relevance to the defined roles in the rail-delay pipeline."
+        },
+        "verified": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "known:bahn-vorhersage",
+      "title": "Bahn-Vorhersage archive (Univ. Augsburg)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "ODbL-1.0",
+      "kind": "events",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "0.0166667 h",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "annotations",
+        "notes": "DB Timetable API polled per station since 2021; ~3.5-5M stops/week",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "hourly",
+          "confidence": 0.8,
+          "reasoning": "The Bahn-Vorhersage archive provides per-stop events data that spans until the end of 2025, which includes the target window for rail delay prediction. It may contain relevant annotations for disruptions and delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "known:openholidays",
+      "title": "OpenHolidays API",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "ODbL-1.0",
+      "kind": "calendar",
+      "probe": {
+        "school_periods_BY": 7,
+        "public_holidays_BY": 13,
+        "fields": [
+          "endDate",
+          "id",
+          "name",
+          "nationwide",
+          "regionalScope",
+          "startDate",
+          "subdivisions",
+          "temporalScope",
+          "type"
+        ],
+        "probed": true,
+        "seconds": 0.4
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "24 h",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "annotations",
+        "notes": "public and school holidays per Bundesland",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.9,
+          "reasoning": "The OpenHolidays API provides public and school holidays data relevant to the German context, which can influence rail delays. The data covers the entire window of interest."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "known:db-stations",
+      "title": "db-stations (station hub)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "ISC",
+      "kind": "reference",
+      "probe": {
+        "stations": 5388,
+        "fields": [
+          "additionalIds",
+          "address",
+          "category",
+          "federalState",
+          "hasBicycleParking",
+          "hasCarRental",
+          "hasDBLounge",
+          "hasLocalPublicTransport",
+          "hasLockerSystem",
+          "hasLostAndFound",
+          "hasMobilityService",
+          "hasParking",
+          "hasPublicFacilities",
+          "hasRailwayMission",
+          "hasSteplessAccess",
+          "hasTaxiRank",
+          "hasTravelCenter",
+          "hasTravelNecessities",
+          "hasWiFi",
+          "id"
+        ],
+        "with_federal_state": 5388,
+        "probed": true,
+        "seconds": 0.3
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "join hub",
+        "notes": "5,388 stations: EVA, DS100, Bundesland, category, weight, coordinates",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "join hub",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "This dataset provides essential reference data for 5,388 stations, which can be useful for contextualizing delays and disruptions.",
+          "confidence": 0.8,
+          "reasoning": "The station reference data can help correlate delays with specific locations and infrastructure, aiding in the analysis of rail disruptions."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "known:bright-sky",
+      "title": "Bright Sky (DWD hourly weather)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "weather",
+      "probe": {
+        "hourly_rows_one_week": 169,
+        "fields": [
+          "cloud_cover",
+          "condition",
+          "dew_point",
+          "fallback_source_ids",
+          "icon",
+          "precipitation",
+          "precipitation_probability",
+          "precipitation_probability_6h",
+          "pressure_msl",
+          "relative_humidity",
+          "solar",
+          "source_id",
+          "sunshine",
+          "temperature",
+          "timestamp",
+          "visibility",
+          "wind_direction",
+          "wind_gust_direction",
+          "wind_gust_speed",
+          "wind_speed"
+        ],
+        "source": "München-Stadt",
+        "probed": true,
+        "seconds": 0.4
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "1 h",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "context channels",
+        "notes": "hourly observations for any lat/lon, no key",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "hourly",
+          "confidence": 0.9,
+          "reasoning": "Weather data is crucial for predicting rail delays, and the provided API covers the entire required time window with hourly observations."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "known:infrago-infrastruktur",
+      "title": "DB InfraGO Infrastrukturdaten",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "infrastructure",
+      "probe": {
+        "status": 200,
+        "size_mb": null,
+        "content_type": "application/octet-stream",
+        "probed": true,
+        "seconds": 0.8
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "track count, electrification, line speed, Bauzustand, Betriebsstellen with DS100 and km",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "data enhances understanding of infrastructure impact on delays",
+          "confidence": 0.8,
+          "reasoning": "The infrastructure data provides essential context for analyzing delays, including track conditions and operational statuses relevant to the specified time window."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "known:zensus-2022-grid",
+      "title": "Zensus 2022 population grid (100 m)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "status": 200,
+        "size_mb": null,
+        "content_type": "application/zip",
+        "probed": true,
+        "seconds": 0.2
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "catchment population per station",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "100m grid",
+          "confidence": 0.8,
+          "reasoning": "The Zensus 2022 population grid provides demographic data that can help contextualize rail delays by understanding passenger volumes and catchment areas around stations during the specified time period."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "known:mobilithek-delfi-gtfs",
+      "title": "DELFI GTFS Germany (Mobilithek)",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "known:db-gtfs-rt",
+      "title": "DB GTFS-RT",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "events"
+    },
+    {
+      "id": "known:db-timetables-api",
+      "title": "DB Timetables (IRIS) API",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "events"
+    },
+    {
+      "id": "known:stada",
+      "title": "DB StaDa (station data)",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "known:openligadb",
+      "title": "openligadb (football fixtures)",
+      "registry": "known",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "ODbL-1.0",
+      "kind": "other"
+    },
+    {
+      "id": "known:auma-messen",
+      "title": "AUMA trade-fair calendar",
+      "registry": "known",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "other"
+    },
+    {
+      "id": "known:ticketmaster-discovery",
+      "title": "Ticketmaster Discovery API",
+      "registry": "known",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "proprietary",
+      "kind": "other"
+    },
+    {
+      "id": "hf:deutschebahn/mnist",
+      "title": "deutschebahn/mnist",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "UNKNOWN",
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:islam-hajosman/deutsche_bahn_faq_1k",
+      "title": "islam-hajosman/deutsche_bahn_faq_1k",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:islam-hajosman/deutsche_bahn_faq_128",
+      "title": "islam-hajosman/deutsche_bahn_faq_128",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:islam-hajosman/deutsche_bahn_faq_1k_emails",
+      "title": "islam-hajosman/deutsche_bahn_faq_1k_emails",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:piebro/deutsche-bahn-data",
+      "title": "piebro/deutsche-bahn-data",
+      "registry": "huggingface",
+      "accepted": true,
+      "reason": "coverage measured by probe: 2025-10..2026-08 present",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "columns": [
+          "station_name",
+          "xml_station_name",
+          "eva",
+          "train_number",
+          "line_number",
+          "final_destination_station",
+          "delay_in_min",
+          "time",
+          "arrival_is_canceled",
+          "departure_is_canceled",
+          "train_type",
+          "train_line_ride_id",
+          "train_line_station_num",
+          "arrival_planned_time",
+          "arrival_change_time",
+          "departure_planned_time",
+          "departure_change_time",
+          "id"
+        ],
+        "columns_typed": [
+          [
+            "station_name",
+            "VARCHAR"
+          ],
+          [
+            "xml_station_name",
+            "VARCHAR"
+          ],
+          [
+            "eva",
+            "VARCHAR"
+          ],
+          [
+            "train_number",
+            "VARCHAR"
+          ],
+          [
+            "line_number",
+            "VARCHAR"
+          ],
+          [
+            "final_destination_station",
+            "VARCHAR"
+          ],
+          [
+            "delay_in_min",
+            "INTEGER"
+          ],
+          [
+            "time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "departure_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "train_type",
+            "VARCHAR"
+          ],
+          [
+            "train_line_ride_id",
+            "VARCHAR"
+          ],
+          [
+            "train_line_station_num",
+            "INTEGER"
+          ],
+          [
+            "arrival_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "id",
+            "VARCHAR"
+          ]
+        ],
+        "n_columns": 18,
+        "per_month": {
+          "2025-10": {
+            "rows": 1989180,
+            "stations": 107
+          },
+          "2025-11": {
+            "rows": 13943561,
+            "stations": 5293
+          },
+          "2026-08": {
+            "rows": 14270628,
+            "stations": 5203
+          }
+        },
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_platform": false,
+        "has_cause_codes": false,
+        "coverage_step": {
+          "before": 107,
+          "after": 5293,
+          "ratio": 49.5
+        },
+        "notes": "cause codes live only in raw_data/ IRIS XML (measured 30.1% of stops carry one)",
+        "probed": true,
+        "seconds": 18.3
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "primary series",
+        "notes": "lastModified 2026-09-12, downloads 6408; duplicates known:piebro/deutsche-bahn-data (scout confirms the primary source)",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "primary series",
+          "covers_window": true,
+          "has_actual_times": true,
+          "has_cancellation": true,
+          "has_cause_codes": null,
+          "resolution": "high",
+          "confidence": 0.9,
+          "reasoning": "The dataset provides extensive per-stop event data for Deutsche Bahn, covering the entire window of interest with actual delay times and cancellation information, making it crucial for delay prediction."
+        },
+        "overruled_by_probe": {}
+      },
+      "schema_map": {
+        "proposed": {
+          "timestamp": "time",
+          "entity_id": "id",
+          "station": "station_name",
+          "value": "delay_in_min",
+          "cancellation_flag": "arrival_is_canceled",
+          "line_id": "line_number",
+          "sequence_index": "train_line_station_num",
+          "cause_code": null,
+          "planned_time": "arrival_planned_time",
+          "changed_time": "arrival_change_time",
+          "reasoning": "Mapped columns based on their relevance to the rail-delay pipeline schema."
+        },
+        "verified": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "hf:kamalnsr123456/deutsche-bahn-data",
+      "title": "kamalnsr123456/deutsche-bahn-data",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "annotations",
+        "notes": "lastModified 2026-01-18, downloads 121",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The dataset is related to Deutsche Bahn data and may contain relevant annotations, but specific details on temporal coverage and content are unclear."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "hf:ksg104/deutsche-bahn-data",
+      "title": "ksg104/deutsche-bahn-data",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "annotations",
+        "notes": "lastModified 2026-06-27, downloads 61",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "data available for the specified time frame",
+          "confidence": 0.8,
+          "reasoning": "The dataset is focused on Deutsche Bahn data and was last modified in June 2026, suggesting it may contain relevant annotations for the specified time window."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:haltestellen-deutsche-bahn",
+      "title": "Haltestellen Deutsche Bahn",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "reference",
+        "notes": "publisher Metropolregion Rhein-Neckar; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gpkg', 'http://publications.europa.eu/resource/authority/file-type/wms_srvc']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "reference",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides station reference data which is essential for contextualizing rail delays, though it does not directly include temporal data or disruption causes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:schienennetz-deutsche-bahnddea3",
+      "title": "Schienennetz Deutsche Bahn",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Metropolregion Rhein-Neckar; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gpkg', 'http://publications.europa.eu/resource/authority/file-type/wms_srvc']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides reference information about the Deutsche Bahn network, which can be useful for understanding infrastructure and potential disruptions affecting rail delays, although specific temporal coverage is not confirmed."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:wfs-geoinformation-deutsches-zentrum-fur-schienenverkehrsforschung-beim-eisenbahn-bundesamt-dzs",
+      "title": "(WFS) Geoinformation Deutsches Zentrum für Schienenverkehrsforschung beim Eisenbahn-Bundesamt (DZSF)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wmts-geoinformation-deutsches-zentrum-fur-schienenverkehrsforschung-beim-eisenbahn-bundesamt-dz",
+      "title": "(WMTS) Geoinformation Deutsches Zentrum für Schienenverkehrsforschung beim Eisenbahn-Bundesamt (DZSF)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wms-potenzielle-naturliche-gefahrdung-an-schienenwegen-des-bundes",
+      "title": "(WMS) Potenzielle natürliche Gefährdung an Schienenwegen des Bundes",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehr-krefeld",
+      "title": "Verkehr Krefeld",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schienennetze-norddeutschland",
+      "title": "Schienennetze Norddeutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin,http://publications.europa.eu/resource/authority/file-type/gml,http://publications.europa.eu/resource/authority/file-type/html' is not machine-readable data (map service / html / pdf)",
+      "licence": "ODbL-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schienennetze-norddeutschland15266",
+      "title": "Schienennetze Norddeutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'gml,html,oaf,wfs,wms' is not machine-readable data (map service / html / pdf)",
+      "licence": "ODbL-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:infrastrukturdaten-der-db-infrago",
+      "title": "Infrastrukturdaten der DB InfraGO",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/bin', 'http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides infrastructure data which can be useful for understanding delays, but specific temporal coverage and details on cause codes are not confirmed."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:larmkarte-essen",
+      "title": "Lärmkarte Essen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:beta-boschungsbrandgefahrdung47997",
+      "title": "(Beta) - Böschungsbrandgefährdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hochwassergefahrdung-hq100",
+      "title": "Hochwassergefährdung HQ100",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:v2x-durail-funkinterferenzdaten-zwischen-stadtischen-kooperative-intelligente-verkehrssystemen-",
+      "title": "V2X-DuRail Funkinterferenzdaten zwischen städtischen kooperative, intelligente Verkehrssystemen im Straßen- und Schienenverkehr",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:potentielle-hangmurena498a",
+      "title": "potentielle Hangmuren",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:murganggefaehrdung",
+      "title": "Murganggefaehrdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hangrutschungsgefahrdung",
+      "title": "Hangrutschungsgefährdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:potentielle-murgange861b3",
+      "title": "potentielle Murgänge",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:potentielle-murgange-hangmuren",
+      "title": "potentielle Murgänge Hangmuren",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:flachennutzungsplan-der-kreisstadt-olpe",
+      "title": "Flächennutzungsplan der Kreisstadt Olpe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:beta-boschungsbrandgefahrdung-aggregiert",
+      "title": "(Beta) - Böschungsbrandgefährdung aggregiert",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:murgang-und-hangmurengefahrdung-kombiniert",
+      "title": "Murgang- und Hangmurengefährdung kombiniert",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:mobilfunk-signalstarke-signalqualitat-fur-gsm-umts-und-lte",
+      "title": "Mobilfunk Signalstärke & Signalqualität für GSM, UMTS und LTE",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "ODbL-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:hangmurengefahrdung",
+      "title": "Hangmurengefährdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bundesflachen-hamburg",
+      "title": "Bundesflächen Hamburg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bebauungsplan-wilhelmsburg-90-hamburg",
+      "title": "Bebauungsplan Wilhelmsburg 90 Hamburg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:fahrplandaten-magdeburger-regionalverkehrsverbund-gmbh-marego-ohne-bahn",
+      "title": "Fahrplandaten Magdeburger Regionalverkehrsverbund GmbH (marego) - ohne Bahn",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:lvb-fahrplandaten",
+      "title": "LVB-Fahrplandaten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:vbb-fahrplandaten-via-gtfs61e61",
+      "title": "VBB-Fahrplandaten via GTFS",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Berlin Open Data; formats []",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.7,
+          "reasoning": "The VBB-Fahrplandaten provides timetable data which can be useful for understanding scheduled services and potential delays, though it lacks specific information on disruptions or causes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:vbb-fahrplandaten-november-2017-bis-dezember-2018",
+      "title": "VBB-Fahrplandaten November 2017 bis Dezember 2018",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset covers a time period from November 2017 to December 2018, which does not overlap with the required window of",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Berlin Open Data; formats ['zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": false,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset covers a time period from November 2017 to December 2018, which does not overlap with the required window of November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:vbb-fahrplandaten-via-apidb58a",
+      "title": "VBB-Fahrplandaten via API",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:soll-fahrplandaten-mvv-regionalbus-gtfs",
+      "title": "Soll-Fahrplandaten MVV-Regionalbus (GTFS)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to regional bus schedules and does not provide relevant information on rail delays, causes, or disr",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to regional bus schedules and does not provide relevant information on rail delays, causes, or disruptions for the specified window."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:barrierefreiheit-an-bahnhofen-und-haltepunkten-spnv-baden-wurttembergf63fb",
+      "title": "Barrierefreiheit an Bahnhöfen und Haltepunkten (SPNV) Baden-Württemberg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on accessibility at stations and does not provide information on delays, disruptions, or other relev",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Open Data Baden-Württemberg; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/pdf', 'http://publications.europa.eu/resource/authority/file-type/zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.2,
+          "reasoning": "The dataset focuses on accessibility at stations and does not provide information on delays, disruptions, or other relevant factors for rail delay prediction."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:streckenlange-des-schienennetzes-deutschland-stichtag-betriebsordnung",
+      "title": "Streckenlänge des Schienennetzes: Deutschland, Stichtag, Betriebsordnung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides information on the length of the rail network but does not include time-series data, cause codes, o",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides information on the length of the rail network but does not include time-series data, cause codes, or disruptions relevant to rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:streckenlange-des-schienennetzes-bundeslander-stichtag-betriebsordnung",
+      "title": "Streckenlänge des Schienennetzes: Bundesländer, Stichtag, Betriebsordnung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides information on the length of the rail network by federal state but does not include time-series dat",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.2,
+          "reasoning": "The dataset provides information on the length of the rail network by federal state but does not include time-series data or relevant operational details for delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:schienennetz-und-geplante-schienenprojekte-in-der-lausitz",
+      "title": "Schienennetz und geplante Schienenprojekte in der Lausitz",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/json']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.6,
+          "reasoning": "The dataset provides information on planned rail projects which may impact delays, but lacks specific temporal coverage and details on disruptions or causes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:streckenlange-des-schienennetzes-nach-betriebsordnung-2-land-jahr",
+      "title": "Streckenlänge des Schienennetzes nach Betriebsordnung (2) -Land - Jahr",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides information on track lengths but does not include temporal data or specific events related to delay",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Open.NRW; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.2,
+          "reasoning": "The dataset provides information on track lengths but does not include temporal data or specific events related to delays, cancellations, or causes, making it not useful for predicting rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-atkis-basis-dlm51119",
+      "title": "INSPIRE HH Verkehrsnetze ATKIS Basis-DLM",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-alkis3f62f",
+      "title": "INSPIRE HH Verkehrsnetze ALKIS",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrsweg-ulr51f4b",
+      "title": "Verkehrsweg (ULR)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrsweg-erweiterte-kartierung74c16",
+      "title": "Verkehrsweg (erweiterte Kartierung)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:landesentwicklungsplan-hessen-inspire",
+      "title": "Landesentwicklungsplan Hessen INSPIRE",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:historisches-digitales-basis-landschaftsmodell-nw79824",
+      "title": "Historisches Digitales Basis-Landschaftsmodell NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitales-landschaftsmodell-50-nwc49b4",
+      "title": "Digitales Landschaftsmodell 50 NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-atkis-basis-dlm2a318",
+      "title": "INSPIRE HH Verkehrsnetze ATKIS Basis-DLM",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-alkis4788c",
+      "title": "INSPIRE HH Verkehrsnetze ALKIS",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:historisches-digitales-landschaftsmodell-50-nw52a25",
+      "title": "Historisches Digitales Landschaftsmodell 50 NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitales-basis-landschaftsmodell-nwff5f5",
+      "title": "Digitales Basis-Landschaftsmodell NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:historische-topographische-karte-nw-1-100-000",
+      "title": "Historische Topographische Karte NW 1:100 000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-10-000-historisch",
+      "title": "Digitale Topographische Karte NW 1:10 000, historisch",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:deutsche-grundkarte-nw-1-5-00042979",
+      "title": "Deutsche Grundkarte NW 1:5 000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-25-000-schwarz-weisscc992",
+      "title": "Digitale Topographische Karte NW 1:25 000 Schwarz-Weiß",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-50-000-schwarz-weiss05327",
+      "title": "Digitale Topographische Karte NW 1:50 000 Schwarz-Weiß",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:landesentwicklungsplan-hessen",
+      "title": "Landesentwicklungsplan Hessen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-50-00032bf1",
+      "title": "Digitale Topographische Karte NW 1:50 000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:parking-information-service-db-bahnpark",
+      "title": "Parking Information Service - DB Bahnpark",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The Parking Information Service does not provide data related to rail delays, causes, or disruptions, making it irreleva",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/json']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The Parking Information Service does not provide data related to rail delays, causes, or disruptions, making it irrelevant for the time-series model focused on delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:wms-schienenverkehrsnetz-db-infrago",
+      "title": "WMS Schienenverkehrsnetz DB-InfraGO",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:openstation-siri-fm-realtime-facility-status",
+      "title": "OpenStation SIRI FM – Realtime Facility Status",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC0-1.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "static",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides real-time facility status which can help understand disruptions and delays, although it lacks specific temporal coverage and detailed cause codes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:beta-openstation-netex-station-infrastructure",
+      "title": "OpenStation NeTEx – Static Station Infrastructure",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC0-1.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "static reference data",
+          "confidence": 0.7,
+          "reasoning": "The OpenStation NeTEx dataset provides static station infrastructure information, which can help contextualize rail delays but does not directly provide time-series data or disruption details."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:wettermessungen-in-der-landeshauptstadt-kiel-odala",
+      "title": "Wettermessungen in der Landeshauptstadt Kiel (ODALA)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:anwendung-von-digitalen-zwillingen-zur-erweiterung-der-emissionsdaten-der-beim-projekt-emidat-v-1",
+      "title": "Anwendung von digitalen Zwillingen zur Erweiterung der Emissionsdaten der beim Projekt „EmiDaT“ vermessenen frei belüfteten Milchviehställe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:dlr-urban-traffic-dataset-dlr-ut",
+      "title": "DLR Urban Traffic dataset (DLR UT)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:sentinel-5p-tropomi-aerosol-optical-depth-aod-level-3-global92426",
+      "title": "Sentinel-5P TROPOMI - Aerosol Optical Depth (AOD), Level 3 - Global",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-serieba99f",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-seriedfe68",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-101bc26",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -10",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-08f5b5e",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -08",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-120cfa3",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -12",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-046d319",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -04",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-0446a20",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -04",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-0575bc9",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -05",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-07f91f6",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -07",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-02565e8",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-094bfb2",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -09",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-11624b8",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -11",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-028c610",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-01b7a06",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-09dc503",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -09",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-06fa39c",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -06",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-24-2006-05e7538",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 24 2006 -05",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-0357733",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-0748dfe",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -07",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-06bc9dd",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -06",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-083729e",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 -08",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:raw_data_publication_jonas_erhardt_2025",
+      "title": "Raw_Data_Publication_Jonas_Erhardt_2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:german-private-equity-barometer",
+      "title": "German Private Equity Barometer",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-german-earthquake-catalogue-gerseis",
+      "title": "INSPIRE: German Earthquake Catalogue (GERSEIS)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ship-wave-measurements-in-german-coastal-waterways-from-1998-to-2022c5954",
+      "title": "Ship Wave Measurements in German Coastal Waterways from 1998 to 2022",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:inspire-marine-seismic-survey-profiles-for-the-german-eez-mssp-eez",
+      "title": "INSPIRE: Marine seismic survey profiles for the German EEZ (MSSP-EEZ)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:deutsches-kleinseen-und-teichinventar-german-small-lake-and-pond-inventory-gslpi-datensatzbe801",
+      "title": "Deutsches Kleinseen- und Teichinventar - German small lake and pond inventory (GSLPI) (Datensatz)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:radio-oncology-center-locations-and-driving-distances-times-to-the-german-population-in-20221faf9",
+      "title": "Radio Oncology Center locations and driving distances/times to the German population in 2022",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'by-nc-sa/4.0/deed.en' not in the open allowlist",
+      "licence": "by-nc-sa/4.0/deed.en",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-map-of-the-distribution-of-sand-and-gravel-in-the-northern-german-glacial-area",
+      "title": "INSPIRE: Map of the distribution of sand and gravel in the Northern German glacial area",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:land-surface-temperature-lst-aggregates-germany-summer-2021-20254a423",
+      "title": "Land Surface Temperature (LST) - Aggregates - Germany, Summer 2021-2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:inspire-the-1-5-million-international-geological-map-of-europe-and-adjacent-areas-german-part-i",
+      "title": "INSPIRE: The 1:5 Million International Geological Map of Europe and Adjacent Areas - German part (IGME5000-DE)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:harmonized-cross-border-seismic-velocity-model-for-the-dutch-german-and-danish-north-sea-area-p",
+      "title": "Harmonized, cross-border seismic velocity model for the Dutch, German and Danish North Sea area (Project 3DGEO-EU)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schichtdicken-des-operationellen-zirkulationsmodells-des-bsh-in-der-nord-und-ostsee-hor-2025-02a8734",
+      "title": "Schichtdicken des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schichtdicken-des-operationellen-zirkulationsmodells-des-bsh-in-der-nord-und-ostsee-hor-2025-031d797",
+      "title": "Schichtdicken des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schichtdicken-des-operationellen-zirkulationsmodells-des-bsh-in-der-nord-und-ostsee-hor-2025-01be473",
+      "title": "Schichtdicken des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-stromungen-des-operationellen-zirkulationsmodells-des-bsh-in-der-nord-und-o-2025-0119245",
+      "title": "Modellierte Strömungen des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-wasserstandsauslenkung-des-operationellen-zirkulationsmodells-des-bsh-in-de-2025-023f5e9",
+      "title": "Modellierte Wasserstandsauslenkung des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-stromungen-des-operationellen-zirkulationsmodells-des-bsh-in-der-nord-und-o-2025-024fb33",
+      "title": "Modellierte Strömungen des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:microsatellite-ssr-dataset-pomological-and-molecular-characterization-of-pear-cultivars-pyrus-c",
+      "title": "Microsatellite/SSR dataset: pomological and molecular characterization of pear cultivars (Pyrus communis) of the German Fruit Genebank, Version1",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:microsatellite-ssr-dataset-pomological-and-molecular-characterization-of-apple-cultivars-malus-",
+      "title": "Microsatellite/SSR dataset: pomological and molecular characterization of apple cultivars (Malus × domestica Borkh.) of the German Fruit Genebank, Version 1",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-wasserstandsauslenkung-des-operationellen-zirkulationsmodells-des-bsh-in-de-2025-01dfe33",
+      "title": "Modellierte Wasserstandsauslenkung des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-wasserstandsauslenkung-des-operationellen-zirkulationsmodells-des-bsh-in-de-2025-03f9615",
+      "title": "Modellierte Wasserstandsauslenkung des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-stromungen-des-operationellen-zirkulationsmodells-des-bsh-in-der-nord-und-o-2025-03c8a8a",
+      "title": "Modellierte Strömungen des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schichtdicken-des-operationellen-zirkulationsmodells-des-bsh-in-der-deutschen-bucht-und-2025-0370871",
+      "title": "Schichtdicken des operationellen Zirkulationsmodells des BSH in der deutschen Bucht und der westlichen Ostsee (horizontale Auflösung ca. 900 m) 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-temperatur-und-salzgehalt-des-operationellen-zirkulationsmodells-des-bsh-in-2025-03b8d41",
+      "title": "Modellierte Temperatur und Salzgehalt des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:modellierte-temperatur-und-salzgehalt-des-operationellen-zirkulationsmodells-des-bsh-in-2025-0228d25",
+      "title": "Modellierte Temperatur und Salzgehalt des operationellen Zirkulationsmodells des BSH in der Nord- und Ostsee (horizontale Auflösung ca. 5 km) 2025 02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:location-code-list-lcl-event-code-list-ecl",
+      "title": "Location Code List (LCL) / Event Code List (ECL)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:an-der-bahn-9",
+      "title": "An der Bahn",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:an-der-bahn",
+      "title": "An der Bahn",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:untersuchte-unfalle-und-storungen-im-eisenbahnbetrieb-beu774b2",
+      "title": "Untersuchte Unfälle und Störungen im Eisenbahnbetrieb (BEU)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'https://w3id.org/mdp/schema/file_media_type#any_other_mediatype' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahn-vorhersage-gesammelte-stationsdaten",
+      "title": "Bahn-Vorhersage: Gesammelte Stationsdaten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "ODbL-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:liniennetz-opnv-bus-und-bahn",
+      "title": "Liniennetz ÖPNV Bus und Bahn",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'shp' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:echtzeitzahldaten-s-bahn-berlin-pilotaufbau",
+      "title": "Echtzeitzähldaten S-Bahn Berlin Pilotaufbau",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "coverage 2024-10-21..2024-10-27 does not overlap the window 2025-11-02..2026-08-31",
+      "licence": "CC0-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:digitale-hydrogeologische-karte-1-100-000-hydrogeologisch-relevante-storungenbd647",
+      "title": "Digitale Hydrogeologische Karte 1:100.000 - Hydrogeologisch relevante Störungen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:an-der-bahn-nach-inspire-plu",
+      "title": "An der Bahn nach INSPIRE PLU",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:an-der-bahn-nach-inspire-plu-1",
+      "title": "An der Bahn nach INSPIRE PLU",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:gtfs-sollfahrplandaten-opnv-bus-und-bahn",
+      "title": "GTFS Sollfahrplandaten ÖPNV Bus und Bahn",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Open.NRW; formats ['gtfs', 'http://publications.europa.eu/resource/authority/file-type/zip']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "gtfs",
+          "confidence": 0.8,
+          "reasoning": "The GTFS data provides scheduled transport information which can be useful for understanding delays in the context of planned services. It covers the entire window and is machine-readable."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-maerz-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) Maerz 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-mai-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) Mai 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-august-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) August 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-april-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) April 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-februar-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) Februar 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-januar-2025-bis-dezember-2025ee87f",
+      "title": "hvv Fahrplandaten (GTFS) Januar 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-juni-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) Juni 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-juli-2025-bis-dezember-20251ffb6",
+      "title": "hvv Fahrplandaten (GTFS) Juli 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bebauungsplan-063-wusting-an-der-bahn-urschrift",
+      "title": "Bebauungsplan 063 Wüsting - An der Bahn Urschrift",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-aktueller-september-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) aktueller September 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://www.govdata.de/dl-de/by-2-0' not in the open allowlist",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ist-daten-bus-und-bahn-opnv-realtime",
+      "title": "IST-Daten Bus und Bahn ÖPNV Realtime",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'gtfs' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-januar-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) Januar 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset covers only until December 2025, which does not overlap with the required window of November 2025 to August ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Transparenzportal Hamburg; formats ['zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.2,
+          "reasoning": "The dataset covers only until December 2025, which does not overlap with the required window of November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-april-2025-bis-dezember-2025bf980",
+      "title": "hvv Fahrplandaten (GTFS) April 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset covers only from April to December 2025, which does not overlap with the required window of November 2025 to",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Transparenzportal Hamburg; formats ['zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": false,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset covers only from April to December 2025, which does not overlap with the required window of November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-mai-2025-bis-dezember-2025edffc",
+      "title": "hvv Fahrplandaten (GTFS) Mai 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset covers a period from May to December 2025, which does not overlap with the required window of November 2025 ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Transparenzportal Hamburg; formats ['zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": false,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.2,
+          "reasoning": "The dataset covers a period from May to December 2025, which does not overlap with the required window of November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:hvv-fahrplandaten-gtfs-juli-2025-bis-dezember-2025",
+      "title": "hvv Fahrplandaten (GTFS) Juli 2025 bis Dezember 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset covers only until December 2025, which does not include the entire required window of November 2025 to Augus",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Transparenzportal Hamburg; formats ['zip']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": false,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset covers only until December 2025, which does not include the entire required window of November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:historische-wetterdaten",
+      "title": "Historische Wetterdaten",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "other-open",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Open Data Baden-Württemberg; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/json']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.8,
+          "reasoning": "Historical weather data can influence rail delays, making it relevant for prediction. The dataset covers the necessary time frame and provides contextual information."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2011",
+      "title": "Wetterdaten Brückstraße 45 - 2011",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2018",
+      "title": "Wetterdaten Brückstraße 45 - 2018",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2021",
+      "title": "Wetterdaten Brückstraße 45 - 2021",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2014",
+      "title": "Wetterdaten Brückstraße 45 - 2014",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2020",
+      "title": "Wetterdaten Brückstraße 45 - 2020",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2019",
+      "title": "Wetterdaten Brückstraße 45 - 2019",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2017",
+      "title": "Wetterdaten Brückstraße 45 - 2017",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2012",
+      "title": "Wetterdaten Brückstraße 45 - 2012",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2022",
+      "title": "Wetterdaten Brückstraße 45 - 2022",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2013",
+      "title": "Wetterdaten Brückstraße 45 - 2013",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2015",
+      "title": "Wetterdaten Brückstraße 45 - 2015",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2010",
+      "title": "Wetterdaten Brückstraße 45 - 2010",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2016",
+      "title": "Wetterdaten Brückstraße 45 - 2016",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-bruckstrasse-45-2009",
+      "title": "Wetterdaten Brückstraße 45 - 2009",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-der-dwd-wetterstation-munster-osnabruck",
+      "title": "Wetterdaten der DWD Wetterstation Münster/Osnabrück",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Open.NRW; formats ['http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.8,
+          "reasoning": "Weather data can significantly impact rail delays, making it relevant for prediction. The dataset covers the necessary time frame and provides contextual information."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:wetterdaten-13-monate-ruckwirkend",
+      "title": "Wetterdaten 13 Monate rückwirkend",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC0-1.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Open Data Baden-Württemberg; formats ['csv']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.8,
+          "reasoning": "Weather data is crucial for predicting rail delays, and the provided dataset covers a relevant time frame, enhancing the model's context."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2002",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2002",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2006",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2006",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2003",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2003",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2007",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2007",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2000",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2005",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2005",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2001",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2001",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wetterdaten-guterbahnhof-heiliger-weg-59-2004",
+      "title": "Wetterdaten Güterbahnhof Heiliger Weg 59 - 2004",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'http://dcat-ap.de/def/licenses/dl-zero-de/2.0' not in the open allowlist",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:kinder-in-offentlich-geforderter-kindertagespflege-bundeslander-stichtag-altersgruppen9190c",
+      "title": "Kinder in öffentlich geförderter Kindertagespflege: Bundesländer, Stichtag, Altersgruppen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:kinder-in-offentlich-geforderter-kindertagespflege-bundeslander-stichtag-geschlecht-migrationsh",
+      "title": "Kinder in öffentlich geförderter Kindertagespflege: Bundesländer, Stichtag, Geschlecht, Migrationshintergrund",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:kinder-in-offentlich-geforderter-kindertagespflege-bundeslander-stichtag-in-der-familie-vorrang",
+      "title": "Kinder in öffentlich geförderter Kindertagespflege: Bundesländer, Stichtag, In der Familie vorrangig gesprochene Sprache",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:erwerbstatige-aus-hauptwohnsitzhaushalten-bundeslander-jahre-geschlecht-stellung-im-beruf-woche",
+      "title": "Erwerbstätige aus Hauptwohnsitzhaushalten: Bundesländer, Jahre, Geschlecht, Stellung im Beruf, Wochenend- und Feiertagsarbeit",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on employment statistics and does not provide information related to rail delays, disruptions, or re",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on employment statistics and does not provide information related to rail delays, disruptions, or relevant temporal data for the specified window."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:tagespflegepersonen-bundeslander-stichtag-geschlecht",
+      "title": "Tagespflegepersonen: Bundesländer, Stichtag, Geschlecht",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:tagespflegepersonen-bundeslander-stichtag-altersgruppen",
+      "title": "Tagespflegepersonen: Bundesländer, Stichtag, Altersgruppen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:arbeitskosten-je-vollzeiteinheit-bundeslander-jahre-unternehmensgrossenklassen-wirtschaftszweig",
+      "title": "Arbeitskosten je Vollzeiteinheit: Bundesländer, Jahre, Unternehmensgrößenklassen, Wirtschaftszweige, Arbeitskostenarten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:aufkommen-an-haushaltsabfallen-bundeslander-jahre",
+      "title": "Aufkommen an Haushaltsabfällen: Bundesländer, Jahre",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:tageseinrichtungen-bundeslander-stichtag-art-des-tragers",
+      "title": "Tageseinrichtungen: Bundesländer, Stichtag, Art des Trägers",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:aufkommen-an-haushaltsabfallen-bundeslander-jahre-abfallarten",
+      "title": "Aufkommen an Haushaltsabfällen: Bundesländer, Jahre, Abfallarten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:offentliche-wasserversorgung-und-abwasserbeseitigung-in-schleswig-holstein-2023",
+      "title": "Öffentliche Wasserversorgung und Abwasserbeseitigung in Schleswig-Holstein 2023",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:offentliche-wasserversorgung-und-abwasserbeseitigung-in-schleswig-holstein-2016",
+      "title": "Öffentliche Wasserversorgung und Abwasserbeseitigung in Schleswig-Holstein 2016",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:offentliche-wasserversorgung-und-abwasserbeseitigung-in-schleswig-holstein-2017",
+      "title": "Öffentliche Wasserversorgung und Abwasserbeseitigung in Schleswig-Holstein 2017",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:offentliche-wasserversorgung-und-abwasserbeseitigung-in-schleswig-holstein-2015",
+      "title": "Öffentliche Wasserversorgung und Abwasserbeseitigung in Schleswig-Holstein 2015",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:realsteuerhebesatze-der-gemeinden-in-schleswig-holstein-2025-und-2024",
+      "title": "Realsteuerhebesätze der Gemeinden in Schleswig-Holstein 2025 und 2024",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bodenflache-bundeslander-stichtag-nutzungsarten-tatsachliche-nutzung-adv-tn-2023",
+      "title": "Bodenfläche: Bundesländer, Stichtag, Nutzungsarten (tatsächliche Nutzung) (AdV-TN 2023)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:personal-fur-forschung-und-entwicklung-vollzeitaquivalente-bundeslander-und-ausland-jahre-einri",
+      "title": "Personal für Forschung und Entwicklung (Vollzeitäquivalente): Bundesländer und Ausland, Jahre, Einrichtungsgruppe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:realsteueristaufkommen-und-hebesatze-der-gemeinden-in-schleswig-holstein-2024-und-2025",
+      "title": "Realsteueristaufkommen und -hebesätze der Gemeinden in Schleswig-Holstein 2024 und 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:personal-fur-forschung-und-entwicklung-vollzeitaquivalente-bundeslander-und-ausland-jahre-einri-1",
+      "title": "Personal für Forschung und Entwicklung (Vollzeitäquivalente): Bundesländer und Ausland, Jahre, Einrichtungsgruppe, Geschlecht",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:obelisoffentlich-stamm-und-betriebsdaten-geforderter-offentlich-zuganglicher-ladestationen-fur-",
+      "title": "OBELISöffentlich: Stamm- und Betriebsdaten geförderter öffentlich zugänglicher Ladestationen für Elektrofahrzeuge",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to electric vehicle charging stations and does not provide relevant information for predicting Germ",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to electric vehicle charging stations and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:staatliche-steuern-in-schleswig-holstein-2025-l-i-1-j-25-sh",
+      "title": "Staatliche Steuern in Schleswig-Holstein 2025 (L I 1 - j 25 SH)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:klarschlammentsorgung-klarschlamm-direkte-entsorgungstofflich-thermisch-anderes-bundesland-2006",
+      "title": "Klärschlammentsorgung: Klärschlamm, direkte Entsorgung(stofflich/thermisch) (anderes Bundesland) -Kreise (Gebietsstand 31.12.06) - Jahr (2006)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:o-lis-report-bestand-und-entwicklung-der-offentlich-zuganglichen-ladeinfrastruktur-in-deutschla",
+      "title": "ö-LIS-Report: Bestand und Entwicklung der öffentlich zugänglichen Ladeinfrastruktur in Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0,
+          "reasoning": "The dataset focuses on charging infrastructure for electric vehicles, which does not provide relevant information for predicting rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:arbeitskosten-arbeitskosten-je-vollzeiteinheit-eurnach-kostenarten-und-ausgewahlten-wirtsc-2004",
+      "title": "Arbeitskosten: Arbeitskosten je Vollzeiteinheit (EUR)nach Kostenarten und ausgewählten Wirtschaftsabschnittender WZ 2003 - Land - Jahr (ab 1992 bis 2004)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:arbeitskosten-je-vollzeiteinheit-eur-nachunternehmensgrossenklassen-kostenarten-und-ausgew-2004",
+      "title": "Arbeitskosten je Vollzeiteinheit (EUR) nachUnternehmensgrößenklassen, Kostenarten und ausgewähltenWirtschaftsabschnitten der WZ 2003 - Land - Jahr (2004)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:markenanmeldungen-2025-geordnet-nach-bundeslandern-pro-100-000-einwohner",
+      "title": "Markenanmeldungen 2025, geordnet nach Bundesländern, pro 100.000 Einwohner",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "officialwork",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:gebrauchsmusteranmeldungen-2025-geordnet-nach-bundeslandern-pro-100-000-einwohner",
+      "title": "Gebrauchsmusteranmeldungen 2025, geordnet nach Bundesländern, pro 100.000 Einwohner",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "officialwork",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:patentanmeldungen-2025-geordnet-nach-bundeslandern-pro-100-000-einwohner",
+      "title": "Patentanmeldungen 2025, geordnet nach Bundesländern, pro 100.000 Einwohner",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "officialwork",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:eingetragene-designs-2025-geordnet-nach-bundeslandern-pro-100-000-einwohner",
+      "title": "Eingetragene Designs 2025, geordnet nach Bundesländern, pro 100.000 Einwohner",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "officialwork",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:anhorung-anderung-der-schulferien-2024-2030",
+      "title": "Anhörung Änderung der Schulferien 2024-2030",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:markenanmeldungen-2021-geordnet-nach-bundeslandern-pro-100-000-einwohner",
+      "title": "Markenanmeldungen 2024, geordnet nach Bundesländern pro 100 000 Einwohner",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:patentanmeldungen-2021-geordnet-nach-bundeslandern-pro-100-000-einwohner",
+      "title": "Patentanmeldungen 2024, geordnet nach Bundesländern pro 100 000 Einwohner",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:gebrauchsmusteranmeldungen-2022-geordnet-nach-bundeslandern-2000-2022",
+      "title": "Gebrauchsmusteranmeldungen nach Bundesländern",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:eingetragene-designs-nach-bundeslandern",
+      "title": "Eingetragene Designs nach Bundesländern",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:patentanmeldungen-der-hochschulen-nach-bundeslandern-2017-2021",
+      "title": "Patentanmeldungen der Hochschulen nach Bundesländern",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:markenanmeldungen-nach-bundeslandern",
+      "title": "Markenanmeldungen nach Bundesländern",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://dcat-ap.de/def/licenses/dl-by-de/2_0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:patentanmeldungen-nach-bundeslandern",
+      "title": "Patentanmeldungen nach Bundesländern",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://dcat-ap.de/def/licenses/dl-by-de/2_0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:geburtsorte-2025",
+      "title": "Geburtsorte 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://dcat-ap.de/def/licenses/dl-zero-de/2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:fz-27-2025-bestand-an-kraftfahrzeugen-und-kraftfahrzeuganhangern-nach-ausgewahlten-merkmalen-bu",
+      "title": "FZ 27 - 2025 - Bestand an Kraftfahrzeugen und Kraftfahrzeuganhängern nach ausgewählten Merkmalen (Bundesländer und Fahrzeugklassen)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:bevolkerungsdichte-bundeslander-stichtag",
+      "title": "Bevölkerungsdichte: Bundesländer, Stichtag",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides population density information, which does not directly relate to rail delays or their causes, maki",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides population density information, which does not directly relate to rail delays or their causes, making it irrelevant for the prediction model."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:bevolkerung-bundeslander-stichtag",
+      "title": "Bevölkerung: Bundesländer, Stichtag",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides population statistics by federal state, which does not directly relate to rail delays or their caus",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides population statistics by federal state, which does not directly relate to rail delays or their causes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:verbraucherpreisindex-bundeslander-monate0b8c3",
+      "title": "Verbraucherpreisindex: Bundesländer, Monate",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:untergebrachte-wohnungslose-personen-bundeslander-stichtag-nationalitat-geschlecht-altersgruppe-4",
+      "title": "Untergebrachte wohnungslose Personen: Bundesländer, Stichtag (bis 31.01.2025), Nationalität, Geschlecht, Altersgruppen, Art der Überlassung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ausgesonderte-mehrwegverpackungen-bundeslander-jahred6fa0",
+      "title": "Ausgesonderte Mehrwegverpackungen: Bundesländer, Jahre",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:okosystemleistungen-bundeslander-jahre-okosysteme7b8f7",
+      "title": "Ökosystemleistungen: Bundesländer, Jahre, Ökosysteme",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bevolkerung-bundeslander-stichtag-geschlecht",
+      "title": "Bevölkerung: Bundesländer, Stichtag, Geschlecht",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides demographic information about the population by gender and state, which does not directly relate to",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides demographic information about the population by gender and state, which does not directly relate to rail delays or their causes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:bevolkerung-bundeslander-stichtag-altersjahre",
+      "title": "Bevölkerung: Bundesländer, Stichtag, Altersjahre",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides demographic information about the population in German states, which does not directly relate to ra",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides demographic information about the population in German states, which does not directly relate to rail delays or their causes."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:flache-bundeslander-jahre-okosysteme7cae0",
+      "title": "Fläche: Bundesländer, Jahre, Ökosysteme",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:daten-der-raddauerzahlstellen-munchen-2025",
+      "title": "Daten der Raddauerzählstellen München 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:daten-des-haushaltsplans-2024-2025",
+      "title": "Daten des Haushaltsplans 2024/2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-10655f0",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 10",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays, such",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays, such as cause codes or disruption notices."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-04bd306",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 04",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German ra",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-08d8111",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 08",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays, such",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays, such as cause codes or disruptions."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-0600331",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 06",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays.",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-04ecc85",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 04",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on ship emissions and does not provide relevant information for rail delays, such as cause codes or ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on ship emissions and does not provide relevant information for rail delays, such as cause codes or disruptions affecting trains."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-11b41f9",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 11",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions measurements and does not provide relevant information for predicting German rail",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0,
+          "reasoning": "The dataset pertains to ship emissions measurements and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-0904cca",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 09",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on ship emissions in Bremerhaven and does not provide relevant information for predicting German rai",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on ship emissions in Bremerhaven and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-09cb653",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 09",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting rail delays or disruptio",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting rail delays or disruptions."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-11f510a",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 11",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German ra",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-09c5ccc",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 09",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on ship emissions measurements and does not provide relevant information for rail delays, such as ca",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on ship emissions measurements and does not provide relevant information for rail delays, such as cause codes or disruption notices."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-01aa9e1",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting rail delays or disruptio",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting rail delays or disruptions."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-03de228",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays.",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-01086b7",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on ship emissions and does not provide relevant information for rail delays, such as cause codes or ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on ship emissions and does not provide relevant information for rail delays, such as cause codes or disruptions related to trains."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-010d3f8",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German ra",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-040ed5a",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 04",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays.",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-0384e91",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for rail delays, such as cause codes or",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "none",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for rail delays, such as cause codes or disruptions affecting train schedules."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-wedel-2025-050f6de",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Wedel 2025 05",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions measurements and does not provide relevant information for predicting German rail",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions measurements and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-0771c61",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 07",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on ship emissions measurements and does not provide relevant information for predicting rail delays ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on ship emissions measurements and does not provide relevant information for predicting rail delays or disruptions."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-0803fb4",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 08",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on ship emissions at a specific station and does not provide relevant information for rail delays or",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on ship emissions at a specific station and does not provide relevant information for rail delays or related disruptions."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-07fd1d2",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 07",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German ra",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions in Bremerhaven and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-08eb881",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 08",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions measurement and does not provide relevant information for predicting German rail ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions measurement and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-kiel-2025-0576ddd",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Kiel 2025 05",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions and does not provide relevant information for rail delays, such as cause codes or",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions and does not provide relevant information for rail delays, such as cause codes or disruption notices."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:ais-daten-zur-schiffsabgasmessung-an-der-messstation-bremerhaven-2025-10a8201",
+      "title": "AIS-Daten zur Schiffsabgasmessung an der Messstation Bremerhaven 2025 10",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to ship emissions data in Bremerhaven and does not provide relevant information for predicting Germ",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher GDI-DE; formats ['xml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to ship emissions data in Bremerhaven and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    }
+  ]
+}
