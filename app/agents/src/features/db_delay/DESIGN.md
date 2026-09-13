@@ -832,6 +832,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
 | TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
 | TSLM, no series (summaries in the rationale only), v7, 2k | 3.442 / 2.769 | | |
+| TSLM, encoder only (all series as embeddings, summaries in the rationale), v7, 2k | 3.451 / 2.773 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
 | TSLM, stacked text, v7, 6k (candidate, 30,000 test examples) | 3.224 / 2.560 on its 30,000 | | *queued* |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
@@ -851,7 +852,8 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   it -0.009 (-0.017 to -0.001), real but small; no series against XGBoost-v7 -0.054 (-0.098 to
   -0.023), real. On the new data, as on the old, the win over the tabular model comes from the
   language model reading the facts in the rationale; the series add at most a hundredth, as text,
-  and nothing through the encoder.
+  and nothing through the encoder. Encoder only on v7 (every series as embeddings, no number lists
+  in the text) scores 3.451 / 2.773, the same as no series and as split.
 - **Six thousand steps on v7 (07:35): the lead candidate.** Stacked text, scored on 30,000 test
   examples: 3.224 / 2.560, validation 2.572 / 2.066 (best of all runs). Against XGBoost-v7 on the
   28,290 that ran: CRPS -0.074 (-0.097 to -0.055), median error -0.072, within 15 minutes -0.104,
