@@ -1,0 +1,88 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CBH372B454AAKXXAKKB05S",
+  "session_id": "470422f3-9e2e-4cbe-abbf-d262ed718dfb",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T03:03:49.227597Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    ".vercelignore",
+    "api/[[...path]].js",
+    "package-lock.json",
+    "package.json",
+    "vercel.json"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-5",
+  "turn_id": "09da47107d59",
+  "checkpoint_transcript_start": 201,
+  "transcript_lines_at_start": 201,
+  "compact_transcript_start": 22,
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 40712,
+    "cache_read_tokens": 184305,
+    "output_tokens": 1072,
+    "api_call_count": 3
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-13T03:03:49.210252Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "total_lines_changed": 0,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 2479,
+      "user_lines_removed": 178,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".gitignore": 1,
+        ".vercelignore": 8,
+        "api/[[...path]].js": 10,
+        "app/frontend/AGENTS.md": 18,
+        "app/frontend/HOMEPAGE-REVIEW.md": 82,
+        "app/frontend/cache-rail-routes.mjs": 37,
+        "app/frontend/camera.smoke.mjs": 188,
+        "app/frontend/public/seed/mapped-routes.json": 1,
+        "app/frontend/src/features/globe-map/camera.ts": 80,
+        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 283,
+        "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts": 193,
+        "app/frontend/src/features/globe-map/train-layer.ts": 148,
+        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 103,
+        "app/frontend/src/features/pwa-shell/components/StatusPills.tsx": 108,
+        "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx": 92,
+        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 60,
+        "app/frontend/src/index.css": 384,
+        "app/frontend/src/lib/contract.ts": 10,
+        "app/frontend/src/lib/geo.ts": 12,
+        "app/frontend/src/lib/journey-search.ts": 56,
+        "app/frontend/src/lib/osm-route.ts": 117,
+        "app/frontend/src/lib/train-story.ts": 22,
+        "app/frontend/src/single-screen.css": 187,
+        "app/frontend/train-visual.smoke.mjs": 177,
+        "package-lock.json": 13,
+        "package.json": 6,
+        "team-setup/state/decisions.md": 14,
+        "vercel.json": 69
+      },
+      "user_removed_per_file": {
+        "app/frontend/src/index.css": 176,
+        "app/frontend/src/lib/geo.ts": 2
+      }
+    }
+  ]
+}
