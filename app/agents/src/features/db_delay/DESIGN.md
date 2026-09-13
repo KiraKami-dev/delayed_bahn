@@ -721,6 +721,7 @@ features (3.462 / 2.759 on the original features).
 | same, within 15 min (36,556) | | | -0.091 (-0.116 to -0.069), real |
 | same, beyond 30 min (39,829) | | | -0.046 (-0.063 to -0.029), real |
 | its lead-time blend | 3.387 | 2.692 | -0.067 (-0.078 to -0.056), real |
+| Text, plain loss, 24,000 steps (05:15) | 3.374 | 2.680 | -0.079 (-0.091 to -0.067), real; within 15 min -0.100, beyond 30 min -0.073; against text plus encoder at 12,000 steps -0.019 (-0.024 to -0.013), real |
 | Text, combined data (previous trains, 720 h), exact-minute plus CRPS loss (05:10) | 3.322 | 2.644 | -0.076 (-0.088 to -0.065) against XGBoost on the combined features (3.414 / 2.720), real |
 | same, within 15 min | | | -0.092 (-0.117 to -0.070), real |
 | same, beyond 30 min | | | -0.073 (-0.087 to -0.059), real |
