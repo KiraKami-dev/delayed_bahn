@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2CSETKCVS1BN70ZG8RXZHDN",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 5,
+  "checkpoints_count": 7,
   "files_touched": [
     "app/frontend/src/features/globe-map/components/GlobeMap.tsx",
     "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts",
@@ -31,13 +31,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 336,
-    "cache_creation_tokens": 72274,
-    "cache_read_tokens": 3726058,
-    "output_tokens": 42378,
-    "api_call_count": 18
+    "input_tokens": 536,
+    "cache_creation_tokens": 111839,
+    "cache_read_tokens": 4348553,
+    "output_tokens": 49552,
+    "api_call_count": 28
   }
 }
