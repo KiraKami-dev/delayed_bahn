@@ -266,6 +266,21 @@ class Forecaster:
             self.offline_forecast(leg, str(error))
         return self.live_cache[leg_key(leg)][2]
 
+    def set_offline(self, on: bool) -> dict:
+        """Switch DB live data off (or back on) while serving, to show the offline estimates in the app.
+
+        Kept forecasts and explanations are dropped, so the next check uses the new mode."""
+        if self.live is None:
+            raise LookupError("live data is not enabled (start with --xgb)")
+        client = self.live.feeds.client
+        client.offline = on
+        if not on:
+            client.down_until = 0.0
+        with self.guard:
+            self.live_cache.clear()
+            self.explanations.clear()
+        return {"offline": on}
+
     def offline_forecast(self, leg: dict, reason: str) -> dict:
         """The leg forecast from an offline example (no DB live data), kept like a live one for a minute."""
         row, sources = self.live.offline_example(leg, reason=reason)
@@ -411,7 +426,9 @@ def make_handler(forecaster: Forecaster):
             try:
                 length = int(self.headers.get("content-length") or 0)
                 body = json.loads(self.rfile.read(length) or b"{}")
-                if self.path.rstrip("/").endswith("/explain"):  # {"leg": Leg}: the model's own words, slow
+                if self.path.rstrip("/").endswith("/offline"):  # {"on": true}: simulate a DB outage, false ends it
+                    self._reply(200, forecaster.set_offline(bool(body.get("on", True))))
+                elif self.path.rstrip("/").endswith("/explain"):  # {"leg": Leg}: the model's own words, slow
                     self._reply(200, forecaster.explain(body.get("leg") or body))
                 else:
                     self._reply(200, forecaster.forecast(body))

@@ -128,3 +128,20 @@ def test_forecaster_falls_back_from_live_to_offline_to_the_prior(offline_live):
 
     prior = f.leg_forecast(leg("ICE 5", "Nowhere"), None)
     assert prior["confidence"] == "low" and "Live data could not be used" in prior["reasoning"]
+
+
+def test_offline_switch_clears_kept_forecasts(offline_live):
+    frame = pd.DataFrame([trip(100 + i, "RE", str(i), "RE1", "Elsewhere", "2026-09-10 10:00", "2026-09-10 09:30") for i in range(3)])
+    f = serve.Forecaster(frame, [], model=object(), mode="text", live=offline_live)
+    probs = np.zeros(serve.MINUTES)
+    probs[2] = 1.0
+    f.model_forecast = lambda row: (probs, 0.02)
+    f.leg_forecast(leg("RB 16", "Big City", "59143"), None)
+    assert f.live_cache
+    client = offline_live.feeds.client
+    client.down_until = time.monotonic() + 60
+    assert f.set_offline(False) == {"offline": False} and not client.offline and client.down_until == 0.0
+    assert not f.live_cache, "the next check must use the new mode"
+    assert f.set_offline(True) == {"offline": True} and client.offline
+    with pytest.raises(LookupError):
+        serve.Forecaster(frame, []).set_offline(True)
