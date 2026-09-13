@@ -636,6 +636,8 @@ encoder-only plain run at 3.702 / 2.954.
 |---|---|---|---|
 | Encoder learning rate five times higher (1e-3) | 3.687 | 2.956 | no gain; lead blend beats XGBoost (CRPS -0.039, -0.093 to -0.007) |
 | Stage 1: language model frozen, only encoder and projector trained | 3.724 | 3.031 | worse than XGBoost alone (+0.059, -0.002 to +0.113); validation 2.288 |
+| Stage 2: resume that encoder, add the text channel, unfreeze the adapters (partner: text plus CRPS loss 3.621 / 2.903) | 3.608 | 2.900 | beats XGBoost (-0.072, -0.133 to -0.023); vs text -0.004 (-0.016 to +0.008): the pre-trained encoder adds nothing |
+| Text plus encoder, combined data, 72-hour series, CRPS loss (partner: same with 720-hour series and plain loss, 3.603 / 2.877) | 3.606 | 2.878 | identical (+0.001, -0.031 to +0.036); beats XGBoost retrained on the same data (-0.057, -0.117 to -0.009) |
 
 - Training the encoder alone, with the language model fixed, is the cleanest test of whether the
   series channel carries the signal: it lands 0.08 CRPS behind the text models and behind the
@@ -644,6 +646,43 @@ encoder-only plain run at 3.702 / 2.954.
   start than the ECG-trained one.
 - A faster encoder does not change the outcome either; the encoder's ceiling is not a learning
   rate problem.
+- Giving the joint model an encoder that was trained first (stage 2) lands exactly on the text
+  model: the encoder channel is read, but it carries nothing the text does not. And 72 hourly
+  points through the encoder do as well as 720, so the short series is enough for the finals.
+
+### Stacking: the statistical forecast as a sentence in the prompt (03:15)
+
+Text, exact-minute plus CRPS loss, 2,000 steps, `examples_v4` (the combined data plus XGBoost's
+own median, 10 to 90% range, P(late) and P(cancelled) as one rationale sentence; out-of-fold on
+the training split so the model never sees a forecast fitted on its own row). Partner: XGBoost
+retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
+
+| Model | Median error | CRPS | vs XGBoost (CRPS, 95% interval) |
+|---|---|---|---|
+| Text, stacked, 2k | 3.573 | 2.860 | -0.075 (-0.116 to -0.044), real |
+| same, within 15 min (1,927) | | | -0.086 (-0.180 to -0.024), real |
+| same, beyond 30 min (2,158) | | | -0.085 (-0.123 to -0.047), real |
+| vs text plus encoder on the combined data (3.603 / 2.877) | | | -0.017 (-0.058 to +0.032) |
+
+- **The first single model that beats XGBoost at every lead time.** Given the statistical
+  forecast as a starting point, the language model corrects it with what it reads live; the
+  correction is worth 0.075 CRPS overall and, for the first time, as much beyond 30 minutes as
+  within 15. The lead-time blend fitted on validation chooses weight 1.0 for the TSLM: there is
+  nothing left for a blend to add, because the stacked model already contains XGBoost.
+- Validation is unchanged against the plain text run (2.188 vs 2.192), so the gain shows on the
+  test months only; the 5,000-step version (running) and the 12,000-step finals on the full test
+  (submitted 03:20: text, and text plus encoder, both on `examples_v4`) tell whether it holds.
+- **September, out of time (03:30):** the same 2,000-step stacked model scored on 10,000
+  September examples built with the combined features (`forward_v4.parquet`; XGBoost trained on
+  May, scored on September, and its September forecast written into the prompts). Persistence
+  3.057 / 2.493, XGBoost 2.745 / 2.175, stacked TSLM **2.689 / 2.136**: CRPS -0.039 (-0.076 to
+  -0.015) and median error -0.056 (-0.107 to -0.023), both real; within 15 minutes -0.068
+  (-0.148 to -0.025); the blind lead-time blend -0.040. The first TSLM that beats the tabular
+  baseline alone on data none of it had seen. (This September set is the combined-feature build
+  with 32,553 test examples; its numbers are not comparable with the earlier 10,000 from
+  `forward.parquet`, where XGBoost scored 3.244 / 2.586.)
+- **Planned trajectory channels** (running time, dwell and minutes left per stop through the
+  encoder, `examples_v5`): 3.604 / 2.879 against 3.606 / 2.878 without them. Nothing.
 
 ### Pending at the time of writing
 

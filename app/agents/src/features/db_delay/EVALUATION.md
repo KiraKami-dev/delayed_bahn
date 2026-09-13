@@ -89,6 +89,7 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | TSLM, text + encoder, v2 data, 2k | 3.603 | 2.877 | -0.060 vs XGBoost-v2 (-0.130 to -0.005) real |
 | Lead-time blend, text + plain, 2k | 3.618 | 2.901 | -0.070 (-0.127 to -0.030) real |
 | Lead-time blend, text + encoder, v2 data | | | -0.049 vs XGBoost-v2 (-0.100 to -0.015) real |
+| TSLM, text with XGBoost's forecast in the prompt (stacked, v4 data), 2k | 3.573 | 2.860 | -0.075 vs XGBoost-v3 (-0.116 to -0.044) real; within 15 min -0.086, beyond 30 min -0.085, both real |
 
 ### 5.2 All 93,738 test examples
 
@@ -132,6 +133,19 @@ are new.
 | Lead-time blend of that | 3.230 | 2.573 | -0.013 (-0.022 to -0.005) real |
 | Finals | *pending* | | |
 
+Second September set, built with the combined features (previous trains on the route) and the
+statistical forecast: 10,000 of its 32,553 September examples; XGBoost retrained on those
+features on May and scored on September. Not comparable with the table above (different
+examples).
+
+| Model | Median error | CRPS | vs XGBoost (CRPS) |
+|---|---|---|---|
+| Persistence | 3.057 | 2.493 | |
+| XGBoost (combined features) | 2.745 | 2.175 | |
+| TSLM, stacked, 2k | 2.689 | 2.136 | -0.039 (-0.076 to -0.015) real; median error -0.056 (-0.107 to -0.023) real; within 15 min -0.068 (-0.148 to -0.025) real |
+| Lead-time blend of that (weights from May) | | | -0.040 (-0.075 to -0.019) real |
+| Stacked finals (12k) | *pending* | | |
+
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the
 tabular model overall and ahead in the last quarter hour; blended by lead time with weights that
 never saw September, it beats XGBoost.
@@ -152,6 +166,11 @@ details and intervals in `DESIGN.md` section 16.
   baseline or below it. With the richer v2 data the text-plus-encoder model is the best 2,000-step
   run, 0.013 ahead of text alone (inside the noise).
 - **More training keeps helping** (2k to 5k: -0.024 CRPS for text); the long runs are the finals.
+- **The statistical forecast as an input makes the TSLM win everywhere.** With XGBoost's own
+  median, range and probabilities written into the prompt as one sentence (out-of-fold on the
+  training split), the model corrects the tabular forecast: -0.075 CRPS on the shared test at
+  every lead time, and -0.039 alone on September, out of time. The lead-time blend then has
+  nothing to add (fitted weight 1.0).
 - **Richer data helps both sides equally:** the previous trains on the route improve XGBoost by
   0.036 and the TSLM by 0.018 on the full test, and the TSLM keeps its edge against the retrained
   baseline.
@@ -163,9 +182,10 @@ details and intervals in `DESIGN.md` section 16.
 
 ## 7. Limits, stated plainly
 
-- A single 2,000-step TSLM does not beat XGBoost across the board; the wins are within 15 minutes
-  of arrival and through the lead-time blend. Whether a 12,000-step TSLM wins alone on the full
-  test is what the final runs answer.
+- Without the statistical forecast in the prompt, a single 2,000-step TSLM does not beat XGBoost
+  across the board; the wins are within 15 minutes of arrival and through the lead-time blend.
+  With it, the 2,000-step model wins at every lead time and out of time; the 12,000-step finals
+  say by how much.
 - The encoder, the part of OpenTSLM built for time series, is not where the gain comes from on
   this data; the language model reading the numbers as text is.
 - Differences of 0.01 to 0.03 CRPS between single runs on 5,000 examples are inside the noise;

@@ -95,7 +95,7 @@ def svg(crps: dict[str, dict[str, float]], sizes: dict[str, int], n: int, title:
 
 
 def svg_relative(crps: dict[str, dict[str, float]], sizes: dict[str, int], n: int, title: str, subtitle: str) -> str:
-    """Bars of CRPS difference to the first model per lead bucket; below the line is better."""
+    """Bars of CRPS difference to the first model per lead bucket; a bar above the line is a gain."""
     names = list(crps)
     base = crps[names[0]]
     diffs = {name: {g: crps[name][g] - base[g] for g in GROUPS if g in crps[name] and g in base} for name in names[1:]}
@@ -115,9 +115,9 @@ def svg_relative(crps: dict[str, dict[str, float]], sizes: dict[str, int], n: in
         parts.append(f'<line x1="{LEFT}" y1="{y:.1f}" x2="{LEFT + WIDTH}" y2="{y:.1f}" stroke="currentColor" opacity="0.15"/>')
         parts.append(f'<text x="{LEFT - 8}" y="{y + 4:.1f}" text-anchor="end" fill="currentColor" opacity="0.7">{value:+.2f}</text>')
     parts.append(f'<line x1="{LEFT}" y1="{zero:.1f}" x2="{LEFT + WIDTH}" y2="{zero:.1f}" stroke="currentColor" stroke-width="1.5"/>')
-    parts.append(f'<text x="{LEFT + 4}" y="{zero - 6:.1f}" font-size="11" fill="currentColor" opacity="0.7">{names[0]} = 0</text>')
+    parts.append(f'<text x="{LEFT + 4}" y="{zero + 14:.1f}" font-size="11" fill="currentColor" opacity="0.7">{names[0]} = 0</text>')
     parts.append(f'<text x="{LEFT - 44}" y="{TOP + HEIGHT / 2:.1f}" transform="rotate(-90 {LEFT - 44} {TOP + HEIGHT / 2:.1f})" '
-                 f'text-anchor="middle" fill="currentColor" opacity="0.7">CRPS minus {names[0]} (below the line is better)</text>')
+                 f'text-anchor="middle" fill="currentColor" opacity="0.7">CRPS minus {names[0]} (above the line is better)</text>')
     for g, (group, label) in enumerate(zip(GROUPS, LABELS)):
         x0 = LEFT + g * group_w + (group_w - bar_w * len(diffs)) / 2
         for m, name in enumerate(diffs):
