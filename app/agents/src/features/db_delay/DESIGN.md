@@ -627,6 +627,24 @@ against 3.635 / 2.907, so two identical trainings differ by about 0.006 CRPS.
   the planned trajectory of the run (running time, dwell, minutes left per stop) as encoder-only
   channels. Results follow.
 
+### Third wave: encoder experiments, first results (02:47)
+
+Encoder only, exact-minute plus CRPS loss, 2,000 steps, same 5,000 test examples; partner is the
+encoder-only plain run at 3.702 / 2.954.
+
+| Change | Median error | CRPS | Verdict |
+|---|---|---|---|
+| Encoder learning rate five times higher (1e-3) | 3.687 | 2.956 | no gain; lead blend beats XGBoost (CRPS -0.039, -0.093 to -0.007) |
+| Stage 1: language model frozen, only encoder and projector trained | 3.724 | 3.031 | worse than XGBoost alone (+0.059, -0.002 to +0.113); validation 2.288 |
+
+- Training the encoder alone, with the language model fixed, is the cleanest test of whether the
+  series channel carries the signal: it lands 0.08 CRPS behind the text models and behind the
+  tabular baseline. Stage 2 (resume that checkpoint, unfreeze the adapters, add the text channel)
+  was submitted at 02:52 and tells whether a pre-trained encoder gives the joint model a better
+  start than the ECG-trained one.
+- A faster encoder does not change the outcome either; the encoder's ceiling is not a learning
+  rate problem.
+
 ### Pending at the time of writing
 
 - Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text
