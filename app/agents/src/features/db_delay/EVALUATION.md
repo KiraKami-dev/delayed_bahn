@@ -272,6 +272,12 @@ details and intervals in `DESIGN.md` section 16.
   -0.044 to +0.062), and beats XGBoost alone on the September set as well (-0.033). The series
   channel carries the same information as the text and needs about twice the training to extract
   it.
+- **Without written summaries the series carry the signal, and text still reads them best.** With
+  the rationale cut to the timetable (v7, 2,000 steps, 4,729 shared test trains), no series scores
+  3.678 CRPS, the encoder 2.989 (-0.689, real) and the series as text 2.793 (-0.886, real; -0.196
+  against the encoder, real), level with XGBoost on the v7 features (2.824; -0.031, -0.089 to
+  +0.018). With the full rationale all three routes tie, because its summaries already state what
+  the series hold.
 - **More training keeps helping** (2k to 5k: -0.024 CRPS for text); the long runs are the finals.
 - **The statistical forecast as an input makes the TSLM win everywhere.** With XGBoost's own
   median, range and probabilities written into the prompt as one sentence (out-of-fold on the
