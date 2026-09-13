@@ -149,6 +149,9 @@ def rationale(row: pd.Series) -> str:
         parts.append(f"A statistical model expects about {row['xgb_median']:.0f} minutes late (likely "
                      f"{row['xgb_q10']:.0f} to {row['xgb_q90']:.0f}), with {pct(row['xgb_p_late'])} chance of being at "
                      f"least 6 minutes late and {pct(row['xgb_p_cancel'])} of cancellation.")
+    if "cause_text" in row and isinstance(row["cause_text"], str) and row["cause_text"]:
+        # Delay causes and notices reported before the prediction moment (causes.py); empty when none.
+        parts.append(row["cause_text"])
     if "station_late_same_hour" in row and len(row["station_series"]) >= 168:
         parts.append(f"At this time of day, {pct(row['station_late_same_hour'])} of stops at {stop} ran late over the "
                      f"last {len(row['station_series']) // 24} days, {pct(row['network_late_same_hour'])} nationwide.")
