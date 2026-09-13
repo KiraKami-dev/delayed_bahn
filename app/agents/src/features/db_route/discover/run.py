@@ -10,10 +10,11 @@ import datetime as dt
 import json
 from pathlib import Path
 
+from . import llm
 from .gates import gate
 from .probe import probe
 from .rubric import rubric
-from .scout import scout
+from .scout import NEEDS, scout
 from .spec import DataSpec
 
 
@@ -25,7 +26,10 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     spec = DataSpec()
 
-    cands = scout(spec)
+    proposed_queries = llm.propose_queries(spec.window, NEEDS) if llm.available() else None
+    if proposed_queries:
+        print("agent proposed queries:", json.dumps(proposed_queries, ensure_ascii=False)[:400])
+    cands = scout(spec, proposed_queries)
     (out / "candidates.jsonl").write_text("\n".join(json.dumps(c.as_dict(), ensure_ascii=False) for c in cands) + "\n")
     print(f"scout: {len(cands)} candidates ({sum(c.registry == 'known' for c in cands)} known, "
           f"{sum(c.registry == 'huggingface' for c in cands)} huggingface, {sum(c.registry == 'govdata' for c in cands)} govdata, "
@@ -39,6 +43,23 @@ def main() -> int:
             p = probe(c)
             entry["probe"] = p
             entry["rubric"] = rubric(c, p)
+            if llm.available():
+                # The agent judges relevance and fills the rubric; the probe overrules any boolean it contradicts.
+                verdict = llm.assess(c.as_dict(), p if p.get("probed") else None, spec.window)
+                if verdict:
+                    overruled = {k: verdict[k] for k in ("has_actual_times", "has_cancellation", "has_cause_codes")
+                                 if p.get("probed") and k in verdict and verdict[k] is not None and bool(verdict[k]) != bool(p.get(k, False))}
+                    entry["agent"] = {"proposed": verdict, "overruled_by_probe": overruled}
+                    if verdict.get("relevant") is False:
+                        entry["accepted"] = False
+                        entry["reason"] = f"agent judged not relevant: {verdict.get('reasoning', '')[:120]}"
+                    elif isinstance(verdict.get("role"), str):
+                        entry["rubric"]["role"] = verdict["role"]
+                        entry["rubric"]["filled_by"] = "agent+probe"
+                if entry["accepted"] and p.get("columns_typed"):
+                    proposal = llm.map_schema(c.id, p["columns_typed"])
+                    if proposal:
+                        entry["schema_map"] = {"proposed": proposal, **llm.verify_schema(proposal, [tuple(x) for x in p["columns_typed"]])}
             if p.get("probed") is False and "error" in p:
                 entry["accepted"] = False
                 entry["reason"] = f"probe failed: {p['error']}"
@@ -51,7 +72,9 @@ def main() -> int:
                     entry["reason"] = "temporal coverage not stated and no probe could measure it"
         assessment.append(entry)
     (out / "assessment.json").write_text(json.dumps({"generated": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
-                                                     "window": [d.isoformat() for d in spec.window], "entries": assessment}, indent=2, ensure_ascii=False))
+                                                     "window": [d.isoformat() for d in spec.window], "agent": {"model": llm.MODEL if llm.available() else None,
+                                                     "proposed_queries": proposed_queries, "calls": len(llm.LOG)}, "entries": assessment}, indent=2, ensure_ascii=False))
+    (out / "agent_log.json").write_text(json.dumps(llm.LOG, indent=2, ensure_ascii=False))
 
     acc = [e for e in assessment if e["accepted"]]
     rej = [e for e in assessment if not e["accepted"]]
@@ -75,7 +98,12 @@ def main() -> int:
     (out / "REJECTIONS.md").write_text("\n".join(lines) + "\n")
     print(f"assess: {len(acc)} accepted, {len(rej)} rejected -> {out}/assessment.json, {out}/REJECTIONS.md")
     for e in acc:
-        print(f"  ACCEPT {e['id']:42} {e['kind']:15} {e.get('rubric', {}).get('role', '')}")
+        sm = e.get("schema_map")
+        print(f"  ACCEPT {e['id']:42} {e['kind']:15} {e.get('rubric', {}).get('role', '')}"
+              + (f"  schema map {'verified' if sm['verified'] else 'REJECTED: ' + '; '.join(sm['problems'])}" if sm else ""))
+    if llm.available():
+        print(f"agent: {llm.MODEL}, {len(llm.LOG)} calls, {sum(1 for e in assessment if e.get('agent'))} candidates assessed, "
+              f"{sum(1 for e in assessment if e.get('reason', '').startswith('agent judged'))} rejected by the agent")
     from collections import Counter
     for reason, n in Counter(e["reason"].split(":")[0] for e in rej).most_common():
         print(f"  reject x{n:<3} {reason}")

@@ -34,7 +34,7 @@ def probe_piebro() -> dict:
         per_month[m] = {"rows": int(n), "stations": int(st)}
     cols = [c[0] for c in schema]
     return {
-        "columns": cols, "n_columns": len(cols), "per_month": per_month,
+        "columns": cols, "columns_typed": [[c[0], c[1]] for c in schema], "n_columns": len(cols), "per_month": per_month,
         "has_actual_times": any("change_time" in c for c in cols), "has_cancellation": any("cancel" in c for c in cols),
         "has_platform": any("platform" in c for c in cols), "has_cause_codes": False,
         "coverage_step": {"before": per_month["2025-10"]["stations"], "after": per_month["2025-11"]["stations"],

@@ -42,7 +42,7 @@ def _dcat_licence(uri: str) -> str | None:
 
 def huggingface(spec: DataSpec) -> list[SourceCandidate]:
     out = []
-    for q in spec.queries[:6]:
+    for q in spec.queries:
         try:
             hits = _get_json(f"https://huggingface.co/api/datasets?search={urllib.parse.quote(q)}&limit=25&full=true")
         except Exception as exc:  # noqa: BLE001
@@ -65,7 +65,7 @@ def huggingface(spec: DataSpec) -> list[SourceCandidate]:
 
 def govdata(spec: DataSpec) -> list[SourceCandidate]:
     out = []
-    for q in ("deutsche bahn", "verspätung zug", "fahrplan bahn", "schienennetz", "infrastrukturdaten db infrago"):
+    for q in list(dict.fromkeys(["deutsche bahn", "verspätung zug", "fahrplan bahn", "schienennetz", "infrastrukturdaten db infrago", *spec.queries[11:]])):
         try:
             res = _get_json(f"https://www.govdata.de/ckan/api/3/action/package_search?q={urllib.parse.quote(q)}&rows=25")["result"]
         except Exception as exc:  # noqa: BLE001
@@ -91,9 +91,9 @@ def govdata(spec: DataSpec) -> list[SourceCandidate]:
     return out
 
 
-def zenodo(spec: DataSpec) -> list[SourceCandidate]:
+def zenodo(spec: DataSpec, extra: list[str] = ()) -> list[SourceCandidate]:
     out = []
-    for q in ("deutsche bahn delay", "train delay germany dataset", "railway punctuality germany"):
+    for q in list(dict.fromkeys(["deutsche bahn delay", "train delay germany dataset", "railway punctuality germany", *extra])):
         try:
             hits = _get_json(f"https://zenodo.org/api/records?q={urllib.parse.quote(q)}&size=25&sort=mostrecent")["hits"]["hits"]
         except Exception as exc:  # noqa: BLE001
@@ -159,8 +159,16 @@ def known() -> list[SourceCandidate]:
     ]
 
 
-def scout(spec: DataSpec) -> list[SourceCandidate]:
-    cands = known() + huggingface(spec) + govdata(spec) + zenodo(spec)
+NEEDS = ("per-stop rail events with actual times and cancellations; cause codes or disruption notices; hourly weather; "
+         "public and school holidays per Bundesland; rail infrastructure (track, speed, works); station reference data")
+
+
+def scout(spec: DataSpec, llm_queries: dict[str, list[str]] | None = None) -> list[SourceCandidate]:
+    """Registries with the fixed queries plus whatever the agent proposed; the agent's terms are recorded on each hit."""
+    if llm_queries:
+        spec = DataSpec(window=spec.window, max_interval_hours=spec.max_interval_hours, stations_sample=spec.stations_sample,
+                        queries=tuple(dict.fromkeys(list(spec.queries) + llm_queries.get("huggingface", []) + llm_queries.get("govdata", []))))
+    cands = known() + huggingface(spec) + govdata(spec) + zenodo(spec, extra=(llm_queries or {}).get("zenodo", []))
     cands = _dedupe(cands)
     # A registry hit that duplicates a known candidate is the scout confirming it; keep both records but link them.
     for c in cands:

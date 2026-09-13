@@ -96,7 +96,7 @@ def caption_stats(captions: list[str]) -> list[float]:
     return out
 
 
-def build_rows(dataset, bridge) -> list[dict]:
+def build_rows(dataset, bridge, caption_only: bool = False) -> list[dict]:
     """Every (record, task) as a training sample with the fields the loop and the scorer need."""
     options: dict[str, set[str]] = {}
     for record in dataset.records:
@@ -127,7 +127,7 @@ def build_rows(dataset, bridge) -> list[dict]:
             proxy = types.SimpleNamespace(target=target, rationale=getattr(task, "rationale", None))
             row = bridge.BridgeRow(record, proxy)
             menu = menus.get(getattr(task, "target_schema", ""), ()) if kind == "ClassificationTask" else ()
-            sample = bridge.build_sample(row, eos_token="", label_options=menu)
+            sample = bridge.build_sample(row, eos_token="", label_options=menu, caption_only=caption_only)
             sample["prefix"] = sample["answer"].rsplit(" Answer:", 1)[0] + " Answer:"
             sample.update(
                 kind=kind, y=y, target_text=str(target), record_id=str(record.record_id),
@@ -260,7 +260,11 @@ def main() -> int:
     ap.add_argument("--max-hours", type=float, default=2.5)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--grad-checkpointing", action="store_true")
+    ap.add_argument("--caption-only", action="store_true", help="zero every series, keep the captions: the encoder ablation")
+    ap.add_argument("--lora-lr", type=float, default=None, help="alias of --lr")
     args = ap.parse_args()
+    if args.lora_lr is not None:
+        args.lr = args.lora_lr
 
     rank = int(os.environ.get("LOCAL_RANK", "0"))
     profiles = [p for p in args.profiles.split(",") if p]
@@ -291,7 +295,7 @@ def main() -> int:
     dataset_id = f"error404/db-route-{profile}"
     t = time.time()
     dataset = TimeNet(args.registry).load(dataset_id)
-    rows = build_rows(dataset, bridge)
+    rows = build_rows(dataset, bridge, caption_only=args.caption_only)
     train = [r for r in rows if r["split"] == "train"]
     by_cell = {c: [r for r in rows if r["cell"] == c] for c in CELLS}
     log(rank, f"{dataset_id}: {len(rows)} samples, train {len(train)}, "
@@ -355,7 +359,7 @@ def main() -> int:
         scalar = [r for r in cell_rows if r["kind"] == "ScalarPredictionTask"]
         if not scalar:
             continue
-        if len(scalar) > args.eval_limit:
+        if args.eval_limit and len(scalar) > args.eval_limit:
             scalar = [scalar[i] for i in sorted(rng.choice(len(scalar), args.eval_limit, replace=False))]
         probs = []
         with torch.no_grad():

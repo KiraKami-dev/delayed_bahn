@@ -1,9 +1,39 @@
 {
-  "generated": "2026-09-13T05:15:10+00:00",
+  "generated": "2026-09-13T05:29:19+00:00",
   "window": [
     "2025-11-02",
     "2026-08-31"
   ],
+  "agent": {
+    "model": "gpt-4o-mini",
+    "proposed_queries": {
+      "huggingface": [
+        "German rail delays events 2025",
+        "Deutsche Bahn disruptions cause codes",
+        "German public holidays 2025 2026",
+        "German weather hourly data",
+        "German rail infrastructure updates",
+        "German station reference data"
+      ],
+      "govdata": [
+        "Ereignisse Deutsche Bahn 2025 2026",
+        "Störungen Bahn Ursache Codes",
+        "Wetterdaten stündlich Deutschland",
+        "Öffentliche Feiertage Bundesländer 2025 2026",
+        "Eisenbahninfrastruktur Bauarbeiten 2025",
+        "Bahnhof Referenzdaten Deutschland"
+      ],
+      "zenodo": [
+        "rail delays Germany 2025",
+        "disruption notices Deutsche Bahn",
+        "weather data Germany hourly",
+        "public holidays Germany 2025 2026",
+        "infrastructure projects rail Germany",
+        "station data Deutsche Bahn"
+      ]
+    },
+    "calls": 34
+  },
   "entries": [
     {
       "id": "known:piebro/deutsche-bahn-data",
@@ -34,6 +64,80 @@
           "departure_change_time",
           "id"
         ],
+        "columns_typed": [
+          [
+            "station_name",
+            "VARCHAR"
+          ],
+          [
+            "xml_station_name",
+            "VARCHAR"
+          ],
+          [
+            "eva",
+            "VARCHAR"
+          ],
+          [
+            "train_number",
+            "VARCHAR"
+          ],
+          [
+            "line_number",
+            "VARCHAR"
+          ],
+          [
+            "final_destination_station",
+            "VARCHAR"
+          ],
+          [
+            "delay_in_min",
+            "INTEGER"
+          ],
+          [
+            "time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "departure_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "train_type",
+            "VARCHAR"
+          ],
+          [
+            "train_line_ride_id",
+            "VARCHAR"
+          ],
+          [
+            "train_line_station_num",
+            "INTEGER"
+          ],
+          [
+            "arrival_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "id",
+            "VARCHAR"
+          ]
+        ],
         "n_columns": 18,
         "per_month": {
           "2025-10": {
@@ -60,7 +164,7 @@
         },
         "notes": "cause codes live only in raw_data/ IRIS XML (measured 30.1% of stops carry one)",
         "probed": true,
-        "seconds": 17.3
+        "seconds": 15.0
       },
       "rubric": {
         "covers_window": true,
@@ -71,7 +175,38 @@
         "static": false,
         "role": "primary series",
         "notes": "processed monthly parquet + raw IRIS XML; ~100 stations to 2025-11-02, all stations after",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "primary series",
+          "covers_window": true,
+          "has_actual_times": true,
+          "has_cancellation": true,
+          "has_cause_codes": null,
+          "resolution": "parquet",
+          "confidence": 0.9,
+          "reasoning": "The dataset contains detailed per-stop events with delays and cancellations, covering the required time window and providing essential data for predicting rail delays."
+        },
+        "overruled_by_probe": {}
+      },
+      "schema_map": {
+        "proposed": {
+          "timestamp": "time",
+          "entity_id": "id",
+          "station": "station_name",
+          "value": "delay_in_min",
+          "cancellation_flag": "arrival_is_canceled",
+          "line_id": "line_number",
+          "sequence_index": "train_line_station_num",
+          "cause_code": null,
+          "planned_time": "departure_planned_time",
+          "changed_time": "departure_change_time",
+          "reasoning": "Mapped columns based on their relevance to the rail-delay pipeline schema."
+        },
+        "verified": true,
+        "problems": []
       }
     },
     {
@@ -95,7 +230,21 @@
         "static": false,
         "role": "primary series",
         "notes": "DB Timetable API polled per station since 2021; ~3.5-5M stops/week",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "primary series",
+          "covers_window": true,
+          "has_actual_times": true,
+          "has_cancellation": true,
+          "has_cause_codes": false,
+          "resolution": "high",
+          "confidence": 0.85,
+          "reasoning": "The Bahn-Vorhersage archive provides extensive event data from DB since 2021, covering the required time window and offering actual stop times and cancellation information, which are crucial for delay prediction."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -121,7 +270,7 @@
           "type"
         ],
         "probed": true,
-        "seconds": 0.3
+        "seconds": 0.4
       },
       "rubric": {
         "covers_window": true,
@@ -132,7 +281,21 @@
         "static": false,
         "role": "annotations",
         "notes": "public and school holidays per Bundesland",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.9,
+          "reasoning": "The OpenHolidays API provides public and school holiday data relevant to the temporal window, which can influence rail delays due to increased travel or service changes."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -169,7 +332,7 @@
         ],
         "with_federal_state": 5388,
         "probed": true,
-        "seconds": 0.3
+        "seconds": 0.4
       },
       "rubric": {
         "covers_window": true,
@@ -178,9 +341,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "join hub",
         "notes": "5,388 stations: EVA, DS100, Bundesland, category, weight, coordinates",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "join hub",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "data source provides station reference information which can be useful for contextualizing delays.",
+          "confidence": 0.8,
+          "reasoning": "The station data can enhance understanding of delays by providing context about station facilities and locations, which may correlate with disruptions."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -217,7 +394,7 @@
         ],
         "source": "München-Stadt",
         "probed": true,
-        "seconds": 0.1
+        "seconds": 0.2
       },
       "rubric": {
         "covers_window": true,
@@ -226,9 +403,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": false,
-        "role": "context annotations or channels",
+        "role": "context channels",
         "notes": "hourly observations for any lat/lon, no key",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "hourly",
+          "confidence": 0.9,
+          "reasoning": "Weather data is crucial for predicting rail delays, and the provided API covers the entire required window with hourly observations, making it a valuable context channel."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -244,7 +435,7 @@
         "size_mb": null,
         "content_type": "application/octet-stream",
         "probed": true,
-        "seconds": 0.6
+        "seconds": 0.7
       },
       "rubric": {
         "covers_window": true,
@@ -253,9 +444,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations",
+        "role": "context channels",
         "notes": "track count, electrification, line speed, Bauzustand, Betriebsstellen with DS100 and km",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "infrastructure data can help understand delays related to track conditions and operational capabilities.",
+          "confidence": 0.8,
+          "reasoning": "The infrastructure data provides essential context for analyzing delays, especially regarding track conditions and operational constraints during the specified period."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -271,7 +476,7 @@
         "size_mb": null,
         "content_type": "application/zip",
         "probed": true,
-        "seconds": 0.1
+        "seconds": 0.2
       },
       "rubric": {
         "covers_window": true,
@@ -280,9 +485,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "catchment population per station",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "100m",
+          "confidence": 0.8,
+          "reasoning": "The Zensus 2022 population grid provides demographic data that can help contextualize rail delays by understanding population density and catchment areas around stations, relevant for predicting delays."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -413,6 +632,80 @@
           "departure_change_time",
           "id"
         ],
+        "columns_typed": [
+          [
+            "station_name",
+            "VARCHAR"
+          ],
+          [
+            "xml_station_name",
+            "VARCHAR"
+          ],
+          [
+            "eva",
+            "VARCHAR"
+          ],
+          [
+            "train_number",
+            "VARCHAR"
+          ],
+          [
+            "line_number",
+            "VARCHAR"
+          ],
+          [
+            "final_destination_station",
+            "VARCHAR"
+          ],
+          [
+            "delay_in_min",
+            "INTEGER"
+          ],
+          [
+            "time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "departure_is_canceled",
+            "BOOLEAN"
+          ],
+          [
+            "train_type",
+            "VARCHAR"
+          ],
+          [
+            "train_line_ride_id",
+            "VARCHAR"
+          ],
+          [
+            "train_line_station_num",
+            "INTEGER"
+          ],
+          [
+            "arrival_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "arrival_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_planned_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "departure_change_time",
+            "TIMESTAMP_NS"
+          ],
+          [
+            "id",
+            "VARCHAR"
+          ]
+        ],
         "n_columns": 18,
         "per_month": {
           "2025-10": {
@@ -439,7 +732,7 @@
         },
         "notes": "cause codes live only in raw_data/ IRIS XML (measured 30.1% of stops carry one)",
         "probed": true,
-        "seconds": 15.7
+        "seconds": 14.8
       },
       "rubric": {
         "covers_window": false,
@@ -448,9 +741,40 @@
         "has_cancellation": true,
         "has_cause_codes": false,
         "static": false,
-        "role": "unknown",
+        "role": "primary series",
         "notes": "lastModified 2026-09-12, downloads 6408; duplicates known:piebro/deutsche-bahn-data (scout confirms the primary source)",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "primary series",
+          "covers_window": true,
+          "has_actual_times": true,
+          "has_cancellation": true,
+          "has_cause_codes": null,
+          "resolution": "high",
+          "confidence": 0.9,
+          "reasoning": "The dataset contains detailed per-stop events including delays and cancellations, which are crucial for predicting rail delays. It covers the entire specified window and provides actual times."
+        },
+        "overruled_by_probe": {}
+      },
+      "schema_map": {
+        "proposed": {
+          "timestamp": "time",
+          "entity_id": "id",
+          "station": "station_name",
+          "value": "delay_in_min",
+          "cancellation_flag": "arrival_is_canceled",
+          "line_id": "line_number",
+          "sequence_index": "train_line_station_num",
+          "cause_code": null,
+          "planned_time": "arrival_planned_time",
+          "changed_time": "arrival_change_time",
+          "reasoning": "Mapped columns based on their relevance to the defined roles, ensuring each key aligns with the dataset's structure."
+        },
+        "verified": true,
+        "problems": []
       }
     },
     {
@@ -472,9 +796,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": false,
-        "role": "unknown",
+        "role": "annotations",
         "notes": "lastModified 2026-01-18, downloads 121",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The dataset appears to be related to Deutsche Bahn data, which may include relevant annotations for rail delays. However, specific details on temporal coverage and content are unclear."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -496,9 +834,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": false,
-        "role": "unknown",
+        "role": "annotations",
         "notes": "lastModified 2026-06-27, downloads 61",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "annotations",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The dataset is related to Deutsche Bahn and may contain relevant annotations, but specific details about its coverage and content are unclear."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -520,9 +872,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "reference",
         "notes": "publisher Metropolregion Rhein-Neckar; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gpkg', 'http://publications.europa.eu/resource/authority/file-type/wms_srvc']",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "reference",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.6,
+          "reasoning": "The dataset provides station reference data which can be useful for contextualizing rail delays, but it does not directly include temporal or event-specific data for the specified window."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -544,9 +910,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "publisher Metropolregion Rhein-Neckar; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gpkg', 'http://publications.europa.eu/resource/authority/file-type/wms_srvc']",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides reference information about the Deutsche Bahn network, which can help contextualize delays but does not directly include time-series data or specific delay causes."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -622,9 +1002,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/bin', 'http://publications.europa.eu/resource/authority/file-type/csv']",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides infrastructure data which can be useful for understanding delays but lacks specific temporal coverage and details on disruptions or causes."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -808,17 +1202,31 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "publisher Berlin Open Data; formats []",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "reference",
+          "confidence": 0.7,
+          "reasoning": "The VBB-Fahrplandaten provides timetable data which can be useful for understanding scheduled services and potential delays, but lacks specific disruption or cause code information."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
       "id": "govdata:vbb-fahrplandaten-november-2017-bis-dezember-2018",
       "title": "VBB-Fahrplandaten November 2017 bis Dezember 2018",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset covers a time period from November 2017 to December 2018, which is outside the required window of November 2",
       "licence": "CC-BY-4.0",
       "kind": "reference",
       "probe": {
@@ -835,6 +1243,20 @@
         "role": "annotations / join hub",
         "notes": "publisher Berlin Open Data; formats ['zip']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": false,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset covers a time period from November 2017 to December 2018, which is outside the required window of November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -850,8 +1272,8 @@
       "id": "govdata:soll-fahrplandaten-mvv-regionalbus-gtfs",
       "title": "Soll-Fahrplandaten MVV-Regionalbus (GTFS)",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to regional bus schedules and does not provide relevant information for rail delays, cancellations,",
       "licence": "CC-BY-4.0",
       "kind": "reference",
       "probe": {
@@ -868,14 +1290,28 @@
         "role": "annotations / join hub",
         "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/zip']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to regional bus schedules and does not provide relevant information for rail delays, cancellations, or causes related to Deutsche Bahn operations."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
       "id": "govdata:barrierefreiheit-an-bahnhofen-und-haltepunkten-spnv-baden-wurttembergf63fb",
       "title": "Barrierefreiheit an Bahnhöfen und Haltepunkten (SPNV) Baden-Württemberg",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on accessibility at stations and does not provide information on delays, disruptions, or causes rele",
       "licence": "DL-DE-BY-2.0",
       "kind": "reference",
       "probe": {
@@ -892,14 +1328,28 @@
         "role": "annotations / join hub",
         "notes": "publisher Open Data Baden-Württemberg; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/pdf', 'http://publications.europa.eu/resource/authority/file-type/zip']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.2,
+          "reasoning": "The dataset focuses on accessibility at stations and does not provide information on delays, disruptions, or causes relevant to rail delay prediction."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
       "id": "govdata:streckenlange-des-schienennetzes-deutschland-stichtag-betriebsordnung",
       "title": "Streckenlänge des Schienennetzes: Deutschland, Stichtag, Betriebsordnung",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides information on the length of the rail network but does not include time-series data, cause codes, o",
       "licence": "DL-DE-BY-2.0",
       "kind": "reference",
       "probe": {
@@ -916,14 +1366,28 @@
         "role": "annotations / join hub",
         "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides information on the length of the rail network but does not include time-series data, cause codes, or disruptions relevant to rail delays."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
       "id": "govdata:streckenlange-des-schienennetzes-bundeslander-stichtag-betriebsordnung",
       "title": "Streckenlänge des Schienennetzes: Bundesländer, Stichtag, Betriebsordnung",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides information on the length of the rail network by federal state but does not include temporal data o",
       "licence": "DL-DE-BY-2.0",
       "kind": "reference",
       "probe": {
@@ -940,6 +1404,20 @@
         "role": "annotations / join hub",
         "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides information on the length of the rail network by federal state but does not include temporal data or operational disruptions relevant to rail delays."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -961,17 +1439,31 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/json']",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.6,
+          "reasoning": "The dataset provides information on planned rail projects which may affect delays, but lacks specific temporal coverage and details on disruptions or causes."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
       "id": "govdata:streckenlange-des-schienennetzes-nach-betriebsordnung-2-land-jahr",
       "title": "Streckenlänge des Schienennetzes nach Betriebsordnung (2) -Land - Jahr",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset provides information on the length of the rail network but does not include temporal data or specific events",
       "licence": "DL-DE-BY-2.0",
       "kind": "reference",
       "probe": {
@@ -988,6 +1480,20 @@
         "role": "annotations / join hub",
         "notes": "publisher Open.NRW; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset provides information on the length of the rail network but does not include temporal data or specific events related to delays, disruptions, or causes during the specified window."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -1156,8 +1662,8 @@
       "id": "govdata:parking-information-service-db-bahnpark",
       "title": "Parking Information Service - DB Bahnpark",
       "registry": "govdata",
-      "accepted": true,
-      "reason": "passes every gate",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset focuses on parking information and does not provide relevant data for rail delays, causes, or disruptions.",
       "licence": "DL-DE-BY-2.0",
       "kind": "reference",
       "probe": {
@@ -1174,6 +1680,20 @@
         "role": "annotations / join hub",
         "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/json']",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset focuses on parking information and does not provide relevant data for rail delays, causes, or disruptions."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -1204,9 +1724,23 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/xml']",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "unknown",
+          "confidence": 0.7,
+          "reasoning": "The OpenStation SIRI FM dataset provides real-time facility status, which may include disruptions and delays relevant to rail operations, potentially aiding in understanding delays during the specified window."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -1228,10 +1762,1429 @@
         "has_cancellation": false,
         "has_cause_codes": false,
         "static": true,
-        "role": "annotations / join hub",
+        "role": "context channels",
         "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/xml']",
-        "filled_by": "metadata+probe"
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "static reference data",
+          "confidence": 0.7,
+          "reasoning": "The dataset provides static station infrastructure information which can be useful for understanding delays related to station facilities, but does not directly address temporal events or disruptions."
+        },
+        "overruled_by_probe": {}
       }
+    },
+    {
+      "id": "govdata:german-private-equity-barometer",
+      "title": "German Private Equity Barometer",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:skn-flache-nordsee-202613395",
+      "title": "SKN-Fläche Nordsee 2026",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:skn-flache-nordsee-2026-wcs",
+      "title": "SKN-Fläche Nordsee 2026 - WCS",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:skn-flache-nordsee-2026-wms",
+      "title": "SKN-Fläche Nordsee 2026 - WMS",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:deutsches-kleinseen-und-teichinventar-german-small-lake-and-pond-inventory-gslpi-datensatzbe801",
+      "title": "Deutsches Kleinseen- und Teichinventar - German small lake and pond inventory (GSLPI) (Datensatz)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:land-surface-temperature-lst-aggregates-germany-summer-2021-20254a423",
+      "title": "Land Surface Temperature (LST) - Aggregates - Germany, Summer 2021-2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbauszenario-20511ca",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-05e7868",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -05",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-1099936",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -10",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-08a0d77",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -08",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-031a1b4",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -03",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-011cc8f",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -01",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-076d31e",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -07",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-12767ef",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -12",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-090aa6d",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -09",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-0663ee6",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -06",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-1194d2c",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -11",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-04fbe02",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -04",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-ertragspotenzial-der-offshore-windenergie-fur-die-gesamte-nordsee-ausbausze-2025-02665e1",
+      "title": "Modelldaten Ertragspotenzial der Offshore-Windenergie für die gesamte Nordsee, Ausbauszenario 2025 -02",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:digital-terrain-model-of-the-watercourses-elbe-and-lower-havel-germany-dgm-w-elbe-2022-project495c0",
+      "title": "Digital terrain model of the watercourses Elbe and Lower Havel (Germany), DGM-W Elbe 2022 project",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digital-surface-model-of-the-watercourses-elbe-and-lower-havel-germany-dgm-w-elbe-project-202230a12",
+      "title": "Digital surface model of the watercourses Elbe and Lower Havel (Germany), DGM-W Elbe project, DOM Elbe 2022",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ruckstreumosaike-fk-33-2020c4718",
+      "title": "Rückstreumosaike - FK 33 2020",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ruckstreumosaike-atair-008c927f",
+      "title": "Rückstreumosaike - Atair 008",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ruckstreumosaike-atair-012acd1f",
+      "title": "Rückstreumosaike - Atair 012",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ruckstreumosaike-wega-194ed876",
+      "title": "Rückstreumosaike - Wega 194",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-wetterphaenomene-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Wetterphaenomene für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:wettermessungen-in-der-landeshauptstadt-kiel-odala",
+      "title": "Wettermessungen in der Landeshauptstadt Kiel (ODALA)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:wetterdaten-der-dwd-wetterstation-munster-osnabruck",
+      "title": "Wetterdaten der DWD Wetterstation Münster/Osnabrück",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Open.NRW; formats ['http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": true,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.8,
+          "reasoning": "Weather data can significantly impact rail delays, making it a valuable context channel for predicting disruptions during the specified window."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:anwendung-von-digitalen-zwillingen-zur-erweiterung-der-emissionsdaten-der-beim-projekt-emidat-v-1",
+      "title": "Anwendung von digitalen Zwillingen zur Erweiterung der Emissionsdaten der beim Projekt „EmiDaT“ vermessenen frei belüfteten Milchviehställe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:dlr-urban-traffic-dataset-dlr-ut",
+      "title": "DLR Urban Traffic dataset (DLR UT)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:verkehrszahlung-fahrradverkehr-daten-der-zahlstellen-munster-schlachthofviertelc9441",
+      "title": "Verkehrszählung Fahrradverkehr: Daten der Zählstellen Münster Schlachthofviertel",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrszahlung-fahrradverkehr-daten-der-zahlstellen-munster-bahnhofsviertel9de85",
+      "title": "Verkehrszählung Fahrradverkehr: Daten der Zählstellen Münster Bahnhofsviertel",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/xls,xlsx' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrszahlung-fahrradverkehr-daten-der-zahlstellen-munster-josefsviertela6444",
+      "title": "Verkehrszählung Fahrradverkehr: Daten der Zählstellen Münster Josefsviertel",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrszahlung-fahrradverkehr-daten-der-zahlstellen-munster-schlossbezirk131b8",
+      "title": "Verkehrszählung Fahrradverkehr: Daten der Zählstellen Münster Schloßbezirk",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:sentinel-5p-tropomi-aerosol-optical-depth-aod-level-3-global92426",
+      "title": "Sentinel-5P TROPOMI - Aerosol Optical Depth (AOD), Level 3 - Global",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:sentinel-5p-tropomi-water-vapour-h2o-level-3-global83503",
+      "title": "Sentinel-5P TROPOMI – Water Vapour (H2O), Level 3 – Global",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:bioclis-cams-wrf-germany-daily",
+      "title": "BioClis - CAMS/WRF - Germany, Daily",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:referenzwinddaten-langfristiges-ertragspotenzial-offshore-windenergie-ostsee-2006-serie6d962",
+      "title": "Referenzwinddaten langfristiges Ertragspotenzial Offshore-Windenergie Ostsee 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:referenzwinddaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-2006-serieae66e",
+      "title": "Referenzwinddaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-11-2006-seriea2152",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 11 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-7-2006-serie42925",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 7 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-15-2006-serie66a27",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 15 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-19-2006-serie8a74c",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 19 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-5-2006-serie05c08",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 5 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-16-2006-seriea1555",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 16 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-4-2006-seriefe94e",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 4 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-14-2006-serie0ca4f",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 14 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-22-2006-serieb4b35",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 22 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-25-2006-serieba99f",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 25 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:modelldaten-langfristiges-ertragspotenzial-offshore-windenergie-nordsee-szenario-13-2006-serie045e0",
+      "title": "Modelldaten langfristiges Ertragspotenzial Offshore-Windenergie Nordsee - Szenario 13 2006 - Serie",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:dns-reference-data-of-flow-over-periodic-hills-at-re5600-and-10595",
+      "title": "DNS reference data of flow over periodic hills at Re=5600 and 10595",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-german-earthquake-catalogue-gerseis",
+      "title": "INSPIRE: German Earthquake Catalogue (GERSEIS)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:global-reference-histograms-of-the-ims-infrasound-broadband-detection-lists",
+      "title": "Global reference histograms of the IMS infrasound broadband detection lists",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-german-regional-seismic-network-grsn",
+      "title": "INSPIRE: German Regional Seismic Network (GRSN)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:reference-percentiles-for-carotid-measures-of-subclinical-atherosclerosis-in-children-and-adole",
+      "title": "Reference percentiles for carotid measures of subclinical atherosclerosis in children and adolescents – Data from the KiGGS study",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:characterization-data-of-reference-industrial-polycarboxylate-superplasticizers-used-within-pri",
+      "title": "Characterization data of reference industrial polycarboxylate superplasticizers used within Priority Program DFG SPP 2005 “Opus Fluidum Futurum - Rheology of reactive, multiscale, multiphase construction materials”",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:open-sensor-data-for-rail-2023a97e5",
+      "title": "Open Sensor Data for Rail 2023",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'by-sa/3.0/deed.de' not in the open allowlist",
+      "licence": "by-sa/3.0/deed.de",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:grdc-caravan-extending-the-original-dataset-with-data-from-the-global-runoff-data-centre",
+      "title": "GRDC-Caravan: extending the original dataset with data from the Global Runoff Data Centre",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:characterization-data-of-reference-industrial-polycarboxylate-superplasticizer-vp-2020-15-2-use",
+      "title": "Characterization data of reference industrial polycarboxylate superplasticizer VP 2020/15.2 used for Priority Program DFG SPP 2005 “Opus Fluidum Futurum - Rheology of reactive, multiscale, multiphase construction materials”",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ship-wave-measurements-in-german-coastal-waterways-from-1998-to-2022c5954",
+      "title": "Ship Wave Measurements in German Coastal Waterways from 1998 to 2022",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:historical-digital-terrain-model-data-of-the-weser-estuary-hiwest11357",
+      "title": "Historical digital terrain model data of the Weser Estuary (HIWEST)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc by 4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:data-used-for-analysis-of-extreme-precipitation-events-and-their-impact-on-summer-deep-seepage-",
+      "title": "Data used for analysis of extreme precipitation events and their Impact on summer deep seepage on the Intensive Forest Monitoring Station Britz",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher OpenAgrar; formats ['csv']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.7,
+          "reasoning": "The dataset on extreme precipitation events can provide insights into weather-related disruptions affecting rail delays, which is relevant for the time-series model."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:co2-storage-potential-of-the-jurassic-within-the-german-central-graben",
+      "title": "CO2 storage potential of the Jurassic within the German Central Graben",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-surface-geology-geological-overview-map-of-the-german-north-sea-guk200-dn",
+      "title": "INSPIRE: Surface geology – Geological overview map of the German North Sea (GÜK200-DN)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:co2-storage-potential-of-the-middle-buntsandstein-subgroup-eez-of-the-german-north-sea",
+      "title": "CO2 storage potential of the Middle Buntsandstein Subgroup - EEZ of the German North Sea",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digital-terrain-model-of-the-watercourse-estuary-elbe-2022-dgm-w-2022-model-data",
+      "title": "Digital terrain model of the watercourse estuary Elbe 2022 (DGM-W 2022) | model data",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digital-terrain-model-of-the-watercourse-estuary-elbe-2016-dgm-w-2016-model-data",
+      "title": "Digital terrain model of the watercourse estuary Elbe 2016 (DGM-W 2016) | model data",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "geonutz/20130319",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:microsatellite-ssr-dataset-pomological-and-molecular-characterization-of-apple-cultivars-malus-",
+      "title": "Microsatellite/SSR dataset: pomological and molecular characterization of apple cultivars (Malus × domestica Borkh.) of the German Fruit Genebank, Version 1",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:microsatellite-ssr-dataset-pomological-and-molecular-characterization-of-pear-cultivars-pyrus-c",
+      "title": "Microsatellite/SSR dataset: pomological and molecular characterization of pear cultivars (Pyrus communis) of the German Fruit Genebank, Version1",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:harmonized-cross-border-seismic-velocity-model-for-the-dutch-german-and-danish-north-sea-area-p",
+      "title": "Harmonized, cross-border seismic velocity model for the Dutch, German and Danish North Sea area (Project 3DGEO-EU)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:temporal-trends-of-mercury-levels-in-fish-dab-limanda-limanda-and-sediment-from-the-german-bigh",
+      "title": "Temporal trends of mercury levels in fish (dab, Limanda limanda) and sediment from the German Bight (North Sea) in the period 1995–2020",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:kinetic-measurements-used-to-determine-the-nucleophilicity-of-2-methylene-12-dihydropyridines-2",
+      "title": "Kinetic measurements used to determine the nucleophilicity of 2-methylene-1,2-dihydropyridines (2-pyNHOs)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:easygsh-db_synoptische_hydrodynamik-seegangsparameter-swan8560e",
+      "title": "EasyGSH-DB_synoptische_Hydrodynamik: Seegangsparameter SWAN",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-des-niederschlags-fur-deutschland",
+      "title": "Stündliche Stationsmessungen des Niederschlags für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-feuchteparameter-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Feuchteparameter für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-sichtweite-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Sichtweite für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-sonnenscheindauer-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Sonnenscheindauer für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-erdbodentemperatur-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Erdbodentemperatur für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-des-luftdrucks-fur-deutschland",
+      "title": "Stündliche Stationsmessungen des Luftdrucks für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-wolkenbedeckung-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Wolkenbedeckung für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:wetterdaten",
+      "title": "Wetterdaten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/txt' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-windgeschwindigkeit-und-windrichtung-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Windgeschwindigkeit und Windrichtung für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-luft-und-taupunkttemperatur-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Luft- und Taupunkttemperatur für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-lufttemperatur-und-luftfeuchte-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Lufttemperatur und Luftfeuchte für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-erdbodentemperatur-in-10-cm-tiefe-in-c-fur-deutschland",
+      "title": "Stündliche Stationsmessungen der Erdbodentemperatur in 10 cm Tiefe in °C für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-solarstrahlung-global-diffus-und-der-atmospharischen-gegenstra",
+      "title": "Stündliche Stationsmessungen der Solarstrahlung (global/diffus) und der atmosphärischen Gegenstrahlung für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:stundliche-stationsmessungen-der-wolkenbedeckung-der-wolkenart-und-der-wolkenhohe-in-bis-zu-4-s",
+      "title": "Stündliche Stationsmessungen der Wolkenbedeckung, der Wolkenart und der Wolkenhöhe in bis zu 4 Schichten für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:restni-regionalisierte-stundliche-niederschlagsdaten-fur-die-ausbreitungsrechnung-nach-ta-luft-",
+      "title": "RESTNI - Regionalisierte stündliche Niederschlagsdaten für die Ausbreitungsrechnung nach TA Luft (Datensatz)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "es gelten keine zugriffsbeschränkungen",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:gerasterte-stundliche-echtzeitdaten-der-globalstrahlung-und-der-sonnenscheindauer-basierend-auf948b5",
+      "title": "Gerasterte stündliche Echtzeitdaten der Globalstrahlung und der Sonnenscheindauer basierend auf Bodenmessungen und Satellitendaten - DUETT Projekt",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:gerasterte-1-km-stundliche-echtzeitdaten-der-globalstrahlung-und-der-sonnenscheindauer-basierened1a1",
+      "title": "Gerasterte (1 km) stündliche Echtzeitdaten der Globalstrahlung und der Sonnenscheindauer basierend auf Bodenmessungen und Satellitendaten - DUETT Projekt",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:5-minutige-stationsmessungen-des-niederschlages-fur-deutschland",
+      "title": "5-minütige Stationsmessungen des Niederschlages für Deutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:wetterstation-datensatze-zu-den-luftdaten-in-konstanz-gemessen-von-lubw",
+      "title": "Wetterstation Datensätze zu den Luftdaten in Konstanz gemessen von LUBW",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC0-1.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "context channels",
+        "notes": "publisher Open Data Baden-Württemberg; formats ['http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "agent+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": true,
+          "role": "context channels",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "daily",
+          "confidence": 0.7,
+          "reasoning": "Weather data can influence rail delays, making it relevant for predictions. However, the specific temporal coverage is unclear."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:flowkar-flottenwetterkarte",
+      "title": "FloWKar - FlottenWetterKarte",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:passantenzahlung-stundendaten",
+      "title": "Passantenzählung - Stundendaten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:pseudo-stationsdaten-der-stundlichen-echtzeitdaten-der-globalstrahlung-und-der-sonnenscheindaueb44b5",
+      "title": "Pseudo-Stationsdaten der stündlichen Echtzeitdaten der Globalstrahlung und der Sonnenscheindauer basierend auf Bodenmessungen und Satellitendaten - DUETT Projekt",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:synop-bodenwettermeldungen4e2de",
+      "title": "SYNOP-Bodenwettermeldungen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'bufr' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:realsteueristaufkommen-und-hebesatze-der-gemeinden-in-schleswig-holstein-2024-und-2025",
+      "title": "Realsteueristaufkommen und -hebesätze der Gemeinden in Schleswig-Holstein 2024 und 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:staatliche-steuern-in-schleswig-holstein-2025-l-i-1-j-25-sh",
+      "title": "Staatliche Steuern in Schleswig-Holstein 2025 (L I 1 - j 25 SH)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:obelisoffentlich-stamm-und-betriebsdaten-geforderter-offentlich-zuganglicher-ladestationen-fur-",
+      "title": "OBELISöffentlich: Stamm- und Betriebsdaten geförderter öffentlich zugänglicher Ladestationen für Elektrofahrzeuge",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "agent judged not relevant: The dataset pertains to electric vehicle charging stations and does not provide relevant information for predicting Germ",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to electric vehicle charging stations and does not provide relevant information for predicting German rail delays."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:statistisches-jahrbuch718de",
+      "title": "Statistisches Jahrbuch",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schlusselzuweisungen-in-schleswig-holstein-2023",
+      "title": "Schlüsselzuweisungen in Schleswig-Holstein 2023",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schulen883a4",
+      "title": "Schulen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:tiefbohrungen-sonstige-in-schleswig-holstein",
+      "title": "Tiefbohrungen (sonstige) in Schleswig-Holstein",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:tiefbohrungen-bergrecht-in-schleswig-holstein",
+      "title": "Tiefbohrungen (Bergrecht) in Schleswig-Holstein",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:uberschuss-der-stickstoff-flachenbilanz-der-landwirtschaft-in-den-kreisen-fur-die-jahre-1995-20",
+      "title": "Überschuss der Stickstoff-Flächenbilanz der Landwirtschaft in den Kreisen für die Jahre 1995-2023 (3-jährige Mittelwerte) (Datensatz)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "es gelten keine zugriffsbeschränkungen",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:daten-der-raddauerzahlstellen-munchen-2025",
+      "title": "Daten der Raddauerzählstellen München 2025",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:baupreisindizes-gebaude-wagungsanteil-messz-mit-mwst-veranderung-zu-vjahr-vperiode-gebaudearten",
+      "title": "Baupreisindizes (Gebäude): Wägungsanteil, Messz. mit MwSt.,Veränderung zu VJahr/VPeriode, Gebäudearten, Bauarbeiten- Sachsen - Jahre - Quartale",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:baupreisindizes-instandhaltung-von-wohngebauden-wagungsanteil-messzahlen-mit-mwst-bauarbeitenva",
+      "title": "Baupreisindizes (Instandhaltung von Wohngebäuden):Wägungsanteil, Messzahlen mit MwSt., Bauarbeiten,VÄ zu Vorjahr/Vorperiode- SN -Jahre - Quartale",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:baupreisindizes-ingenieurbauten-wagungsanteilmesszahlen-mit-mwst-veranderung-zu-vorjahr-vorperi",
+      "title": "Baupreisindizes (Ingenieurbauten): Wägungsanteil,Messzahlen mit MwSt., Veränderung zu Vorjahr/Vorperiode,Art des Bauwerkes, Bauarbeiten - Sachsen - Quartale - Jahre",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:daten-der-raddauerzahlstellen-munchen-2024-1",
+      "title": "Daten der Raddauerzählstellen München 2024",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:daten-der-raddauerzahlstellen-munchen-2023",
+      "title": "Daten der Raddauerzählstellen München 2023",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:baustellen-hamburg-1",
+      "title": "Baustellen Hamburg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:genannte-cpv-codes-in-vergebenen-offentlichen-auftragen-und-konzessionen-deutschland-quartale-a",
+      "title": "Genannte CPV-Codes in vergebenen öffentlichen Aufträgen und Konzessionen: Deutschland, Quartale, Auftraggeberebene, CPV-Codes (Abteilungen)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:genannte-cpv-codes-in-vergebenen-offentlichen-auftragen-und-konzessionen-bundeslander-quartale-8ddbd",
+      "title": "Genannte CPV-Codes in vergebenen öffentlichen Aufträgen und Konzessionen: Bundesländer, Quartale, Auftraggeberebene, CPV-Codes (Abteilungen)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:baustellen-hamburg",
+      "title": "Baustellen Hamburg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahnhofe1a23f",
+      "title": "Bahnhöfe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/wfs_srvc,http://publications.europa.eu/resource/authority/file-type/wms_srvc' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahnhofec997b",
+      "title": "Bahnhöfe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/wfs_srvc,http://publications.europa.eu/resource/authority/file-type/wms_srvc' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:am-bahnhof",
+      "title": "Am Bahnhof",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahnhofe-weitere2b5b6",
+      "title": "Bahnhöfe, weitere",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/wfs_srvc,http://publications.europa.eu/resource/authority/file-type/wms_srvc' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:trilawatt-use-case-referenzdaten-und-web-gis-fur-das-msrl-berichtswesen",
+      "title": "TrilaWatt Use-Case: Referenzdaten und Web-GIS für das MSRL Berichtswesen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:nr-7-bahnhof",
+      "title": "Nr. 7 \"Bahnhof\"",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/pdf' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:am-bahnhof-ursprungsplan-1",
+      "title": "Am Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:am-bahnhof-ursprungsplan",
+      "title": "Am Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahnhof-stuhr-ursprungsplan-1",
+      "title": "Bahnhof Stuhr (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahnhof-stuhr-ursprungsplan",
+      "title": "Bahnhof Stuhr (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:huttenbusch-am-bahnhof",
+      "title": "Hüttenbusch-Am Bahnhof",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bahnhofe-in-kielebb81",
+      "title": "Bahnhöfe in Kiel",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "publisher Land Schleswig-Holstein; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gml']",
+        "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0.1,
+          "reasoning": "The dataset pertains to train stations in Kiel starting from August 2024, which does not overlap with the required time window for rail delay prediction from November 2025 to August 2026."
+        },
+        "overruled_by_probe": {}
+      }
+    },
+    {
+      "id": "govdata:nr-7-zum-bahnhof",
+      "title": "Nr. 7 \"Zum Bahnhof\"",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/pdf' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:nr-2-am-bahnhof",
+      "title": "Nr. 2 \"Am Bahnhof\"",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/pdf' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:ostliche-anbindung-bahnhof-ursprungsplan-1",
+      "title": "Östliche Anbindung Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:am-bahnhof-ii-ursprungsplan",
+      "title": "Am Bahnhof II (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:gewerbegebiet-am-bahnhof-ursprungsplan",
+      "title": "Gewerbegebiet Am Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ostliche-anbindung-bahnhof-ursprungsplan-2",
+      "title": "Östliche Anbindung Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ostliche-anbindung-bahnhof-ursprungsplan",
+      "title": "Östliche Anbindung Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bebauungsplan-am-bahnhof-urschrift",
+      "title": "Bebauungsplan Am Bahnhof Urschrift",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:am-bahnhof-mellinghausen-ursprungsplan",
+      "title": "Am Bahnhof (Mellinghausen) (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:vor-dem-bahnhof-ursprungsplan-1",
+      "title": "Vor dem Bahnhof (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:am-bahnhof-1-anderung-1",
+      "title": "Am Bahnhof (1. Änderung)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:am-bahnhof-1-anderung",
+      "title": "Am Bahnhof (1. Änderung)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:ostlich-des-bahnhofs-ursprungsplan-1",
+      "title": "Östlich des Bahnhofs (Ursprungsplan)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'online' is not machine-readable data (map service / html / pdf)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
     },
     {
       "id": "zenodo:22730376",
@@ -1300,6 +3253,20 @@
         "role": "unknown",
         "notes": "published 2026-09-12; access open",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "not applicable",
+          "confidence": 0,
+          "reasoning": "The dataset pertains to a MATLAB code unrelated to German rail delays or any relevant transport data."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -1474,8 +3441,8 @@
       "kind": "unknown"
     },
     {
-      "id": "zenodo:22732415",
-      "title": "SARS-CoV-2 Infektionen in Deutschland",
+      "id": "zenodo:22732699",
+      "title": "Dataset from John Wick Institutional Analysis by Audience",
       "registry": "zenodo",
       "accepted": false,
       "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
@@ -1483,8 +3450,26 @@
       "kind": "unknown"
     },
     {
-      "id": "zenodo:22732343",
-      "title": "Dataset from John Wick Institutional Analysis by Audience",
+      "id": "zenodo:22732257",
+      "title": "SLD reconstructed mini-DSTs from the 1996-1998 SLC runs and documentation corpus",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22727240",
+      "title": "Joint Frontal-ear-EEG for Auditory Attention Decoding",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732415",
+      "title": "SARS-CoV-2 Infektionen in Deutschland",
       "registry": "zenodo",
       "accepted": false,
       "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
@@ -1630,6 +3615,20 @@
         "role": "unknown",
         "notes": "published 2026-09-13; access open",
         "filled_by": "metadata+probe"
+      },
+      "agent": {
+        "proposed": {
+          "relevant": false,
+          "role": "not useful",
+          "covers_window": null,
+          "has_actual_times": null,
+          "has_cancellation": null,
+          "has_cause_codes": null,
+          "resolution": "N/A",
+          "confidence": 0,
+          "reasoning": "The dataset is focused on earthquake nucleation and does not pertain to rail delays or related factors."
+        },
+        "overruled_by_probe": {}
       }
     },
     {
@@ -1689,24 +3688,6 @@
     {
       "id": "zenodo:22731184",
       "title": "dathere/qsv: 23.0.1",
-      "registry": "zenodo",
-      "accepted": false,
-      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
-      "licence": "cc-by-4.0",
-      "kind": "unknown"
-    },
-    {
-      "id": "zenodo:22730917",
-      "title": "MI-Snow1000 reviewer deposit",
-      "registry": "zenodo",
-      "accepted": false,
-      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
-      "licence": "cc-by-4.0",
-      "kind": "unknown"
-    },
-    {
-      "id": "zenodo:22699408",
-      "title": "Reproducibility data for \"Beyond Bonding Evolution Sequences: The Multidimensional Topological Organization of the Electron Localization Function",
       "registry": "zenodo",
       "accepted": false,
       "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
@@ -1900,6 +3881,582 @@
       "accepted": false,
       "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
       "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732354",
+      "title": "The 2026 AI Inflection Series, Chapter 31: The Meeting Is No Longer Evidence",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-nd-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732301",
+      "title": "Cybersecurity Challenges in Nigeria's Integrated Personnel and Payroll Information System (IPPIS: Implications for Public Sector Accountability (2020-2025)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732263",
+      "title": "The 2026 AI Inflection Series, Chapter 30: The Authenticity Tax",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-nd-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732215",
+      "title": "The 2026 AI Inflection Series, Chapter 29: When Your Customer Sends an AI to Buy for Them",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-nd-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732186",
+      "title": "BREAKING INTO THE RESIDENTIAL PROPERTY MARKET: DEVELOPING AN EFFECTIVE 7+1P MARKETING MODEL FOR CLOSING DEALS",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732111",
+      "title": "The Totality Theorem: Resolution of the Closed Universe Paradox through Observer-Universe Equivalence",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732131",
+      "title": "The 2026 AI Inflection Series, Chapter 28: The Latency Tax",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-nd-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732117",
+      "title": "Familias contemporáneas: vínculos, cuidados y transformaciones",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732042",
+      "title": "The 2026 AI Inflection Series, Chapter 27: When AI Goes Offline",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-nd-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731798",
+      "title": "The Loudest Sound Ever Heard: Krakatau Awakens Again in a Restless Indonesian Archipelago",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22682890",
+      "title": "The Rippling Field: A Spectral Framework for the Origin of Riemann Zeta Zeros and Spectral Expansion",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731542",
+      "title": "Tariffs, Exemptions, and Trade Diversion: Evidence from the 2025 U.S. Tariff Action Against Brazil",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731276",
+      "title": "Analysis code and outputs: cryptocurrency designation reaches the addresses that moved the money, not the infrastructure that carries it",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "mit-license",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731072",
+      "title": "From Indeterminacy to Agency: Control, Subjecthood, and the Ontological Ground of Agency in Potter, Ellis, and Mitchell",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730906",
+      "title": "A IMPORTÂNCIA DA CONTROLADORIA NA TRANSPARÊNCIA E EFICIÊNCIA DA GESTÃO FINANCEIRA EM UMA ASSOCIAÇÃO DO TERCEIRO SETOR: ESTUDO DE CASO DA APUP",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730815",
+      "title": "Asumir la diversidad social como representación de la historia de cada nación",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730476",
+      "title": "Riemann Minimal Entropy Collapse - A Topological Proof by Contradiction of Non-Trivial Zeros via Spectral Rigidity in Lean 4 & Comparator",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730525",
+      "title": "Global Authorship Across 45+ Universities in 25+ Countries, 4 continents: Evidence from L'Europe Unie / United Europe",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22720286",
+      "title": "Public Utility Data Liberation Project (PUDL) Data Release",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732414",
+      "title": "Split-Zero arithmetic endpoint: exact periods, determinants and Deligne comparison",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22712850",
+      "title": "Resolving the Global Climate Crisis by 2037 via Decentralized Techno-Ecological Systems",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730564",
+      "title": "MQBP v6.14: An Exponential to Linear Acceleration in Quantum and Superconducting Systems - Applying the Multiplicity Theorem",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "apache2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730309",
+      "title": "OpenLogic in Marathi (mr-Deva-IN): Eleven Chapters with EPUB — v0.8.1, 108 of 722 source units",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22726045",
+      "title": "Lean 4 Confirmation and Approval Proof for Hamzah Equation. (73)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22723428",
+      "title": "Arsenic and Lead Exposure and Associated Disease Burden in Bihar, India: Environmental Sources, Dietary Pathways, Biomonitoring and Health Implications",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22722580",
+      "title": "El Niño in a Warming World: Understanding Intensifying Risks and Building Climate Resilience",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22722375",
+      "title": "CHAPTER 18 - Conflict Of Oaths Endangering The Union Chain",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721232",
+      "title": "INFLATION TARGETING IN THE POST-PANDEMIC ERA: CHALLENGES AND POLICY RESPONSES",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721058",
+      "title": "Road network disruption",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22720207",
+      "title": "Effectiveness of AI-Generated Study Materials versus Traditional Teaching Methods in Higher Education",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22713669",
+      "title": "L'Ange des projections lumineuses: Transcription of the Ten Issues Held by the Bibliothèque nationale de France, 1902–1903",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22711646",
+      "title": "scworkbench cross-operator continuity experiments: evidence archive",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-open",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22700797",
+      "title": "scworkbench v0.1.0 preprint software artifacts",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-open",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22710619",
+      "title": "A Derived Reciprocity Moduli Principle: A Conjectural Synthesis of Local-to-Global Coherence, Derived Deformation Theory, and Langlands Reciprocity",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732112",
+      "title": "Analysis code for \"Losing my religion? An aggregation paradox in secularisation\"",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732513",
+      "title": "Data and Codes for Reply to Comment on E-DeepGS",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732338",
+      "title": "Testing reaction-network inference from aerosol molecular time series",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732208",
+      "title": "SANOAT KOMPANIYALARINING DAVLAT XARIDLARIDA NARX SHAKLLANISHI VA RAQOBAT MUHITI: LOT DARAJASIDAGI MA'LUMOTLAR TAHLILI",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732377",
+      "title": "NoiBic: A Noise-Tolerant Biclustering Algorithm for High-Throughput Gene Expression Data Analysis",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "mit-license",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:19834242",
+      "title": "Data, scripts and outputs for the Bayesian Brownian Bridge dating analyses of Coleoptera",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22119474",
+      "title": "Gamma Waves as a Biomarker for Coherence and Its Loss in Cognitive and PV+ Motor Disorders [Hypothesis/Review]",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732245",
+      "title": "The Completed Civilization: Finishing the Arrested Holon",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732164",
+      "title": "space_packet_parser",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "bsd-3-clause",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732497",
+      "title": "Luminous Behavioral Economics: The Translation Layer Between the Floor and the Civilization",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732228",
+      "title": "The Millennium Riemann Hypothesis: Resolution via Log-Concavity of the Pólya Kernel and Λ = 0",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732213",
+      "title": "reflectivity/reflectivity.github.io: Release 2026-09-13-04-27-26",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731989",
+      "title": "La frontera de Bell es escalar vs. vectorial",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732018",
+      "title": "Pierre Deligne — Collected Papers: English and French Editions with Editable LaTeX Sources",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732133",
+      "title": "Livestock Production Interventions, Pastoral Resilience, and Sustainable Livelihoods in Arid and Semi-Arid Areas: A Technical Review of Literature",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731836",
+      "title": "Beyond Gametocyte Density: Sex-Structured Reproductive Availability Improves Prediction of Plasmodium falciparum Mosquito Infection",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731761",
+      "title": "Evaluating the Observed Advantage of Tool-Evidence Fusion under Predefined-Pattern Rewriting of Smart Contract Injection Cues",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "mit-license",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731786",
+      "title": "Code and derived tables for: Cells are not replicates - permutation calibration of the unit-of-analysis error in a pooled sleep single-cell design (GSE137665)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732105",
+      "title": "The Cholinergic Floor: The Organ Beneath Everything (Second Edition)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731266",
+      "title": "The Human Intellectual Idea Stamp: A Proposal to Record Human Origination of Research Ideas",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730634",
+      "title": "Challenges in the Use of Social Media among Students of Niger Delta University, Amassoma, Bayelsa State",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730388",
+      "title": "Reproducibility materials for ECMX-D-26-01378: Resource-Explicit Historical Climate-Stress Screening",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730280",
+      "title": "Tools CoS | WP5 | M5.1 Workflow Management Plan",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22669107",
+      "title": "#RSAA26 Building Capacity from the Inside: A Project Update from the Research Software Engineering Capacity Enhancement Project (RSE-CEP)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730291",
+      "title": "Evaluating the Integration of Innovative Technologies in Library Instruction and Service Delivery: A Study of Two Federal Universities in South-South Nigeria",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22729821",
+      "title": "Example data for scanarea: projected plant area estimation from scanned plant material",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730058",
+      "title": "Tools CoS | WP4 | M4.1 Selection of two communities from within the ELIXIR Priorities and Ambitions",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22729785",
+      "title": "Micro-XRF characterization of elemental mixing and diffusion in electron beam welded Ti–Al dissimilar joints",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22729918",
+      "title": "HCTGS v28 Morocco: The Atlas Gateway v2",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-nd-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22170944",
+      "title": "Data and codes in support of \"Inland battery shipping as the corridor of green electricity\"",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
       "kind": "unknown"
     }
   ]
