@@ -3,7 +3,28 @@
 How the fine-tuned time-series language model (TSLM) was scored, what it was scored against, and
 what the numbers say. Every number below is produced by the scripts named in the last section; the
 run-by-run detail is in `DESIGN.md` section 16 and the command of every job in `trip/RUNS.md`.
-Times are Zurich. Rows marked *pending* are filled in as the last jobs finish.
+Times are Zurich.
+
+## Result in one table
+
+The submission model (stacked text on the v7 examples, 12,000 steps, `trip/README.md` "Final model")
+against the strongest baseline, XGBoost trained on exactly the same features, and against carrying
+the current delay forward. CRPS scores the whole forecast distribution; the other columns read
+the predicted median. Differences are paired bootstraps, 95% intervals.
+
+| | Persistence | XGBoost (same features) | TSLM | TSLM minus XGBoost |
+|---|---|---|---|---|
+| Test, June to August (88,479 trains): CRPS | | 2.616 | 2.537 | -0.079 (-0.090 to -0.069), real |
+| same: average miss | 3.75 min | 3.28 min | 3.19 min | -0.087 min, real |
+| same: within 1 minute | 62% | 59% | 67% | |
+| September, out of time (9,573 trains): CRPS | | 2.063 | 1.992 | -0.071 (-0.116 to -0.042), real |
+| same: average miss | 3.06 min | 2.60 min | 2.52 min | -0.084 min, real |
+| same: within 1 minute | 65% | 62% | 70% | |
+
+The model wins within 15 minutes of arrival (-0.097 CRPS on test, -0.104 on September) and beyond
+30 minutes (-0.071 on test), and it was trained and tuned on data before May only. What carries
+the win, and what does not (the time-series encoder, delay causes), is in section 6 and `DESIGN.md`
+section 16.
 
 ## 1. The task being scored
 
@@ -32,8 +53,11 @@ distributions (`trip/connection.py`).
   weight was fitted on it. It is the honest "future" test.
 - **Dataset variants:** `examples_v2`/`v3` add the arrival delays of the previous trains of the
   same type towards the same destination at the stop (up to five, within six hours, arrived before
-  the prediction moment). Baselines are retrained on the same columns whenever a model uses them,
-  so the comparison never rests on the TSLM seeing more data.
+  the prediction moment). `examples_v4` adds XGBoost's own forecast as a sentence (out-of-fold on
+  the training split, `trip/stack.py`); `examples_v7` adds the delay this train number gained on
+  the remaining stretch over the last 28 days and the gains of the trains just ahead on the same
+  corridor. Baselines are retrained on the same columns whenever a model uses them, so the
+  comparison never rests on the TSLM seeing more data.
 
 ## 3. Metrics
 
@@ -105,20 +129,33 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | Final: text, plain loss, 24k | 3.374 | 2.680 | -0.079 (-0.091 to -0.067) real; median error -0.088 real; within 15 min -0.100 real; beyond 30 min -0.073 real; vs text + encoder 12k -0.019 real |
 | Final A: text, v2 data, plain + CRPS, 12k | 3.322 | 2.644 | against XGBoost on the combined features (3.414 / 2.720): -0.076 (-0.088 to -0.065) real; median error -0.093 real; within 15 min -0.092 real; beyond 30 min -0.073 real; lead-time blend weight 1.0 |
 | Final: stacked text, v4 data, plain + CRPS, 12k | 3.331 | 2.647 | against XGBoost on the combined features (3.414 / 2.720): -0.073 (-0.084 to -0.063) real; within 15 min -0.091 real; beyond 30 min -0.066 real; vs the unstacked text final +0.003, no difference |
+| Final: stacked text, v7 data, plain + CRPS, 12k | 3.192 | 2.537 | against XGBoost-v7: -0.079 (-0.090 to -0.069) real; median error -0.087 real; within 15 min -0.097 real; beyond 30 min -0.071 real; vs the 6k candidate -0.018 real; blend weight 1.0 |
+| Candidate: stacked text, v7 data, plain + CRPS, 6k (30,000 of the test) | 3.224 | 2.560 | against XGBoost-v7 on the same examples: -0.074 (-0.097 to -0.055) real; median error -0.072 real; within 15 min -0.104 real; beyond 30 min -0.060 real |
+| Split, v7 data, plain + CRPS, 6k (30,000 of the test) | 3.234 | 2.570 | against XGBoost-v7: -0.063 (-0.086 to -0.045) real; against the text candidate +0.010, real |
+| Final: stacked text + encoder, v4 data, plain + CRPS, 12k | 3.327 | 2.646 | level with the stacked text final (2.647); XGBoost on the combined features 2.720 |
 | XGBoost with the same-train and corridor series (v7) | 3.278 | 2.616 | the stronger baseline: both text finals trail it (+0.031 and +0.028, real) |
 | Final B: text + encoder, v3 data, plain + CRPS, 12k | 3.319 | 2.643 | against XGBoost on the combined features: -0.077 (-0.089 to -0.066) real; within 15 min -0.093 real; beyond 30 min -0.073 real; vs the text final -0.001, no difference; vs XGBoost-v7 +0.027 |
 
-### 5.3 By lead time (full test, TSLM plain 2k vs XGBoost)
+### 5.3 By lead time
 
-| Lead time | Examples | TSLM median error | XGBoost median error | CRPS difference |
-|---|---|---|---|---|
-| up to 15 min | 36,556 | 0.991 | 1.072 | -0.055, real |
-| beyond 30 min | | | | +0.076, XGBoost better |
+CRPS difference against the matching XGBoost (negative: the TSLM is better), full test unless
+stated; every difference marked real has a 95% bootstrap interval that excludes zero.
 
-The TSLM is the better model close to arrival, where the live delays at the last stops dominate;
-XGBoost is better far out, where the forecast rests on base rates. That is why the blend weights
-follow the lead time: about 90% TSLM within 15 minutes, 10 to 35% further out
-(`trip/combine.py`, weights fitted on validation only).
+| Model | Within 15 min | Beyond 30 min |
+|---|---|---|
+| First wave: plain loss, encoder, 2k (vs XGBoost) | -0.055, real | +0.076, XGBoost better |
+| Text + encoder, plain loss, 12k (vs XGBoost) | -0.091, real | -0.046, real |
+| Text, plain loss, 24k (vs XGBoost) | -0.100, real | -0.073, real |
+| Text, combined data, 12k (vs XGBoost, combined features) | -0.092, real | -0.073, real |
+| Text + encoder, combined data, 12k (vs XGBoost, combined features) | -0.093, real | -0.073, real |
+| Stacked text, 12k (vs XGBoost, combined features) | -0.091, real | -0.066, real |
+| Stacked text on the new series, 6k, 30,000 of the test (vs XGBoost-v7) | -0.104, real | -0.060, real |
+
+The first 2,000-step model won only close to arrival, where the live delays at the last stops
+dominate, and lost far out, where the forecast rests on base rates; blending by lead time
+(`trip/combine.py`, weights fitted on validation) covered that. Longer training closed the gap:
+every final wins at every lead time on its own, and the blend weights fitted on validation are
+0.95 to 1.0 for the TSLM, so the blend no longer adds anything.
 
 ### 5.4 September forward test (10,000 examples, nothing fitted on them)
 
@@ -155,7 +192,7 @@ examples).
 | TSLM, text + encoder, combined data without the forecast, 2k | 2.711 | 2.148 | -0.028 (-0.072 to +0.005); within 15 min -0.071 (-0.160 to -0.023) real |
 | Lead-time blend of that (weights from May) | | | -0.044 (-0.086 to -0.018) real |
 | Final A: text, combined data, plain + CRPS, 12k (not stacked) | 2.669 | 2.106 | -0.070 (-0.111 to -0.041) real; median error -0.076 real; within 15 min -0.096 real |
-| Stacked finals (12k) | *pending* | | |
+| Stacked finals (12k) | not run | | superseded by the v7 models below before their September tests |
 
 Third September set, with the same-train and corridor series (`forward_v7`, same 10,000 examples);
 XGBoost retrained on those features on May:
@@ -163,6 +200,10 @@ XGBoost retrained on those features on May:
 | Model | Median error | CRPS | vs XGBoost with the new series (CRPS) |
 |---|---|---|---|
 | TSLM, split (new series as series through the encoder; their summaries in the rationale), 2k | 2.543 | 2.023 | -0.040 (-0.080 to -0.015) real; median error -0.056 real; within 15 min -0.074 real |
+| **Submission: TSLM, stacked text, v7, 12k** | **2.515** | **1.992** | **-0.071 (-0.116 to -0.042) real; median error -0.084 real; within 15 min -0.104 real; May blend weights 1.0** |
+| TSLM, split (series through the encoder, summaries in the rationale), v7, 6k | 2.527 | 2.009 | -0.054 (-0.094 to -0.029) real; median error -0.072 real; within 15 min -0.091 real |
+| TSLM, stacked text, v7, 6k | 2.524 | 2.001 | -0.062 (-0.102 to -0.036) real; median error -0.076 real; within 15 min -0.095 real |
+| TSLM, no series (summaries in the rationale only), v7, 2k | 2.540 | 2.022 | -0.041 (-0.080 to -0.016) real; within 15 min -0.070 real: the same as split and text, so out of time too the gain is the rationale |
 | TSLM, stacked text, v7, 2k | 2.542 | 2.019 | -0.044 (-0.085 to -0.019) real; median error -0.057 real; within 15 min -0.075 real |
 
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the

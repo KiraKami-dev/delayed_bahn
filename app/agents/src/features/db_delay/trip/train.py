@@ -165,12 +165,15 @@ def main() -> None:
                         help="z-normalise each series for the encoder, or keep the level (fixed)")
     parser.add_argument("--caption-share", type=float, default=0.0,
                         help="share of training rows turned into series-reading questions (curriculum mixed in)")
+    parser.add_argument("--rationale", choices=["full", "bare"], default="full",
+                        help="bare: timetable facts only in the rationale, no delays, summaries or forecast")
     parser.add_argument("--text-dropout", type=float, default=0.0,
                         help="in both mode, share of training rows whose numbers are hidden from the text")
     parser.add_argument("--grad-checkpointing", action="store_true",
                         help="recompute activations in the backward pass; fits the longer text-only prompts in 48 GB")
     args = parser.parse_args()
     mode = "text" if args.text_only else args.prompt_mode
+    prompts.RATIONALE = args.rationale
 
     torch.manual_seed(args.seed)
     out_dir = Path(args.out)

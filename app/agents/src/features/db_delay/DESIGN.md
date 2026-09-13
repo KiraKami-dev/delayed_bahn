@@ -734,6 +734,7 @@ features (3.462 / 2.759 on the original features).
 | same, against text plus encoder with the plain loss | | | -0.054 (-0.062 to -0.047), real |
 | Stacked text, v4 data, exact-minute plus CRPS loss (06:05) | 3.331 | 2.647 | -0.073 (-0.084 to -0.063) against XGBoost on the combined features, real; within 15 min -0.091, beyond 30 min -0.066; against the unstacked text final +0.003 (-0.002 to +0.008), no difference |
 | Text plus encoder, combined data, 72-hour series, exact-minute plus CRPS loss (06:55) | 3.319 | 2.643 | -0.077 (-0.089 to -0.066) against XGBoost on the combined features, real; within 15 min -0.093, beyond 30 min -0.073; against the text final -0.001 (-0.004 to +0.002), no difference; against XGBoost-v7 +0.027 |
+| Stacked text plus encoder, v4 data, exact-minute plus CRPS loss (08:00) | 3.327 | 2.646 | level with the other finals on the combined features (2.643 to 2.647, XGBoost 2.720); validation 2.685 / 2.143 |
 | XGBoost with the new series (v7), for reference | 3.278 | 2.616 | ahead of both text finals: +0.031 (+0.019 to +0.042) and +0.028 (+0.015 to +0.040) |
 
 - **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
@@ -832,8 +833,11 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
 | TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
 | TSLM, no series (summaries in the rationale only), v7, 2k | 3.442 / 2.769 | | |
+| TSLM, encoder only (all series as embeddings, summaries in the rationale), v7, 2k | 3.451 / 2.773 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
-| TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
+| TSLM, stacked text, v7, 6k (30,000 test examples) | 3.224 / 2.560 on its 30,000 | | 2.524 / 2.001 (10,000) |
+| TSLM, split, v7, 6k (30,000 test examples) | 3.234 / 2.570 on its 30,000 | | 2.527 / 2.009 (10,000) |
+| TSLM, stacked text, v7, 12k (submission model) | | 3.192 / 2.537 | 2.515 / 1.992 (10,000) |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
   XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
@@ -850,7 +854,36 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   it -0.009 (-0.017 to -0.001), real but small; no series against XGBoost-v7 -0.054 (-0.098 to
   -0.023), real. On the new data, as on the old, the win over the tabular model comes from the
   language model reading the facts in the rationale; the series add at most a hundredth, as text,
-  and nothing through the encoder.
+  and nothing through the encoder. Encoder only on v7 (every series as embeddings, no number lists
+  in the text) scores 3.451 / 2.773, the same as no series and as split.
+  On September the no-series model scores 2.540 / 2.022 against split 2.023 and text 2.019, and
+  beats XGBoost-v7 by the same margin (-0.041, real): the finding holds out of time.
+- **Six thousand steps on v7 (07:35): the lead candidate.** Stacked text, scored on 30,000 test
+  examples: 3.224 / 2.560, validation 2.572 / 2.066 (best of all runs). Against XGBoost-v7 on the
+  28,290 that ran: CRPS -0.074 (-0.097 to -0.055), median error -0.072, within 15 minutes -0.104,
+  beyond 30 minutes -0.060, all real; against the 2,000-step v7 text model -0.019 (-0.037 to
+  -0.002), real. Checkpoint in the bucket as `models/db-trip-delay-v7-text-6k.pt`.
+- **And it holds out of time: the submission model (08:00).** On 10,000 September examples: 2.524 /
+  2.001, CRPS -0.062 (-0.102 to -0.036), median error -0.076 (-0.120 to -0.046), within 15 minutes
+  -0.095, all real against XGBoost-v7 alone; the lead-time weights fitted on May are 1.0 in every
+  bucket. The best September result of all runs, so this checkpoint is the submission model unless
+  the 12,000-step run is clearly better on both the test and September.
+- **Twelve thousand steps on the full test (09:00).** 3.192 / 2.537 on all 93,738 examples,
+  validation 2.562 / 2.054. Against XGBoost-v7 (3.278 / 2.616) on the 88,479 that ran: CRPS -0.079
+  (-0.090 to -0.069), median error -0.087, within 15 minutes -0.097, beyond 30 minutes -0.071, all
+  real; the blend weight fitted on validation is 1.0. Against the 6,000-step model on their shared
+  28,290 examples -0.018 (-0.024 to -0.011), real.
+- **The submission model (09:40).** On September the 12,000-step model scores 2.515 / 1.992: CRPS
+  -0.071 (-0.116 to -0.042), median error -0.084, within 15 minutes -0.104, all real against
+  XGBoost-v7 alone, with the May blend weights at 1.0 everywhere; against the 6,000-step model
+  -0.009 (-0.024 to +0.002), no clear difference. Better on the full test and at least as good out
+  of time, so it replaces the 6,000-step model: `models/db-trip-delay-final.pt` is now the 12k
+  checkpoint (same bytes as `models/db-trip-delay-v7-text-12k.pt`).
+- **Split at 6,000 steps stays a hundredth behind (07:50).** 3.234 / 2.570 on the same 30,000:
+  against XGBoost-v7 -0.063 (-0.086 to -0.045), real; against the text candidate +0.010 (+0.007 to
+  +0.014), real. The same gap as at 2,000 steps. On September 2.527 / 2.009: against XGBoost-v7
+  -0.054 (-0.094 to -0.029), median error -0.072, within 15 minutes -0.091, all real; about 0.008
+  behind the text model out of time as well.
 - **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
@@ -864,15 +897,9 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   because it largely repeats the forecast written into the prompt, and none of its 16 generated
   answers follows the answer format. Training adds the calibrated distribution and the answers.
 
-### Pending at the time of writing
+### Open at the time of writing (09:50)
 
-- Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text
-  with the plain loss, 24,000 steps (01:06); text on the combined data and text plus encoder on
-  the combined data with 72-hour series, both with the exact-minute plus CRPS loss (02:15).
-- The September forward test of the 2,000-step text models and of the long runs.
-- The plain 2,000-step checkpoint on the full 93,738-example test set.
-- The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
-  forward test.
+- Nothing: every run of the night is finished and recorded above, and `trip/RUNS.md` lists them all.
 
 ### Still open
 
