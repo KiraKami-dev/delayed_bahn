@@ -3,8 +3,21 @@
   "checkpoint_id": "01M2CY4R5ARE35ZEF04K46HWQ4",
   "strategy": "manual-commit",
   "branch": "db-train-model",
-  "checkpoints_count": 4,
-  "files_touched": null,
+  "checkpoints_count": 5,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/slides/SLIDE_NUMBERS.md",
+    "app/agents/src/features/db_delay/trip/slides/figures/crps_vs_xgboost.png",
+    "app/agents/src/features/db_delay/trip/slides/figures/crps_vs_xgboost.svg",
+    "app/agents/src/features/db_delay/trip/slides/figures/encoder_ablation.png",
+    "app/agents/src/features/db_delay/trip/slides/figures/encoder_ablation.svg",
+    "app/agents/src/features/db_delay/trip/slides/figures/example_forecast.png",
+    "app/agents/src/features/db_delay/trip/slides/figures/example_forecast.svg",
+    "app/agents/src/features/db_delay/trip/slides/figures/pipeline.png",
+    "app/agents/src/features/db_delay/trip/slides/figures/pipeline.svg",
+    "app/agents/src/features/db_delay/trip/slides/figures/results_minutes.png",
+    "app/agents/src/features/db_delay/trip/slides/figures/results_minutes.svg",
+    "app/agents/src/features/db_delay/trip/slides/make_figures.py"
+  ],
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -12,13 +25,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 404,
-    "cache_creation_tokens": 117537,
-    "cache_read_tokens": 5461819,
-    "output_tokens": 35653,
-    "api_call_count": 21
+    "input_tokens": 438,
+    "cache_creation_tokens": 138755,
+    "cache_read_tokens": 5542392,
+    "output_tokens": 36423,
+    "api_call_count": 23
   }
 }
