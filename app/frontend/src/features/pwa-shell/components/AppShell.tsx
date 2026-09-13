@@ -30,18 +30,21 @@ function TextPages({ text }: { text: string }) {
   const index = Math.min(page, Math.max(0, pages.length - 1))
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
+// The model's first summary sentence without its detail clause, so it fits one line of the card.
+const oneLine = (summary: string) => (summary.split(/(?<=\.)\s+(?=[A-Z])/)[0] ?? summary).replace(/(;|, the latest|, against).*$/, '').replace(/\.?$/, '.')
 function TrainTake({ index }: { index: number }) {
-  // The model's own one or two sentences on this train, woven into its card once written (about 15 s).
+  // The model's own take on this train in one line, woven into its card once written (about 15 s).
   const e = useStore().explanations[index]
   if (!e || e.status === 'error') return null
-  if (e.status === 'loading') return <span className="mt-2 block space-y-1.5" aria-live="polite"><span className="sr-only">The model is reading this train.</span><span className="block h-1.5 w-11/12 animate-pulse rounded-full bg-[#e3e8da]" /><span className="block h-1.5 w-7/12 animate-pulse rounded-full bg-[#e3e8da] [animation-delay:200ms]" /></span>
-  return <span className="mt-2 flex gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="mt-px shrink-0 text-[#7c9070]" /><span>{e.summary}</span></span>
+  if (e.status === 'loading') return <span className="mt-2 block" aria-live="polite"><span className="sr-only">The model is reading this train.</span><span className="block h-1.5 w-10/12 animate-pulse rounded-full bg-[#e3e8da]" /></span>
+  const line = oneLine(e.summary)
+  return <span className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite" title={line}><Sparkles size={12} className="shrink-0 text-[#7c9070]" /><span className="truncate">{line}</span></span>
 }
-function TakeDetails({ index }: { index: number }) {
+function ModelReasoning({ index }: { index: number }) {
+  // The full rationale the model wrote, at the bottom of the panel, taking the space that is left.
   const e = useStore().explanations[index]
   if (e?.status !== 'done') return null
-  const guess = e.answer ? ` · its guess ${e.answer === 'cancelled' ? 'cancelled' : `+${e.answer} min`}` : ''
-  return <details className="travel-fine"><summary>Model’s full reasoning{guess}</summary><TextPages text={`${e.text} Written freely by the model, so it can misstate numbers; the estimate reads the exact inputs.`} /></details>
+  return <section className="flex-1 border-t border-[#e6eadf] pt-2.5 animate-in fade-in duration-700"><span className="travel-kicker">IN THE MODEL’S OWN WORDS</span><p className="travel-copy mt-1.5 text-[#55624d]">{e.text}</p><p className="travel-fine mt-1.5">Written freely by the model, so it can misstate numbers; the estimate above reads the exact inputs.</p></section>
 }
 function JourneyPanel() {
   const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)
@@ -50,16 +53,14 @@ function JourneyPanel() {
   const left = change != null && forecast ? Math.round(change - forecast.expectedDelayMinutes.value) : null
   const risk = s.prediction?.planFailProbability.value
   const direct = journey.legs.length === 1
-  return <div className="travel-panel-body">
+  return <div className="travel-panel-body min-h-full">
     <div className="travel-verdict"><div><span className="travel-kicker">YOUR WHOLE JOURNEY</span><h2>{risk == null ? s.error ? 'Forecast unavailable.' : 'Checking your connections…' : journey.legs.length === 1 ? 'One train. A simpler journey.' : risk < .15 ? 'This connection looks good.' : 'Give your day a backup plan.'}</h2></div><strong>{risk == null ? '—' : direct ? `+${Math.round(forecast?.expectedDelayMinutes.value ?? 0)}` : `${Math.round(risk * 100)}%`}<small>{direct ? 'minutes estimated arrival delay' : 'estimated plan-failure risk'}</small></strong></div>
+    <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />
     <button type="button" className="travel-train-card" onClick={() => s.dispatch({ type: 'selectLeg', index })} aria-label={`Focus map on ${leg.trainId}`}>
       <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small><TrainTake index={index} /></div>
     </button>
-    {!!leg.disruptions?.length && <details className="travel-fine"><summary>Reported service notice</summary><TextPages text={leg.disruptions.map(n => `${n.text} Source: ${n.source}.`).join(' ')} /></details>}
-    <TakeDetails index={index} />
-    <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
-    <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />
-
+    {!!leg.disruptions?.length && <details className="travel-fine"><summary>Reported service notice</summary><TextPages text={leg.disruptions.map(n => `${n.text} Source: ${n.source}.`).join(' ')} /></details>}    <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
+    <ModelReasoning index={index} />
   </div>
 }
 function AdviceCompact() {
