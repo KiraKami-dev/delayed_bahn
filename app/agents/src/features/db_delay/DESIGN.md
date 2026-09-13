@@ -680,6 +680,7 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
 | vs text plus encoder on the combined data (3.603 / 2.877) | | | -0.017 (-0.058 to +0.032) |
 | Text, stacked, 5k | 3.587 | 2.858 | -0.077 (-0.131 to -0.027), real; vs the 2k run -0.003 (-0.034 to +0.029): validation improves (2.162, the best of the night), test does not |
 | Text plus encoder, stacked, 2k | 3.572 | 2.864 | same as stacked text (validation 2.192 vs 2.188): the encoder adds nothing on top of the stacked text either |
+| Encoder only, stacked, 2k (05:25) | 3.583 | 2.880 | -0.055 (-0.093 to -0.026), real; beyond 30 min -0.047 (-0.078 to -0.017), real; vs stacked text +0.019 (+0.010 to +0.030) with half the prompt: the series as 45 embeddings instead of about 480 number tokens |
 
 - **The first single model that beats XGBoost at every lead time.** Given the statistical
   forecast as a starting point, the language model corrects it with what it reads live; the
