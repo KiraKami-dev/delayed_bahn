@@ -3,7 +3,28 @@
 How the fine-tuned time-series language model (TSLM) was scored, what it was scored against, and
 what the numbers say. Every number below is produced by the scripts named in the last section; the
 run-by-run detail is in `DESIGN.md` section 16 and the command of every job in `trip/RUNS.md`.
-Times are Zurich. Rows marked *pending* are filled in as the last jobs finish.
+Times are Zurich.
+
+## Result in one table
+
+The submission model (stacked text on the v7 examples, 6,000 steps, `trip/README.md` "Final model")
+against the strongest baseline, XGBoost trained on exactly the same features, and against carrying
+the current delay forward. CRPS scores the whole forecast distribution; the other columns read
+the predicted median. Differences are paired bootstraps, 95% intervals.
+
+| | Persistence | XGBoost (same features) | TSLM | TSLM minus XGBoost |
+|---|---|---|---|---|
+| Test, June to August (28,290 trains): CRPS | | 2.63 | 2.56 | -0.074 (-0.097 to -0.055), real |
+| same: average miss | 3.75 min | 3.30 min | 3.22 min | -0.072 min, real |
+| same: within 1 minute | 61% | 59% | 67% | |
+| September, out of time (9,573 trains): CRPS | | 2.06 | 2.00 | -0.062 (-0.102 to -0.036), real |
+| same: average miss | 3.06 min | 2.60 min | 2.52 min | -0.076 min, real |
+| same: within 1 minute | 65% | 62% | 70% | |
+
+The model wins within 15 minutes of arrival (-0.104 CRPS on test, -0.095 on September) and beyond
+30 minutes (-0.060 on test), and its forecasts are trained and tuned on data before May only.
+What carries the win, and what does not (the time-series encoder, delay causes), is in section 6
+and `DESIGN.md` section 16.
 
 ## 1. The task being scored
 
@@ -32,8 +53,11 @@ distributions (`trip/connection.py`).
   weight was fitted on it. It is the honest "future" test.
 - **Dataset variants:** `examples_v2`/`v3` add the arrival delays of the previous trains of the
   same type towards the same destination at the stop (up to five, within six hours, arrived before
-  the prediction moment). Baselines are retrained on the same columns whenever a model uses them,
-  so the comparison never rests on the TSLM seeing more data.
+  the prediction moment). `examples_v4` adds XGBoost's own forecast as a sentence (out-of-fold on
+  the training split, `trip/stack.py`); `examples_v7` adds the delay this train number gained on
+  the remaining stretch over the last 28 days and the gains of the trains just ahead on the same
+  corridor. Baselines are retrained on the same columns whenever a model uses them, so the
+  comparison never rests on the TSLM seeing more data.
 
 ## 3. Metrics
 
