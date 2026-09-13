@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CC4ZHNS4TAXCQ3RFG9VP6T",
+  "strategy": "manual-commit",
+  "branch": "v7-series",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/test_build.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 12234,
+    "cache_creation_tokens": 1987152,
+    "cache_read_tokens": 250228067,
+    "output_tokens": 1016223,
+    "api_call_count": 684
+  }
+}
