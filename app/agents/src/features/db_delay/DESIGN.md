@@ -681,6 +681,7 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
 | Text, stacked, 5k | 3.587 | 2.858 | -0.077 (-0.131 to -0.027), real; vs the 2k run -0.003 (-0.034 to +0.029): validation improves (2.162, the best of the night), test does not |
 | Text plus encoder, stacked, 2k | 3.572 | 2.864 | same as stacked text (validation 2.192 vs 2.188): the encoder adds nothing on top of the stacked text either |
 | Encoder only, stacked, 2k (05:25) | 3.583 | 2.880 | -0.055 (-0.093 to -0.026), real; beyond 30 min -0.047 (-0.078 to -0.017), real; vs stacked text +0.019 (+0.010 to +0.030) with half the prompt: the series as 45 embeddings instead of about 480 number tokens |
+| Split, stacked, 2k: run and previous trains as text, long history through the encoder only (05:35) | 3.594 | 2.883 | -0.052 (-0.084 to -0.028), real; vs stacked text +0.023 (+0.011 to +0.036): giving the encoder the history the text no longer has does not beat writing it out |
 
 - **The first single model that beats XGBoost at every lead time.** Given the statistical
   forecast as a starting point, the language model corrects it with what it reads live; the
@@ -748,6 +749,7 @@ summary numbers.
 | As numbers in the text | 844 | 3.621 | 2.903 | |
 | Through the encoder only | 365 + 45 soft | 3.693 | 2.956 | +0.052 (+0.025 to +0.083), worse; vs not at all -0.002 (-0.014 to +0.011) |
 | Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | no-series partner at 12,000 steps *running* |
+| Through the encoder only, one value per patch (`z4`) | 365 + about 230 soft | 3.689 | 2.959 | vs the encoder with patches of four +0.003 (-0.010 to +0.016) |
 | Text plus encoder | 961 + 45 soft | *running* | | |
 | Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | *running* | | |
 
