@@ -58,3 +58,32 @@ eight-week habit as persistence, and an XGBoost on the same scalar annotations a
 `test_seen_entity` (known trains, unseen weeks) is the deployment number; `test` (unseen trains
 and weeks) is the generalisation diagnostic. Classification tasks report generated-answer accuracy
 against the majority class on a subsample.
+
+## Live serving: the model answers every request on the GPU
+
+`serve_live.py` is `serve_route.py` with the checkpoint loaded: each matched record gets a fresh
+forward pass (≈50–90 ms on one H100) instead of the stored `scalar_<cell>.npz` quantiles, so all
+10,204 recorded (service group, station) rows are forecastable, not only the 2,089 held-out ones.
+A Nebius job has no ingress, so requests travel through the bucket: `relay_proxy.py` on the laptop
+speaks the serve_route HTTP contract on `:8502` and writes each request to
+`live/<name>/requests/<id>.json`; the job answers under `responses/` (≈0.6–1 s round trip). When
+the job's `heartbeat.txt` is stale or it stays silent for 6 s, the proxy answers from the local
+`serve_route.py` on `:8501` and suffixes `modelId` with `(precomputed fallback: …)`.
+
+```bash
+# once: the training tarball plus the current db_route/*.py -> code/db_route_live.tar.gz in the bucket
+D=app/agents/src/features/db_route
+npm --prefix app/backend run -s train -- submit --name live-route-quarter \
+  --script $PWD/$D/serve_live.py --inject $PWD/$D/train_route.py:/workspace/train_route.py \
+  --image nvidia/cuda:13.1.1-runtime-ubuntu24.04 --setup "$(cat $D/nebius_setup_train.sh)" \
+  --platform gpu-h100-sxm --preset 1gpu-16vcpu-200gb \
+  --output storagebucket-e0016098467606655017642 --timeout 8h --disk-gib 100 --env HF_HOME=/workspace/hf \
+  -- --profile quarter --tag route-2k --name live-route-quarter
+uv run --no-project --with boto3 python $D/relay_proxy.py --port 8502 --timeout 6     # laptop
+PREDICT_URL=http://127.0.0.1:8502/predict CAUSES_URL=http://127.0.0.1:8501/causes node app/backend/src/server.js
+```
+
+Setup takes about eight minutes (torch, the Llama-3.2-3B base, 79 s of dataset rows). The bucket
+mount is an object store: an emptied folder disappears (both sides keep a `.keep` object), there is
+no rename, and overwriting means unlink then write. `--tunnel` adds a Cloudflare quick tunnel and
+publishes the URL to `serve/<name>/url.txt` if a public endpoint is wanted instead.
