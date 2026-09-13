@@ -836,7 +836,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | TSLM, encoder only (all series as embeddings, summaries in the rationale), v7, 2k | 3.451 / 2.773 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
 | TSLM, stacked text, v7, 6k (30,000 test examples) | 3.224 / 2.560 on its 30,000 | | 2.524 / 2.001 (10,000) |
-| TSLM, split, v7, 6k (30,000 test examples) | 3.234 / 2.570 on its 30,000 | | |
+| TSLM, split, v7, 6k (30,000 test examples) | 3.234 / 2.570 on its 30,000 | | 2.527 / 2.009 (10,000) |
 | TSLM, stacked text, v7, 12k (submission model) | | 3.192 / 2.537 | 2.515 / 1.992 (10,000) |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
@@ -881,7 +881,9 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   checkpoint (same bytes as `models/db-trip-delay-v7-text-12k.pt`).
 - **Split at 6,000 steps stays a hundredth behind (07:50).** 3.234 / 2.570 on the same 30,000:
   against XGBoost-v7 -0.063 (-0.086 to -0.045), real; against the text candidate +0.010 (+0.007 to
-  +0.014), real. The same gap as at 2,000 steps.
+  +0.014), real. The same gap as at 2,000 steps. On September 2.527 / 2.009: against XGBoost-v7
+  -0.054 (-0.094 to -0.029), median error -0.072, within 15 minutes -0.091, all real; about 0.008
+  behind the text model out of time as well.
 - **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
@@ -895,10 +897,9 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   because it largely repeats the forecast written into the prompt, and none of its 16 generated
   answers follows the answer format. Training adds the calibrated distribution and the answers.
 
-### Open at the time of writing (09:45)
+### Open at the time of writing (09:50)
 
-- The September test of the 6,000-step split model, for the text against encoder comparison out of
-  time. Every other run is finished and recorded above; `trip/RUNS.md` lists them all.
+- Nothing: every run of the night is finished and recorded above, and `trip/RUNS.md` lists them all.
 
 ### Still open
 

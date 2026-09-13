@@ -201,6 +201,7 @@ XGBoost retrained on those features on May:
 |---|---|---|---|
 | TSLM, split (new series as series through the encoder; their summaries in the rationale), 2k | 2.543 | 2.023 | -0.040 (-0.080 to -0.015) real; median error -0.056 real; within 15 min -0.074 real |
 | **Submission: TSLM, stacked text, v7, 12k** | **2.515** | **1.992** | **-0.071 (-0.116 to -0.042) real; median error -0.084 real; within 15 min -0.104 real; May blend weights 1.0** |
+| TSLM, split (series through the encoder, summaries in the rationale), v7, 6k | 2.527 | 2.009 | -0.054 (-0.094 to -0.029) real; median error -0.072 real; within 15 min -0.091 real |
 | TSLM, stacked text, v7, 6k | 2.524 | 2.001 | -0.062 (-0.102 to -0.036) real; median error -0.076 real; within 15 min -0.095 real |
 | TSLM, no series (summaries in the rationale only), v7, 2k | 2.540 | 2.022 | -0.041 (-0.080 to -0.016) real; within 15 min -0.070 real: the same as split and text, so out of time too the gain is the rationale |
 | TSLM, stacked text, v7, 2k | 2.542 | 2.019 | -0.044 (-0.085 to -0.019) real; median error -0.057 real; within 15 min -0.075 real |
