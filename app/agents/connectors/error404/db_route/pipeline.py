@@ -216,6 +216,7 @@ def _notices_by_station(con: Any, ref: RawRefs, stations: set[str]) -> dict[str,
         WITH n AS (
             SELECT notice_id, category, priority,
                    CAST(valid_from AS TIMESTAMP) AS vf, CAST(valid_to AS TIMESTAMP) AS vt,
+                   CAST(issued_at AS TIMESTAMP) AS issued,
                    unnest(stop_ids) AS sid
             FROM read_parquet({_sql_list([str(p) for p in shards])})
         )
@@ -225,7 +226,7 @@ def _notices_by_station(con: Any, ref: RawRefs, stations: set[str]) -> dict[str,
         -- highest priority the operator ever gave it; any_value() made three
         -- identical builds disagree by a handful of notices.
         SELECT e.station_name, n.notice_id, min(n.category), min(n.vf),
-               max(n.vt), min(n.priority)
+               max(n.vt), min(n.priority), min(n.issued)
         FROM n
         JOIN ev e ON e.id = n.sid
         JOIN _stations s ON s.station = e.station_name
@@ -234,16 +235,24 @@ def _notices_by_station(con: Any, ref: RawRefs, stations: set[str]) -> dict[str,
         """
     ).fetchall()
     out: dict[str, list[dict]] = collections.defaultdict(list)
-    for station, nid, cat, vf, vt, pr in rows:
+    for station, nid, cat, vf, vt, pr, issued in rows:
         out[station].append(
-            {"notice_id": nid, "category": cat or "", "valid_from": vf, "valid_to": vt, "priority": int(pr or 4)}
+            {"notice_id": nid, "category": cat or "", "valid_from": vf, "valid_to": vt,
+             "priority": int(pr or 4), "issued_at": issued}
         )
     return out
 
 
 def _notices_for(pool: list[dict], t0: dt.datetime, context_days: float) -> tuple[dict, ...]:
     lo = t0 - dt.timedelta(days=context_days)
-    live = [n for n in pool if n["valid_from"] <= t0 and n["valid_to"] >= lo]
+    # Validity alone is not enough: a notice can be issued after the period it
+    # covers has begun (49% are, almost all within the same day, 0.8% more than
+    # a day later), so the anchor must also postdate its publication or the
+    # record would carry information nobody had at t0. A notice without a
+    # publication time is kept on its validity window.
+    live = [n for n in pool
+            if n["valid_from"] <= t0 and n["valid_to"] >= lo
+            and (n.get("issued_at") is None or n["issued_at"] <= t0)]
     live.sort(key=lambda n: (n["priority"], n["valid_from"], n["notice_id"]))
     return tuple(live[:MAX_NOTICES_PER_RECORD])
 
