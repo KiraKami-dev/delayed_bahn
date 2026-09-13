@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CBH5Z85WP94P7KMHJ93HC5",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/frontend/AGENTS.md",
+    "app/frontend/HOMEPAGE-REVIEW.md",
+    "app/frontend/cache-rail-routes.mjs",
+    "app/frontend/camera.smoke.mjs",
+    "app/frontend/public/seed/mapped-routes.json",
+    "app/frontend/src/features/globe-map/camera.ts",
+    "app/frontend/src/features/globe-map/components/GlobeMap.tsx",
+    "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts",
+    "app/frontend/src/features/globe-map/train-layer.ts",
+    "app/frontend/src/features/pwa-shell/components/AppShell.tsx",
+    "app/frontend/src/features/pwa-shell/components/StatusPills.tsx",
+    "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx",
+    "app/frontend/src/features/share-parser/components/StartPanel.tsx",
+    "app/frontend/src/index.css",
+    "app/frontend/src/lib/contract.ts",
+    "app/frontend/src/lib/geo.ts",
+    "app/frontend/src/lib/journey-search.ts",
+    "app/frontend/src/lib/osm-route.ts",
+    "app/frontend/src/lib/train-story.ts",
+    "app/frontend/src/single-screen.css",
+    "app/frontend/train-visual.smoke.mjs",
+    "team-setup/state/decisions.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
