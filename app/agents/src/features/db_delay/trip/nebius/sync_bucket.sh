@@ -5,6 +5,7 @@
 #   bash sync_bucket.sh results <run tag> <local dir> download logs and predictions of a run
 #   bash sync_bucket.sh ls                            list the bucket
 #   bash sync_bucket.sh put <local file> <object key>  upload one file (a dataset, a checkpoint)
+#   bash sync_bucket.sh get <object key> <local file>  download one file (a checkpoint)
 #
 # Credentials come from the repo-root .env: NEBIUS_S3_ENDPOINT, NEBIUS_S3_ACCESS_KEY_ID and
 # NEBIUS_S3_SECRET_ACCESS_KEY (a service-account access key; only tenant admins can create one).
@@ -53,6 +54,9 @@ case "${1:-}" in
     ;;
   put)
     s3 cp "${2:?usage: sync_bucket.sh put <local file> <object key>}" "s3://$BUCKET/${3:?usage: sync_bucket.sh put <local file> <object key>}"
+    ;;
+  get)
+    s3 cp "s3://$BUCKET/${2:?usage: sync_bucket.sh get <object key> <local file>}" "${3:?usage: sync_bucket.sh get <object key> <local file>}"
     ;;
   *)
     sed -n '2,9p' "$0"
