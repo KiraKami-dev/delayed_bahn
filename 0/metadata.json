@@ -3,22 +3,21 @@
   "checkpoint_id": "01M2C2B3XKWMF7VMM7CPC22GFQ",
   "session_id": "cd860853-789b-4793-89dd-f90596af0281",
   "strategy": "manual-commit",
-  "created_at": "2026-09-13T00:23:14.420299Z",
+  "created_at": "2026-09-13T00:23:15.254647Z",
   "branch": "main",
   "checkpoints_count": 1,
+  "save_step_count": 1,
   "files_touched": [],
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
   "turn_id": "6294491a36d2",
-  "checkpoint_transcript_start": 262,
-  "transcript_lines_at_start": 262,
-  "compact_transcript_start": 39,
+  "compact_transcript_start": 0,
   "token_usage": {
-    "input_tokens": 26,
-    "cache_creation_tokens": 11241,
-    "cache_read_tokens": 1461454,
-    "output_tokens": 4686,
-    "api_call_count": 13
+    "input_tokens": 86,
+    "cache_creation_tokens": 71608,
+    "cache_read_tokens": 4017199,
+    "output_tokens": 28471,
+    "api_call_count": 43
   },
   "skill_events_version": 1,
   "skill_events": [
@@ -56,65 +55,5 @@
   ],
   "session_metrics": {
     "turn_count": 4
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 1095,
-      "user_lines_removed": 943,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "app/frontend/AGENTS.md": 11,
-        "app/frontend/index.html": 5,
-        "app/frontend/package-lock.json": 64,
-        "app/frontend/package.json": 2,
-        "app/frontend/public/favicon.svg": 1,
-        "app/frontend/public/rail-landscape.svg": 54,
-        "app/frontend/src/features/causes/components/CausesPanel.tsx": 4,
-        "app/frontend/src/features/delay-prediction/components/ForecastPanel.tsx": 10,
-        "app/frontend/src/features/delay-prediction/components/WhyDisclosure.tsx": 1,
-        "app/frontend/src/features/evidence/components/EvidencePanel.tsx": 13,
-        "app/frontend/src/features/globe-map/camera.ts": 1,
-        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 30,
-        "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts": 15,
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 109,
-        "app/frontend/src/features/pwa-shell/components/StatusPills.tsx": 11,
-        "app/frontend/src/features/pwa-shell/components/TabBar.tsx": 6,
-        "app/frontend/src/features/recommendation/components/AdvicePanel.tsx": 52,
-        "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx": 71,
-        "app/frontend/src/features/share-parser/components/JourneyCards.tsx": 4,
-        "app/frontend/src/features/share-parser/components/LegCard.tsx": 16,
-        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 28,
-        "app/frontend/src/index.css": 251,
-        "app/frontend/src/lib/geo.ts": 1,
-        "app/frontend/src/lib/store.tsx": 107,
-        "app/frontend/traveler.smoke.mjs": 225,
-        "app/frontend/vite.config.ts": 3
-      },
-      "user_removed_per_file": {
-        "app/frontend/index.html": 5,
-        "app/frontend/public/favicon.svg": 1,
-        "app/frontend/src/features/causes/components/CausesPanel.tsx": 4,
-        "app/frontend/src/features/delay-prediction/components/ForecastPanel.tsx": 11,
-        "app/frontend/src/features/delay-prediction/components/WhyDisclosure.tsx": 1,
-        "app/frontend/src/features/evidence/components/EvidencePanel.tsx": 13,
-        "app/frontend/src/features/globe-map/camera.ts": 7,
-        "app/frontend/src/features/globe-map/components/GlobeMap.tsx": 16,
-        "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts": 3,
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 62,
-        "app/frontend/src/features/pwa-shell/components/StatusPills.tsx": 6,
-        "app/frontend/src/features/pwa-shell/components/TabBar.tsx": 32,
-        "app/frontend/src/features/recommendation/components/AdvicePanel.tsx": 139,
-        "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx": 118,
-        "app/frontend/src/features/share-parser/components/JourneyCards.tsx": 26,
-        "app/frontend/src/features/share-parser/components/LegCard.tsx": 49,
-        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 82,
-        "app/frontend/src/index.css": 232,
-        "app/frontend/src/lib/geo.ts": 1,
-        "app/frontend/src/lib/store.tsx": 132,
-        "app/frontend/vite.config.ts": 3
-      }
-    }
-  ]
+  }
 }
