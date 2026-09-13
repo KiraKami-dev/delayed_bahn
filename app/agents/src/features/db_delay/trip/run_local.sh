@@ -15,18 +15,19 @@
 # API (live.py) with DB_CLIENT_ID and DB_API_KEY from ENV_FILE (default: the repo root's .env),
 # at most CALLS_PER_MINUTE (default 55) calls per minute.
 #
-# Default: the submitted model, stacked text on v7 after 12k steps (bucket key models/db-trip-delay-final.pt) with
+# Default: the embedding model, split mode on v7 after 6k steps (bucket key models/db-trip-delay-v7-split-6k.pt) with
 # september_v7_test.parquet. Its prompt carries XGBoost's forecast, so the xgb_* columns stay.
 # For an unstacked model such as final-v2-text, set DROP_XGB=1 at setup so its prompt matches
-# training. PROMPT_MODE (default text) must be the mode the checkpoint was trained with.
+# training. PROMPT_MODE (default split) must be the mode the checkpoint was trained with: text for
+# the submitted text model (models/db-trip-delay-final.pt).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(git -C "$HERE" rev-parse --show-toplevel)"
 MODEL_PORT="${MODEL_PORT:-8502}"
 PORT="${PORT:-8000}"
-PROMPT_MODE="${PROMPT_MODE:-text}"
-MODEL_ID="${MODEL_ID:-OpenTSLM db-trip-delay final (v7 stacked text, 12k, local MPS)}"
+PROMPT_MODE="${PROMPT_MODE:-split}"
+MODEL_ID="${MODEL_ID:-OpenTSLM db-trip-delay v7 split (6k, embeddings, local MPS)}"
 
 # xgboost needs an OpenMP runtime; torch ships one, so no system install is needed.
 torch_lib() {

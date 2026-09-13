@@ -87,7 +87,7 @@ The checkpoint and the data around it are not in Git. Running the model locally 
 
 | File | Size | Where it comes from |
 |---|---|---|
-| `checkpoint.pt` | 102 MB | The submitted model, stacked text on the v7 data after 12,000 steps: bucket key `models/db-trip-delay-final.pt`, the same file as `models/db-trip-delay-v7-text-12k.pt` (`nebius/sync_bucket.sh get`, S3 keys in the root `.env`), or `checkpoint.pt` in the team's `delayedBahn-model.zip` |
+| `checkpoint.pt` | 102 MB | The shipped embedding model, split mode on the v7 data after 6,000 steps (long delay history, same-train gains and corridor series through the time-series encoder): bucket key `models/db-trip-delay-v7-split-6k.pt` (`nebius/sync_bucket.sh get`, S3 keys in the root `.env`), or `checkpoint.pt` in the team's `delayedBahn-model.zip`. The submitted text model, `models/db-trip-delay-final.pt`, runs with `PROMPT_MODE=text` |
 | `september_v7_test.parquet` | 11 MB | Recorded September trips with the v7 features: the recorded journeys and the stored history of live forecasts; in the zip |
 | `xgb/` (`quantile.json`, `late.json`, `cancel.json`, `features.json`) | 218 MB | The refitted statistical forecast the v7 prompt reads; in the zip, or refitted at setup from `examples_v7.parquet` (bucket key `data/examples_v7.parquet`) in about 3 minutes |
 
@@ -120,7 +120,7 @@ checkpoint live on MPS and starts the team backend and PWA in front of it. Forec
 for any recorded September trip, not only for saved ones.
 
 ```bash
-trip/run_local.sh setup <dir> db-trip-delay-final.pt september_v7_test.parquet
+trip/run_local.sh setup <dir> db-trip-delay-v7-split-6k.pt september_v7_test.parquet
 trip/run_local.sh start <dir>    # model on :8502, app on http://localhost:8000
 ```
 
