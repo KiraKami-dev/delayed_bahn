@@ -706,6 +706,9 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
   (-0.072 to +0.005), no clear difference; within 15 minutes -0.071 (-0.160 to -0.023) and the
   blind lead-time blend -0.044 (-0.086 to -0.018) are real. The stacked sentence is what turns
   the model into one that beats XGBoost on its own out of time.
+- **The stacked encoder-only model holds out of time (05:55):** 2.715 / 2.150 on the same September
+  examples, CRPS -0.025 (-0.051 to -0.006) and median error -0.030 against XGBoost alone, real;
+  within 15 minutes -0.055, real. Half the prompt, still ahead of the tabular model.
 - **More steps do not carry out of time (05:10):** the 5,000-step stacked text model on the same
   September examples scores 2.741 / 2.161: CRPS -0.014 (-0.058 to +0.019) against XGBoost, no clear
   difference, where the 2,000-step model had -0.039 real. Within 15 minutes -0.086 (-0.175 to
@@ -729,6 +732,9 @@ features (3.462 / 2.759 on the original features).
 | same, within 15 min | | | -0.092 (-0.117 to -0.070), real |
 | same, beyond 30 min | | | -0.073 (-0.087 to -0.059), real |
 | same, against text plus encoder with the plain loss | | | -0.054 (-0.062 to -0.047), real |
+| Stacked text, v4 data, exact-minute plus CRPS loss (06:05) | 3.331 | 2.647 | -0.073 (-0.084 to -0.063) against XGBoost on the combined features, real; within 15 min -0.091, beyond 30 min -0.066; against the unstacked text final +0.003 (-0.002 to +0.008), no difference |
+| Text plus encoder, combined data, 72-hour series, exact-minute plus CRPS loss (06:55) | 3.319 | 2.643 | -0.077 (-0.089 to -0.066) against XGBoost on the combined features, real; within 15 min -0.093, beyond 30 min -0.073; against the text final -0.001 (-0.004 to +0.002), no difference; against XGBoost-v7 +0.027 |
+| XGBoost with the new series (v7), for reference | 3.278 | 2.616 | ahead of both text finals: +0.031 (+0.019 to +0.042) and +0.028 (+0.015 to +0.040) |
 
 - **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
   XGBoost beyond 30 minutes (+0.076) and overall (+0.015); at 12,000 steps it wins at every lead
@@ -736,6 +742,10 @@ features (3.462 / 2.759 on the original features).
 - **Better data and the exact-minute loss add another 0.054.** The text model on the combined
   data beats XGBoost trained on the same features by 0.076 on the full test, with the lead-time
   blend choosing weight 1.0: nothing left for XGBoost to add. Validation 2.665 / 2.139.
+- **Stacking saturates at 12,000 steps.** With enough training the unstacked text model reaches the
+  stacked one (+0.003, no difference). And XGBoost given the two new series (fifth wave) beats both
+  finals by about 0.03: the finals are trained on inputs that are now out of date, so the
+  submission model has to come from the v7 runs.
 - **September (05:30), 10,000 examples:** the combined-data text final scores 2.669 / 2.106 on the
   combined-feature September set against XGBoost's 2.745 / 2.175: CRPS -0.070 (-0.111 to -0.041),
   median error -0.076, within 15 minutes -0.096, all real, alone. Text plus encoder with the plain
@@ -754,7 +764,9 @@ summary numbers.
 | Not at all | 365 | 3.677 | 2.957 | +0.054 (+0.023 to +0.085), worse |
 | As numbers in the text | 844 | 3.621 | 2.903 | |
 | Through the encoder only | 365 + 45 soft | 3.693 | 2.956 | +0.052 (+0.025 to +0.083), worse; vs not at all -0.002 (-0.014 to +0.011) |
-| Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | no-series partner at 12,000 steps *running* |
+| Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | vs not at all at 12,000 steps -0.005 (-0.026 to +0.016), no difference |
+| Not at all, 12,000 steps (06:00) | 365 | 3.623 | 2.894 | against XGBoost -0.077 (-0.131 to -0.033), real |
+| Text plus encoder, plain loss, 12,000 steps (the first final) | 961 + 45 soft | | | vs not at all at 12,000 steps -0.051 (-0.093 to -0.015), real |
 | Through the encoder only, one value per patch (`z4`) | 365 + about 230 soft | 3.689 | 2.959 | vs the encoder with patches of four +0.003 (-0.010 to +0.016) |
 | Text plus encoder | 961 + 45 soft | 3.617 | 2.898 | -0.005 (-0.023 to +0.011); vs not at all -0.059 (-0.092 to -0.028), real |
 | Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | 3.647 | 2.925 | vs text plus encoder +0.027 (+0.003 to +0.052), worse |
@@ -763,9 +775,12 @@ summary numbers.
   -0.073 to +0.035); with them it beats it. The series are worth 0.101 CRPS beyond 30 minutes
   (-0.169 to -0.041) and 0.012 within 15 minutes, where the current delay in the rationale
   already says most.
-- **At 2,000 steps the encoder reads nothing yet.** Encoder only equals no series on the test set;
-  at 12,000 steps the same route reaches the text level (third wave). Whether that gain is the
-  series or just longer training is what the 12,000-step no-series run decides.
+- **The encoder alone does not read the series, even at 12,000 steps.** Encoder only equals no
+  series at 2,000 steps (-0.002) and at 12,000 steps (-0.005, -0.026 to +0.016, also beyond 30
+  minutes): its gain from 2,000 to 12,000 steps is longer training, not the series. With the
+  numbers in the prompt the series stay worth 0.05 at 12,000 steps (text plus encoder -0.051,
+  real). After long training the language model beats XGBoost by 0.077 from the timetable and
+  the rationale's summary numbers alone.
 - **Forcing the model to read the encoder does not help.** Hiding the numbers from the text in half
   the training rows (modality dropout) costs 0.027 against plain text plus encoder, and splitting
   the inputs so the encoder alone carries the long history costs 0.023 on the stacked data. One
@@ -809,14 +824,31 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 |---|---|---|---|
 | XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
-| TSLM, stacked text, v7, 2k | *running* | | |
-| TSLM, stacked split, v7, 2k | *running* | | |
+| TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
+| TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
   XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
   the best finished TSLM final (2.616 vs 2.644 on the full test), so the submission comparison is
   against XGBoost-v7.
+- **The first time the embeddings carry what the text does not, and it pays (06:05).** In `split`
+  mode the two new series reach the model only through the encoder. After 2,000 steps it beats
+  XGBoost-v7 on the shared test: CRPS -0.052 (-0.095 to -0.020) and median error -0.058, real;
+  within 15 minutes -0.086 and beyond 30 minutes -0.038, both real; against the stacked text
+  model on v4 -0.089 (-0.130 to -0.050). Validation 2.605 / 2.102, the best of all runs.
+- **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
+  steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
+  beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
+  but small; the encoder route costs a hundredth of a CRPS point for a shorter prompt.
+- **The split model holds out of time (06:30).** On 10,000 September examples it beats XGBoost-v7
+  alone: CRPS -0.040 (-0.080 to -0.015), median error -0.056 (-0.103 to -0.027), within 15
+  minutes -0.074, all real; the May lead-time weights put 1.0 on the TSLM almost everywhere.
+- **Fine-tuning is what makes it work (06:25).** The same OpenTSLM checkpoint on the same v7 prompts
+  without any training scores CRPS +0.347 (+0.291 to +0.402) against the trained 2,000-step model
+  and +0.284 against XGBoost-v7; its median is close to XGBoost's (3.55 against 3.51 minutes)
+  because it largely repeats the forecast written into the prompt, and none of its 16 generated
+  answers follows the answer format. Training adds the calibrated distribution and the answers.
 
 ### Pending at the time of writing
 
