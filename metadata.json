@@ -4,11 +4,7 @@
   "strategy": "manual-commit",
   "branch": "main",
   "checkpoints_count": 16,
-  "files_touched": [
-    "app/frontend/src/features/delay-prediction/components/ForecastPanel.tsx",
-    "app/frontend/src/features/pwa-shell/components/AppShell.tsx",
-    "app/frontend/src/lib/store.tsx"
-  ],
+  "files_touched": null,
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -19,10 +15,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 0,
-    "cache_creation_tokens": 0,
-    "cache_read_tokens": 0,
-    "output_tokens": 0,
-    "api_call_count": 0
+    "input_tokens": 3296,
+    "cache_creation_tokens": 329334,
+    "cache_read_tokens": 28398491,
+    "output_tokens": 176984,
+    "api_call_count": 132
   }
 }
