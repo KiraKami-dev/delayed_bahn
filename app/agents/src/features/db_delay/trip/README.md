@@ -67,6 +67,20 @@ python trip/serve.py --examples data/trip/forward.parquet \
 matching (train spellings, time zones, station name variants), the rebuilt distribution for
 quantile-only prediction files, and the HTTP round trip.
 
+On a laptop without the training environment, the precomputed mode needs only pandas, pyarrow
+and numpy, so `uv` can run it in place with the September test rows and the saved forecasts
+copied from the GPU box (about 17 MB together):
+
+```bash
+uv run --python 3.12 --with pandas --with pyarrow --with numpy python trip/serve.py \
+    --examples september_test.parquet --predictions tslm_test.npz --port 8501
+PREDICT_URL=http://127.0.0.1:8501/ node app/backend/src/server.js   # the team app, port 8000
+```
+
+Checked end to end: `POST /api/predict` on the team backend with two real September trains
+returns the app's `Prediction` (expected delay, transfer-miss and plan-fail probabilities) from
+our forecasts, with `fallbackFrom` unset and our rationale as the explanation.
+
 ## Demo: a traveller's connection
 
 `predict.py` turns a trained checkpoint into the traveller view for recorded trips. With two

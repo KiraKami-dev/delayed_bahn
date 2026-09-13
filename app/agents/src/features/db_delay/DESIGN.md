@@ -638,6 +638,7 @@ encoder-only plain run at 3.702 / 2.954.
 | Stage 1: language model frozen, only encoder and projector trained | 3.724 | 3.031 | worse than XGBoost alone (+0.059, -0.002 to +0.113); validation 2.288 |
 | Stage 2: resume that encoder, add the text channel, unfreeze the adapters (partner: text plus CRPS loss 3.621 / 2.903) | 3.608 | 2.900 | beats XGBoost (-0.072, -0.133 to -0.023); vs text -0.004 (-0.016 to +0.008): the pre-trained encoder adds nothing |
 | Text plus encoder, combined data, 72-hour series, CRPS loss (partner: same with 720-hour series and plain loss, 3.603 / 2.877) | 3.606 | 2.878 | identical (+0.001, -0.031 to +0.036); beats XGBoost retrained on the same data (-0.057, -0.117 to -0.009) |
+| Encoder only, 12,000 steps (partner: encoder only, plain loss, 5,000 steps, 3.678 / 2.923; text 5,000 steps 3.614 / 2.883) | 3.602 | 2.889 | best validation of the night (2.712 / 2.171); beats XGBoost at every lead time (-0.082, -0.137 to -0.041; within 15 min -0.112; beyond 30 min -0.072); level with text at 5,000 steps (+0.006, -0.044 to +0.062) |
 
 - Training the encoder alone, with the language model fixed, is the cleanest test of whether the
   series channel carries the signal: it lands 0.08 CRPS behind the text models and behind the
@@ -649,6 +650,13 @@ encoder-only plain run at 3.702 / 2.954.
 - Giving the joint model an encoder that was trained first (stage 2) lands exactly on the text
   model: the encoder channel is read, but it carries nothing the text does not. And 72 hourly
   points through the encoder do as well as 720, so the short series is enough for the finals.
+- **The encoder path does work; it learns more slowly.** Trained for 12,000 steps with the
+  exact-minute plus CRPS loss, the encoder-only model (no numbers in the prompt at all) reaches
+  the best validation score of the night and beats XGBoost on the shared test at every lead time,
+  including beyond 30 minutes where the 2,000-step models lost. It lands where the text model was
+  after 5,000 steps: the series channel carries the same information as the text, and needs
+  about twice the training to extract it. That is the fair statement about OpenTSLM's encoder on
+  this task, and the reason the finals keep it alongside the text.
 
 ### Stacking: the statistical forecast as a sentence in the prompt (03:15)
 
@@ -663,6 +671,8 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
 | same, within 15 min (1,927) | | | -0.086 (-0.180 to -0.024), real |
 | same, beyond 30 min (2,158) | | | -0.085 (-0.123 to -0.047), real |
 | vs text plus encoder on the combined data (3.603 / 2.877) | | | -0.017 (-0.058 to +0.032) |
+| Text, stacked, 5k | 3.587 | 2.858 | -0.077 (-0.131 to -0.027), real; vs the 2k run -0.003 (-0.034 to +0.029): validation improves (2.162, the best of the night), test does not |
+| Text plus encoder, stacked, 2k | 3.572 | 2.864 | same as stacked text (validation 2.192 vs 2.188): the encoder adds nothing on top of the stacked text either |
 
 - **The first single model that beats XGBoost at every lead time.** Given the statistical
   forecast as a starting point, the language model corrects it with what it reads live; the
