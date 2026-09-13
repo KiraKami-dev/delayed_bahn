@@ -1,0 +1,1 @@
+We have to present it and honestly vibed a lot. Can you explain how we did the model training (also embeddings etc.). Like for a non-expert (!) give me some intro / context, esp. also design decisions
