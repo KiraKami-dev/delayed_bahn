@@ -897,9 +897,41 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   because it largely repeats the forecast written into the prompt, and none of its 16 generated
   answers follows the answer format. Training adds the calibrated distribution and the answers.
 
-### Open at the time of writing (09:50)
+### Sixth wave: the series without written summaries (10:45)
 
-- Nothing: every run of the night is finished and recorded above, and `trip/RUNS.md` lists them all.
+On v7 the no-series control tied the encoder and the text runs, because the rationale already
+summarises what the series hold. `--rationale bare` cuts the rationale to the timetable (where the
+train is, stops and minutes to the target): no delays, no history summaries and no statistical
+forecast, so the series are the only source of delay information. Three runs on `examples_v7`,
+exact-minute plus CRPS loss, 2,000 steps; scored on the 4,729 shared test trains that ran, with
+paired bootstraps against each other and the v7 baselines on the same trains.
+
+| Model | CRPS | Average miss | Within 1 min | Validation CRPS |
+|---|---|---|---|---|
+| No series, bare rationale | 3.678 | 4.66 min | 56% | 2.728 |
+| Encoder only (`series`), bare rationale | 2.989 | 3.73 min | 62% | 2.255 |
+| Text (`text`), bare rationale | **2.793** | **3.48 min** | **66%** | **2.121** |
+| Persistence | 3.316 | 3.99 min | 61% | |
+| XGBoost-v7 | 2.824 | 3.51 min | 58% | |
+
+- **The series carry the signal once nothing summarises them.** Encoder against no series -0.689
+  (-0.792 to -0.588), real; within 15 minutes -0.324 and beyond 30 minutes -1.028, both real. Text
+  against no series -0.886 (-0.990 to -0.785), real; within 15 minutes -0.529, beyond 30 minutes
+  -1.234.
+- **Text still reads them better than the encoder:** -0.196 (-0.238 to -0.154), real, and the same
+  within 15 minutes (-0.205) and beyond 30 minutes (-0.207). The encoder route recovers 0.69 of the
+  0.89 the text recovers.
+- **Text alone ties XGBoost** with no summaries and no stacked forecast after 2,000 steps: -0.031
+  (-0.089 to +0.018). The encoder run beats persistence (-0.327, real) but not XGBoost (+0.165,
+  +0.098 to +0.225).
+- **This corrects the fifth-wave reading.** The encoder is not empty: on v7 it added nothing because
+  the rationale already stated what it would read. As a representation of the raw series it works,
+  and at 3B parameters with this training length the numbers written out still work better.
+
+### Open at the time of writing (11:00)
+
+- Nothing: every run, including the three bare-rationale runs, is finished and recorded above, and
+  `trip/RUNS.md` lists them all.
 
 ### Still open
 
