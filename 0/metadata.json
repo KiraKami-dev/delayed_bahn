@@ -1,0 +1,65 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CE01GRVECWXDSM19HQKXYP",
+  "session_id": "08b27428-84e8-4f05-a359-bfa800d53b0f",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T03:46:54.143642Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "app/frontend/HOMEPAGE-REVIEW.md",
+    "app/frontend/src/lib/journey-search.ts",
+    "app/frontend/train-visual.smoke.mjs"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "41b38cb01950",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 6458,
+    "cache_creation_tokens": 1103367,
+    "cache_read_tokens": 70330486,
+    "output_tokens": 208287,
+    "api_call_count": 225,
+    "subagent_tokens": {
+      "input_tokens": 1432,
+      "cache_creation_tokens": 556567,
+      "cache_read_tokens": 11553582,
+      "output_tokens": 183662,
+      "api_call_count": 100
+    }
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-13T03:46:53.846093Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 1,
+    "total_committed": 0,
+    "total_lines_changed": 1,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 24,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/frontend/HOMEPAGE-REVIEW.md": 4,
+        "app/frontend/src/lib/journey-search.ts": 9,
+        "app/frontend/train-visual.smoke.mjs": 11
+      },
+      "user_removed_per_file": {
+        "app/frontend/src/lib/journey-search.ts": 1
+      }
+    }
+  ]
+}

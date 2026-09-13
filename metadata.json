@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CE01GRVECWXDSM19HQKXYP",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/frontend/HOMEPAGE-REVIEW.md",
+    "app/frontend/src/lib/journey-search.ts",
+    "app/frontend/train-visual.smoke.mjs"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 6458,
+    "cache_creation_tokens": 1103367,
+    "cache_read_tokens": 70330486,
+    "output_tokens": 208287,
+    "api_call_count": 225,
+    "subagent_tokens": {
+      "input_tokens": 1432,
+      "cache_creation_tokens": 556567,
+      "cache_read_tokens": 11553582,
+      "output_tokens": 183662,
+      "api_call_count": 100
+    }
+  }
+}
