@@ -58,6 +58,14 @@ npm --prefix ../frontend run build && npm run dev                 # then open ht
 `GET /api/predict` replies carry `modelId: OpenTSLM db-route-quarter (route-2k)` and,
 per leg, the recorded service and stop the forecast came from in the reasoning text.
 
+## The fine-tuned trip model on a laptop
+
+The db-train-model forecaster (v7 text, `app/agents/src/features/db_delay/trip/`) runs locally
+in place of the route server: `trip/run_local.sh start <dir>` serves it on port 8502 and starts
+this backend with `PREDICT_URL` pointing at it, with live DB data, offline estimates and
+`POST /api/explain`. It needs model files that are not in Git; see "Model files (required)" in
+`app/agents/src/features/db_delay/trip/README.md`.
+
 Owner: see `../../team-setup/state/owners.md` (decided fresh per event,
 not fixed here).
 

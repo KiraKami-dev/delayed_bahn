@@ -30,6 +30,14 @@ still placeholders. Current run commands:
 cd app/backend && npm run train -- doctor   # Nebius GPU training setup check
 ```
 
+The fine-tuned trip-delay model runs locally with its own script, which also starts the
+backend and the PWA. It needs model files that are not in Git: see "Model files (required)"
+in `agents/src/features/db_delay/trip/README.md`.
+
+```bash
+app/agents/src/features/db_delay/trip/run_local.sh start <dir>   # model on :8502, app on http://localhost:8000
+```
+
 GPU training runs on Nebius Serverless AI jobs via
 `backend/src/features/training-jobs/` (see its README). Once the other
 folders have real dependencies filled in, extend this — e.g.:

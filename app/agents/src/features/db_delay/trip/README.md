@@ -81,6 +81,38 @@ Checked end to end: `POST /api/predict` on the team backend with two real Septem
 returns the app's `Prediction` (expected delay, transfer-miss and plan-fail probabilities) from
 our forecasts, with `fallbackFrom` unset and our rationale as the explanation.
 
+### Model files (required)
+
+The checkpoint and the data around it are not in Git. Running the model locally needs three files:
+
+| File | Size | Where it comes from |
+|---|---|---|
+| `checkpoint.pt` | 102 MB | The fine-tuned v7 text model: bucket key `models/db-trip-delay-v7-text-2k.pt` (`nebius/sync_bucket.sh get`, S3 keys in the root `.env`), or `checkpoint.pt` in the team's `delayedBahn-model.zip` |
+| `september_v7_test.parquet` | 11 MB | Recorded September trips with the v7 features: the recorded journeys and the stored history of live forecasts; in the zip |
+| `xgb/` (`quantile.json`, `late.json`, `cancel.json`, `features.json`) | 218 MB | The refitted statistical forecast the v7 prompt reads; in the zip, or refitted at setup from `examples_v7.parquet` (bucket key `data/examples_v7.parquet`) in about 3 minutes |
+
+The zip also carries `INSTRUCTIONS.md` with these steps. The base model (Llama 3.2 3B) and the
+OpenTSLM start checkpoint download from Hugging Face during setup, about 7 GB. Setup puts
+everything into one folder, kept separate from the unpacked files because it copies the checkpoint:
+
+```
+<dir>/.venv/                        Python 3.12 environment (torch with MPS, OpenTSLM, xgboost)
+<dir>/model/checkpoint.pt           the model
+<dir>/data/september_test.parquet   the recorded trips
+<dir>/xgb/                          the statistical forecast; without it there is no live data
+```
+
+```bash
+# with the ready xgb/ folder from the zip
+trip/run_local.sh setup <dir> <files>/checkpoint.pt <files>/september_v7_test.parquet
+cp -R <files>/xgb <dir>/xgb
+# or refit it from the training examples
+trip/run_local.sh setup <dir> <files>/checkpoint.pt <files>/september_v7_test.parquet examples_v7.parquet
+```
+
+Live data also needs `DB_CLIENT_ID` and `DB_API_KEY` (DB API Marketplace, Timetables API, free
+plan) in the repo root `.env`, passed as `ENV_FILE` to `start`.
+
 ### Live on a laptop (Apple silicon)
 
 The 3B model fits an Apple silicon laptop: `run_local.sh` builds the environment, then serves a
@@ -124,6 +156,36 @@ ENV_FILE=<repo root>/.env trip/run_local.sh start <dir>
 
 Checked: a real two-leg journey planned for the next half hour through `POST /api/predict` on the
 team backend, answered in 9 seconds with 22 API calls per leg and no fallback.
+
+### When DB live data fails
+
+`serve.py` answers every leg, trying in this order:
+
+1. The live example described above.
+2. If a change feed cannot be refreshed, its last copy; the sources say from when.
+3. Without live data, an offline estimate: the route and history of the latest recorded run of the
+   train to the target (else a train of its type there), with no live delays, previous trains or
+   corridor trains. The model still forecasts it, with low confidence and "offline estimate" in its
+   sources; the app marks the train card.
+4. The class average of the recorded trips.
+
+API calls time out after 8 s and pause for 60 s after an outage, so the fallbacks answer within a
+second. `test_live.py` covers the pause, the stale feed, the offline rows and this order, without
+network or model.
+
+```bash
+OFFLINE=1 ENV_FILE=<repo root>/.env trip/run_local.sh start <dir>   # never call the API
+curl -X POST http://127.0.0.1:8502/offline -d '{"on": true}'         # simulate an outage while running; false ends it
+curl http://127.0.0.1:8502/health                                    # offline, apiCalls, apiDownForSeconds
+```
+
+### The model's own explanation
+
+`POST /explain` (backend: `POST /api/explain` with `{ leg }`) lets the model write its rationale and
+answer freely for one leg, about 15 s on a laptop, reusing the example row behind the forecast. The
+reply adds a two-sentence `summary`, which the app shortens into the train card, and the full text
+for its "In the model's own words" dropdown. The forecast itself always reads the exact rationale;
+the generated text can misstate numbers.
 
 ## Demo: a traveller's connection
 

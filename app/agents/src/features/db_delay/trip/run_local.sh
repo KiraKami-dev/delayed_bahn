@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run a trip-delay checkpoint live on an Apple silicon laptop (MPS) behind the team app.
+# The model files (checkpoint, September rows, xgb/) are not in Git: see "Model files" in trip/README.md.
 #
 #   trip/run_local.sh setup <dir> <checkpoint.pt> <september test parquet> [<training examples parquet>]
 #   trip/run_local.sh start <dir>
