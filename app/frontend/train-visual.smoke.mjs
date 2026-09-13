@@ -180,12 +180,12 @@ test('lookup preserves service notices and rejects malformed arrival times', asy
   const origin = {id:'8000261',name:'Nürnberg Hbf'}, destination = {id:'8000105',name:'Frankfurt Hbf'}
   const leg = {origin,destination,line:{name:'ICE 75',mode:'train'},plannedDeparture:'2026-09-13T08:00:00Z',plannedArrival:'2026-09-13T10:00:00Z',remarks:[{type:'warning',text:'Track works ahead'},{type:'hint',text:'Bicycle spaces'}]}
   globalThis.fetch = async () => ({ok:true,json:async () => ({journeys:[{legs:[leg]},{legs:[{...leg,plannedArrival:'invalid'}]}]})})
-  const options = await search.searchJourneys({evaNumber:origin.id,name:origin.name},{evaNumber:destination.id,name:destination.name},new AbortController().signal)
+  const options = await search.searchTransportRest({evaNumber:origin.id,name:origin.name},{evaNumber:destination.id,name:destination.name},new AbortController().signal)
   assert.equal(options.length,1)
   assert.equal(options[0].legs[0].disruptions.length,1)
   assert.equal(story.disruptionKind(options[0].legs[0].disruptions[0].text),'works')
   globalThis.fetch = async () => ({ok:false,status:503})
-  await assert.rejects(search.searchJourneys({evaNumber:origin.id},{evaNumber:destination.id},new AbortController().signal), /HTTP 503/)
+  await assert.rejects(search.searchTransportRest({evaNumber:origin.id},{evaNumber:destination.id},new AbortController().signal), /HTTP 503/)
 })
 
 test('browser fetch failures have a traveler-facing message and cancellation is preserved', async t => {
@@ -194,9 +194,9 @@ test('browser fetch failures have a traveler-facing message and cancellation is 
   const error = new TypeError('Failed to fetch')
   globalThis.fetch = async () => { throw error }
   const from = seed.legs[0].from, to = seed.legs[0].to
-  await assert.rejects(search.searchJourneys(from,to,new AbortController().signal), e => e.message.includes('couldn’t reach the timetable service') && e.cause === error)
+  await assert.rejects(search.searchTransportRest(from,to,new AbortController().signal), e => e.message.includes('couldn’t reach the timetable service') && e.cause === error)
   const aborted = new AbortController(); aborted.abort()
-  await assert.rejects(search.searchJourneys(from,to,aborted.signal), e => e === error)
+  await assert.rejects(search.searchTransportRest(from,to,aborted.signal), e => e === error)
 })
 
 test('travel date sends today as now and future dates at 08:00 Germany time', () => {

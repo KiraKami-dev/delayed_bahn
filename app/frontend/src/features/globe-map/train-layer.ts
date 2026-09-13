@@ -6,7 +6,7 @@ import { motionOff } from '@/lib/motion'
 import { trainVisual } from '@/lib/train-service'
 import { buildTrack, sampleTrack, validTrack } from '@/lib/track-path'
 import { legLine } from '@/lib/geo'
-import { buildCar, buildLabel, carCount, sceneWith, CAR_LENGTH, CAR_PITCH } from '../train-models'
+import { buildCar, buildLabel, carCount, sceneWith, CAR_LENGTH, CAR_PITCH } from './train-models'
 
 export type TrainHead = { lon: number; lat: number; heading: number; leg: number; phase: LegPhase; trackLength: number }
 export type TrainLayer = CustomLayerInterface & { head(): TrainHead | null }
