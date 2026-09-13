@@ -593,6 +593,7 @@ against 3.635 / 2.907, so two identical trainings differ by about 0.006 CRPS.
 | Text, exact-minute loss plus 0.1 CRPS term | text 3.635 / 2.907 | 3.621 | 2.903 | best validation (2.192 vs 2.233); test gain inside noise |
 | Text, 5,000 steps | text 2,000 steps | 3.614 | 2.883 | more training helps |
 | Text, previous trains on the route (combined data) | text 3.635 / 2.907 | 3.616 | 2.889 | helps; XGBoost gains as much |
+| Text plus encoder, previous trains (combined data, 720 h series) | text on the same data 3.616 / 2.889 | 3.603 | 2.877 | best 2,000-step run; beats XGBoost retrained on the same data alone (CRPS -0.060, -0.130 to -0.005); vs text -0.013 (-0.035 to +0.009) |
 
 - **Nothing aimed at the encoder worked.** Keeping the level of the series, teaching it to read
   with exact-answer questions (OpenTSLM's curriculum idea folded into training), and ten times
@@ -613,8 +614,18 @@ against 3.635 / 2.907, so two identical trainings differ by about 0.006 CRPS.
   instead of blurred targets, so it is the loss of the long runs.
 - **The September forward test** (10,000 examples the training never saw, XGBoost retrained
   through August): XGBoost 3.244 / 2.586; the original recipe at 12,000 steps 3.257 / 2.611; text
-  plus plain at 2,000 steps 3.281 / 2.626. Overall the tabular model is ahead there; the per-lead
-  and blend results and the long runs' forward scores follow.
+  plus plain at 2,000 steps 3.281 / 2.626; text plus plain plus CRPS 3.266 / 2.610. Alone, every
+  TSLM is behind the tabular model overall in September (plain: +0.040 CRPS, +0.013 to +0.068),
+  ahead within 15 minutes of arrival (plain: -0.011, -0.021 to -0.002; plain plus CRPS: -0.016,
+  -0.026 to -0.006) and clearly behind beyond 30 minutes (+0.089). The lead-time blend with
+  weights fitted on May and applied blind to September beats XGBoost overall: plain 3.225 / 2.570
+  (CRPS -0.016, -0.027 to -0.006), plain plus CRPS (CRPS -0.013, -0.022 to -0.005). Three
+  different checkpoints give the same shape out of time.
+- **Stacking and trajectory channels, submitted 02:29 to 02:33:** the XGBoost forecast as a
+  sentence in the prompt (out-of-fold on the training split, `stack.py`); encoder-only runs with
+  12,000 steps, a five-times higher encoder learning rate, and a frozen language model (stage 1);
+  the planned trajectory of the run (running time, dwell, minutes left per stop) as encoder-only
+  channels. Results follow.
 
 ### Pending at the time of writing
 
