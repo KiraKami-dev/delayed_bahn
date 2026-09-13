@@ -110,17 +110,26 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | XGBoost with the same-train and corridor series (v7) | 3.278 | 2.616 | the stronger baseline: both text finals trail it (+0.031 and +0.028, real) |
 | Final B: text + encoder, v3 data, plain + CRPS, 12k | 3.319 | 2.643 | against XGBoost on the combined features: -0.077 (-0.089 to -0.066) real; within 15 min -0.093 real; beyond 30 min -0.073 real; vs the text final -0.001, no difference; vs XGBoost-v7 +0.027 |
 
-### 5.3 By lead time (full test, TSLM plain 2k vs XGBoost)
+### 5.3 By lead time
 
-| Lead time | Examples | TSLM median error | XGBoost median error | CRPS difference |
-|---|---|---|---|---|
-| up to 15 min | 36,556 | 0.991 | 1.072 | -0.055, real |
-| beyond 30 min | | | | +0.076, XGBoost better |
+CRPS difference against the matching XGBoost (negative: the TSLM is better), full test unless
+stated; every difference marked real has a 95% bootstrap interval that excludes zero.
 
-The TSLM is the better model close to arrival, where the live delays at the last stops dominate;
-XGBoost is better far out, where the forecast rests on base rates. That is why the blend weights
-follow the lead time: about 90% TSLM within 15 minutes, 10 to 35% further out
-(`trip/combine.py`, weights fitted on validation only).
+| Model | Within 15 min | Beyond 30 min |
+|---|---|---|
+| First wave: plain loss, encoder, 2k (vs XGBoost) | -0.055, real | +0.076, XGBoost better |
+| Text + encoder, plain loss, 12k (vs XGBoost) | -0.091, real | -0.046, real |
+| Text, plain loss, 24k (vs XGBoost) | -0.100, real | -0.073, real |
+| Text, combined data, 12k (vs XGBoost, combined features) | -0.092, real | -0.073, real |
+| Text + encoder, combined data, 12k (vs XGBoost, combined features) | -0.093, real | -0.073, real |
+| Stacked text, 12k (vs XGBoost, combined features) | -0.091, real | -0.066, real |
+| Stacked text on the new series, 6k, 30,000 of the test (vs XGBoost-v7) | -0.104, real | -0.060, real |
+
+The first 2,000-step model won only close to arrival, where the live delays at the last stops
+dominate, and lost far out, where the forecast rests on base rates; blending by lead time
+(`trip/combine.py`, weights fitted on validation) covered that. Longer training closed the gap:
+every final wins at every lead time on its own, and the blend weights fitted on validation are
+0.95 to 1.0 for the TSLM, so the blend no longer adds anything.
 
 ### 5.4 September forward test (10,000 examples, nothing fitted on them)
 
