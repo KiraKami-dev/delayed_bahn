@@ -115,8 +115,27 @@ export function createPredictionService({ env = process.env, backend, fetchImpl 
   };
 }
 
+// The model's own words for one leg: the model server generates its rationale and answer freely
+// (about 360 tokens, some 15 s on a laptop), so the app asks after the forecast, leg by leg.
+export async function explainLeg(body, { env = process.env, fetchImpl = fetch } = {}) {
+  const leg = body?.leg;
+  if (typeof leg?.trainId !== 'string' || !leg.plannedDeparture || !leg.plannedArrival) throw fail(400, 'Body must be { leg } with trainId and planned times');
+  if (!env.PREDICT_URL) throw fail(503, 'Explanations need the model server (PREDICT_URL)');
+  const base = env.PREDICT_URL.endsWith('/') ? env.PREDICT_URL : `${env.PREDICT_URL}/`;
+  const res = await fetchImpl(new URL('explain', base), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ leg }),
+    signal: AbortSignal.timeout(Number(env.EXPLAIN_TIMEOUT_MS || 180000)),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw fail(res.status === 404 ? 404 : 502, data.error || `model server replied ${res.status}`);
+  return data;
+}
+
 export function registerRoutes(router, ctx = {}) {
   const svc = ctx.service || createPredictionService(ctx);
   router.post('/api/predict', ({ body }) => svc.predict(body));
+  router.post('/api/explain', ({ body }) => explainLeg(body, { env: ctx.env }));
   return svc;
 }

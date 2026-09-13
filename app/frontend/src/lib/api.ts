@@ -1,4 +1,7 @@
-import type { Causes, Journey, Prediction, Recommendation, Reroute } from "./contract"
+import type { Causes, Journey, Leg, Prediction, Recommendation, Reroute } from "./contract"
+
+/** The model's own rationale for one leg, generated freely after the forecast. */
+export type Explanation = { trainId: string; text: string; answer: string | null; generatedBy: string; seconds: number }
 
 // Serverless cold starts and slow mobile links need patience: 20 s per try,
 // one retry on network failure, timeout or 5xx. 4xx is returned immediately.
@@ -6,6 +9,8 @@ const TIMEOUT_MS = 20000
 // Forecasts from live DB data wait for the timetable API's per-minute budget: a cold journey of
 // several legs can take a minute or more. The model server shares one answer between retries.
 const FORECAST_TIMEOUT_MS = 150000
+// Writing an explanation takes ~15 s per leg, longer while the model is busy with other legs.
+const EXPLAIN_TIMEOUT_MS = 200000
 const RETRIES = 1
 
 export class ApiError extends Error {
@@ -69,6 +74,7 @@ export const api = {
   seedDemo: () => request<Journey>("/api/seed/demo"),
   parseJourney: (text: string) => request<Journey>("/api/journeys/parse", post({ text })),
   predict: (journey: Journey) => request<Prediction>("/api/predict", post(journey), FORECAST_TIMEOUT_MS),
+  explain: (leg: Leg) => request<Explanation>("/api/explain", post({ leg }), EXPLAIN_TIMEOUT_MS),
   recommend: (journey: Journey, prediction: Prediction, doorToStationMin?: number, acceptableRisk?: number) =>
     request<Recommendation>("/api/recommend", post({ journey, prediction, doorToStationMin, acceptableRisk }), FORECAST_TIMEOUT_MS),
   reroute: (journey: Journey, missedLegIndex: number) =>

@@ -44,6 +44,7 @@ MINUTES = 1000  # the model's minute vocabulary
 MATCH_MINUTES = 1  # planned arrival may differ by this much between the app and the record
 MIN_PRIOR = 200  # rows needed before a train type gets its own prior instead of its class
 LIVE_CACHE_SECONDS = 60  # a live leg forecast is reused this long (app retries, the recommendation's re-check)
+EXPLAIN_TOKENS = 400  # a generated rationale and answer take about 360 tokens
 LONG_DISTANCE = {"ICE", "IC", "EC", "ECE", "TGV", "RJ", "RJX", "NJ", "FLX"}
 SOURCES = ["delays at the stops so far", "previous trains on the route today",
            "90-day route history", "72 h of hourly late shares at the station and nationwide"]
@@ -113,6 +114,12 @@ def rounded(probs: np.ndarray) -> list[float]:
     return [round(float(p), 6) for p in probs]
 
 
+def leg_key(leg: dict) -> str:
+    """One leg's identity for the caches: train, planned times and station names."""
+    return json.dumps([leg.get(k) for k in ("trainId", "trainNumber", "plannedDeparture", "plannedArrival")]
+                      + [(leg.get(s) or {}).get("name") for s in ("from", "to")], ensure_ascii=False)
+
+
 class Forecaster:
     """Recorded trips, their saved forecasts, and an optional live model."""
 
@@ -121,9 +128,10 @@ class Forecaster:
         self.frame = frame.reset_index(drop=True)
         self.model, self.mode, self.scaling, self.model_id = model, mode, scaling, model_id
         self.live = live  # live.Live: examples built from the Timetables API for legs without a record
-        self.live_cache: dict[str, tuple[float, dict]] = {}
+        self.live_cache: dict[str, tuple[float, dict, pd.Series]] = {}
         self.live_locks: dict[str, threading.Lock] = {}
         self.guard, self.model_lock = threading.Lock(), threading.Lock()
+        self.explanations: dict[str, dict] = {}
         arrivals = pd.to_datetime(self.frame["k_arr_pt"])
         self.by_minute: dict[pd.Timestamp, list[int]] = {}
         for i, ts in enumerate(arrivals.dt.floor("min")):
@@ -195,21 +203,25 @@ class Forecaster:
     def cached_live_forecast(self, leg: dict) -> dict:
         """live_forecast, reused for a minute. Requests for the same leg wait for the first one, so an app
         retry or the recommendation's re-check does not spend the API budget again. Failures are not kept."""
-        key = json.dumps([leg.get(k) for k in ("trainId", "trainNumber", "plannedDeparture", "plannedArrival")]
-                         + [(leg.get(s) or {}).get("name") for s in ("from", "to")], ensure_ascii=False)
+        key = leg_key(leg)
         with self.guard:
             lock = self.live_locks.setdefault(key, threading.Lock())
         with lock:
             hit = self.live_cache.get(key)
             if hit is not None and time.monotonic() - hit[0] < LIVE_CACHE_SECONDS:
                 return hit[1]
-            out = self.live_forecast(leg)
-            self.live_cache[key] = (time.monotonic(), out)
+            row, sources = self.live.example(leg)
+            out = self.row_forecast(leg, row, sources)
+            self.live_cache[key] = (time.monotonic(), out, row)
             return out
 
     def live_forecast(self, leg: dict) -> dict:
         """The leg forecast from an example built live from the Timetables API."""
         row, sources = self.live.example(leg)
+        return self.row_forecast(leg, row, sources)
+
+    def row_forecast(self, leg: dict, row: pd.Series, sources: list[str]) -> dict:
+        """The contract's leg forecast for a live example row."""
         probs, p_cancel = self.model_forecast(row)
         q = metrics.quantiles_from_distribution(probs[None])[0]
         lead = float(row["lead_minutes"])
@@ -226,6 +238,44 @@ class Forecaster:
             "quantiles": {"p10": int(q[metrics.LOW]), "p50": int(q[metrics.MEDIAN]), "p90": int(q[metrics.HIGH])},
             "pOnTime": round(float(probs[:metrics.LATE_MINUTES].sum()) * (1 - p_cancel), 4),
         }
+
+    def row_for(self, leg: dict) -> pd.Series:
+        """The example row behind a leg's forecast: the recorded trip, or the live row (rebuilt once expired)."""
+        rows = self.candidates(leg)
+        if rows:
+            return self.frame.loc[self.pick(rows, None)]
+        if self.live is None or self.model is None:
+            raise LookupError(f"no recorded trip matches {leg.get('trainId')} and live data is off")
+        self.cached_live_forecast(leg)
+        return self.live_cache[leg_key(leg)][2]
+
+    def explain(self, leg: dict) -> dict:
+        """The model's own rationale and answer for a leg, generated freely (about 15 s on a laptop).
+
+        The forecast reads its distribution after the exact rationale; here the model writes the
+        rationale itself, so its numbers can drift from the inputs. Kept per leg; one generation at a time.
+        """
+        if self.model is None:
+            raise LookupError("no model loaded")
+        key = leg_key(leg)
+        with self.guard:
+            lock = self.live_locks.setdefault(f"explain|{key}", threading.Lock())
+        with lock:
+            if key in self.explanations:
+                return self.explanations[key]
+            row = self.row_for(leg)
+            from train import collate  # noqa: PLC0415
+
+            started = time.monotonic()
+            with self.model_lock:
+                text = self.model.generate_answers(collate([prompts.sample(row, mode=self.mode, scaling=self.scaling)]),
+                                                   max_new_tokens=EXPLAIN_TOKENS)[0]
+            reasoning, _, answer = text.partition("Answer:")
+            words = answer.split()
+            out = {"trainId": leg.get("trainId"), "text": reasoning.strip(), "answer": words[0].rstrip(".") if words else None,
+                   "generatedBy": self.model_id, "seconds": round(time.monotonic() - started, 1)}
+            self.explanations[key] = out
+            return out
 
     def leg_forecast(self, leg: dict, now: pd.Timestamp | None) -> dict:
         """The contract's leg forecast, from a recorded trip or the class prior."""
@@ -327,10 +377,17 @@ def make_handler(forecaster: Forecaster):
         def do_POST(self) -> None:  # noqa: N802
             try:
                 length = int(self.headers.get("content-length") or 0)
-                journey = json.loads(self.rfile.read(length) or b"{}")
-                self._reply(200, forecaster.forecast(journey))
+                body = json.loads(self.rfile.read(length) or b"{}")
+                if self.path.rstrip("/").endswith("/explain"):  # {"leg": Leg}: the model's own words, slow
+                    self._reply(200, forecaster.explain(body.get("leg") or body))
+                else:
+                    self._reply(200, forecaster.forecast(body))
             except (ValueError, KeyError, TypeError) as error:
                 self._reply(400, {"error": str(error)})
+            except LookupError as error:
+                self._reply(404, {"error": str(error)})
+            except (RuntimeError, OSError) as error:
+                self._reply(502, {"error": str(error)})
 
         def log_message(self, fmt, *args) -> None:
             print(f"{self.address_string()} {fmt % args}", flush=True)

@@ -6,6 +6,12 @@ import { hydrateCoords } from "./stations"
 export type Tab = "plan" | "forecast" | "advice" | "causes" | "evidence"
 export type Stage = "idle" | "parsing" | "journey" | "predicting" | "predicted" | "recommending" | "done" | "error"
 
+/** The model's own words for one leg: requested after the forecast, shown when ready. */
+export type ExplanationState =
+  | { status: "loading" }
+  | { status: "done"; text: string; answer: string | null; seconds: number }
+  | { status: "error"; error: string }
+
 export type State = {
   tab: Tab
   stage: Stage
@@ -28,6 +34,7 @@ export type State = {
   stageMode: boolean
   stageStep: number
   busy: boolean
+  explanations: Record<number, ExplanationState>
 }
 
 type Action =
@@ -51,12 +58,13 @@ type Action =
   | { type: "stageMode"; on: boolean }
   | { type: "stageStep"; step: number }
   | { type: "busy"; busy: boolean }
+  | { type: "explanation"; index: number; value: ExplanationState }
   | { type: "reset" }
 
 const initial: State = {
   tab: "plan", stage: "idle", offline: false, selectedLeg: null,
   bufferExtra: 0, doorToStationMin: 20, acceptableRisk: 0.15,
-  overlay: "none", rerouteChoice: 0, stageMode: false, stageStep: 0, busy: false,
+  overlay: "none", rerouteChoice: 0, stageMode: false, stageStep: 0, busy: false, explanations: {},
 }
 
 function reducer(s: State, a: Action): State {
@@ -65,7 +73,7 @@ function reducer(s: State, a: Action): State {
     case "stage": return { ...s, stage: a.stage }
     case "draft": return { ...s, sharedText: a.text }
     case "share": return { ...initial, stageMode: s.stageMode, sharedText: a.text, stage: "parsing", busy: true }
-    case "journey": return { ...s, tab: "plan", journey: a.journey, prediction: undefined, recommendation: undefined, reroute: undefined, missedLeg: undefined, causes: undefined, causesFor: undefined, overlay: "none", bufferExtra: 0, selectedLeg: null, stage: "journey", error: undefined }
+    case "journey": return { ...s, tab: "plan", journey: a.journey, prediction: undefined, recommendation: undefined, reroute: undefined, missedLeg: undefined, causes: undefined, causesFor: undefined, overlay: "none", bufferExtra: 0, selectedLeg: null, stage: "journey", error: undefined, explanations: {} }
     case "prediction": return { ...s, prediction: a.prediction, stage: "predicted" }
     case "recommendation": return { ...s, recommendation: a.recommendation, stage: "done", error: undefined }
     case "reroute": return { ...s, reroute: a.reroute, missedLeg: a.missedLeg, overlay: "reroute", rerouteChoice: 0, error: undefined }
@@ -81,6 +89,7 @@ function reducer(s: State, a: Action): State {
     case "stageMode": return { ...s, stageMode: a.on, stageStep: a.on ? s.stageStep : 0 }
     case "stageStep": return { ...s, stageStep: a.step }
     case "busy": return { ...s, busy: a.busy }
+    case "explanation": return { ...s, explanations: { ...s.explanations, [a.index]: a.value } }
     case "reset": return { ...initial, stageMode: s.stageMode }
   }
 }
@@ -109,6 +118,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     rawDispatch(action)
   }, [])
 
+  // The model's own words, leg by leg after the forecast and the advice: each takes about 15 s.
+  const explainLegs = useCallback(async (journey: Journey, requestId: number) => {
+    journey.legs.forEach((_, i) => dispatch({ type: "explanation", index: i, value: { status: "loading" } }))
+    for (const [i, leg] of journey.legs.entries()) {
+      if (requestId !== generation.current) return
+      try {
+        const e = await api.explain(leg)
+        if (requestId === generation.current) dispatch({ type: "explanation", index: i, value: { status: "done", text: e.text, answer: e.answer, seconds: e.seconds } })
+      } catch (err) {
+        if (requestId === generation.current) dispatch({ type: "explanation", index: i, value: { status: "error", error: (err as Error).message || "no response" } })
+      }
+    }
+  }, [dispatch])
+
   const pipeline = useCallback(async (journey: Journey, requestId: number) => {
     if (!journey?.legs?.length || !journey.legs.every(l => l.trainId && l.from?.name && l.to?.name && Number.isFinite(Date.parse(l.plannedDeparture)) && Date.parse(l.plannedArrival) > Date.parse(l.plannedDeparture))) throw new Error("The journey has incomplete train details. Please check its stations and times.")
     if (requestId !== generation.current) return
@@ -132,7 +155,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } finally {
       if (requestId === generation.current) dispatch({ type: "busy", busy: false })
     }
-  }, [dispatch])
+    if (!demo && requestId === generation.current) void explainLegs(j, requestId)
+  }, [dispatch, explainLegs])
 
   const runJourney = useCallback(async (journey: Journey) => {
     const id = ++generation.current
