@@ -93,7 +93,9 @@ class TestPlacement(unittest.TestCase):
 
     def test_a_short_window_drops_anchors_rather_than_shrinking_the_gap(self) -> None:
         short = (dt.date(2026, 1, 1), dt.date(2026, 3, 1))
-        anchors = plan_anchors(IDS, window=short)
+        # history_days=0: this test is about gap placement inside a window,
+        # not about the context-depth shift, which would swallow 59 days whole.
+        anchors = plan_anchors(IDS, window=short, history_days=0)
         counts = {}
         for anchor in anchors:
             counts[anchor.entity_id] = counts.get(anchor.entity_id, 0) + 1

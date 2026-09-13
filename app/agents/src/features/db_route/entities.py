@@ -318,7 +318,20 @@ def enumerate_entities(
     # Excluded in SQL rather than skipped in Python: a row with no station is not
     # a rejected entity, it is not an entity at all, and putting it in the
     # rejection log would misreport what the log counts.
-    where = [region_sql, "station_name IS NOT NULL", "final_destination_station IS NOT NULL"]
+    # `Bus` is rail-replacement service (Schienenersatzverkehr) that the feed
+    # carries under a train type. It is not a train: it runs while a line is
+    # closed, a handful of times a day, on road time. Measured 336k stop events
+    # a month, 2.7% of the archive, and the single densest source of entities
+    # that cannot fill an hourly week -- one curated "Bus -> Augsburg Hbf" had
+    # 1, 3 and 6 stop events in three sampled weeks. Excluded as an entity;
+    # it still counts toward station throughput, where a replacement bus is
+    # honest evidence that the line was shut.
+    where = [
+        region_sql,
+        "station_name IS NOT NULL",
+        "final_destination_station IS NOT NULL",
+        "train_type <> 'Bus'",
+    ]
     if window is not None:
         start, end = window
         where.append(f"{SERVICE_DATE_SQL} >= DATE '{start.isoformat()}'")

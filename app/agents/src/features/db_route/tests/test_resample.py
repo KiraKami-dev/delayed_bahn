@@ -277,28 +277,37 @@ class TestGaps(unittest.TestCase):
         self.assertTrue(window.within_imputation_budget)
 
     def test_pair_grain_is_structurally_sparse_at_the_week_layer(self):
-        """Evidence for the warning on Window.worst_imputed_fraction.
+        """Why `service_at_station_delay` lives at the coarse layers only.
 
         A realistic S-Bahn pair: trains 05:00-22:59, nothing overnight. The
-        overnight hours are not missing data, they are the timetable -- and they
-        put `service_at_station_delay` far over MAX_IMPUTED_FRACTION on a record
-        with nothing whatever wrong with it.
+        overnight hours are not missing data, they are the timetable -- and at
+        hourly resolution they put the pair channel at 6/24 imputed on a record
+        with nothing whatever wrong with it. Re-bucketed to six hours every
+        bucket of the day has a train in it and the same channel is dense.
+        That is the measurement behind dropping the channel from WEEK.
         """
         pair_rows = [r for r in _hourly(5.0) if 5 <= r["hour"].hour < 23]
         con = fixture_connection(pair_rows=pair_rows)
         cache = FactCache(con=con, relations=RELATIONS)
-        window = cache.window(KEY, ANCHOR, PROFILES["S"])
 
+        self.assertNotIn("service_at_station_delay", PROFILES["S"].layers[0].signals)
+
+        hourly = profiles.WEEK.with_signals(
+            ("service_at_station_delay", "station_throughput", "service_throughput")
+        )
+        probe = profiles.TimelineProfile("T", "test/hourly-pair", (hourly,))
+        window = cache.window(KEY, ANCHOR, probe)
         pair_fraction = window.imputed_fraction[("week", "service_at_station_delay")]
         self.assertAlmostEqual(pair_fraction, 6 / 24, places=6)
-        # Structurally sparse -- far past what a station-grain channel would be
-        # allowed -- yet inside the pair budget, so the record survives. That is
-        # the whole point of making the budget per-grain.
         self.assertGreater(pair_fraction, resample.MAX_IMPUTED_FRACTION["station"])
-        self.assertLessEqual(pair_fraction, resample.MAX_IMPUTED_FRACTION["pair"])
-        # the station channel, over the same hours, is fine -- so the budget as
-        # a single max across channels is what fails, not the data
-        self.assertEqual(window.imputed_fraction[("week", "station_delay")], 0.0)
+
+        coarse = cache.window(KEY, ANCHOR, PROFILES["M"])
+        self.assertAlmostEqual(
+            coarse.imputed_fraction[("quarter", "service_at_station_delay")], 0.0, places=6
+        )
+        # the station channel, over the same hours, is fine -- so a single max
+        # across channels is what would have failed, not the data
+        self.assertEqual(window.imputed_fraction[("week", "station_throughput")], 0.0)
         self.assertTrue(np.all(np.isfinite(
             window.values[("week", "service_at_station_delay")])))
 
@@ -365,10 +374,10 @@ class TestDerivedSignals(unittest.TestCase):
         """service / station / pair must not collapse onto one another."""
         con = fixture_connection()
         cache = FactCache(con=con, relations=RELATIONS)
-        window = cache.window(KEY, ANCHOR, PROFILES["S"])
-        service = window.values[("week", "service_delay")]
-        station = window.values[("week", "station_delay")]
-        pair = window.values[("week", "service_at_station_delay")]
+        window = cache.window(KEY, ANCHOR, PROFILES["M"])
+        service = window.values[("quarter", "service_delay")]
+        station = window.values[("quarter", "station_delay")]
+        pair = window.values[("quarter", "service_at_station_delay")]
         self.assertFalse(np.allclose(service, station))
         self.assertFalse(np.allclose(station, pair))
         # fixture seeds: line 3.0, station 4.0, pair 5.0, same rush shape
@@ -386,13 +395,25 @@ class TestGuards(unittest.TestCase):
         jitter[0] = 1e-9
         self.assertTrue(resample.is_degenerate(jitter), "below the z-score floor")
 
-    def test_flat_cancel_rate_is_reported_as_degenerate(self):
+    def test_flat_cancel_rate_is_a_quiet_week_not_a_reject(self):
         """The realistic case: a station that never cancels anything."""
         rows = [r | {"n_cancelled": 0} for r in _hourly(4.0)]
         con = fixture_connection(station_rows=rows)
         cache = FactCache(con=con, relations=RELATIONS)
         window = cache.window(KEY, ANCHOR, PROFILES["S"])
-        self.assertIn(("week", "station_cancel_rate"), window.degenerate_channels)
+        # A flat cancellation rate is a week with no cancellations, not a
+        # defect; only a flat delay channel disqualifies the record.
+        self.assertNotIn(("week", "station_cancel_rate"), window.degenerate_channels)
+        self.assertTrue(resample.is_degenerate(window.values[("week", "station_cancel_rate")]))
+        self.assertIsNone(window.reject_reason())
+
+    def test_flat_delay_channel_still_rejects(self):
+        """A service whose mean delay never moves did not run; that record must not exist."""
+        rows = [r | {"sum_delay": 0.0} for r in _hourly(3.0)]
+        con = fixture_connection(line_rows=rows)
+        cache = FactCache(con=con, relations=RELATIONS)
+        window = cache.window(KEY, ANCHOR, PROFILES["S"])
+        self.assertIn(("week", "service_delay"), window.degenerate_channels)
         self.assertIsNotNone(window.reject_reason())
 
     def test_non_finite_raises_rather_than_propagating(self):
@@ -451,11 +472,11 @@ class TestOneCodePathForEveryProfile(unittest.TestCase):
                                               f"{pid} vs XM at {lid}/{signal}")
 
         # ...and the panels were built once, not once per profile: 3 grains x 3
-        # buckets is the ceiling, and only the week layer touches the pair grain.
+        # buckets is the ceiling, and only the coarse layers touch the pair grain.
         self.assertLessEqual(len(cache._panels), 9)
         self.assertEqual(sorted(cache._panels), [
             ("line", "1 day"), ("line", "1 hour"), ("line", "6 hours"),
-            ("pair", "1 hour"),
+            ("pair", "1 day"), ("pair", "6 hours"),
             ("station", "1 day"), ("station", "1 hour"), ("station", "6 hours"),
         ])
 

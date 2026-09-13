@@ -52,6 +52,11 @@ from bridge import (
     series_values,
 )
 from profiles import TimelineProfile
+from resample import (
+    MAX_IMPUTED_FRACTION as GRAIN_IMPUTATION_BUDGET,
+    MAX_OVERALL_IMPUTED_FRACTION,
+    must_vary,
+)
 from sources import BASIS_EXPANSION_DATE, SERVICE_DATE_SQL
 
 # --- the annotation contract this validator holds the builder to -------------
@@ -106,7 +111,13 @@ except Exception:  # pragma: no cover
 
 # --- thresholds --------------------------------------------------------------
 
-MAX_IMPUTED_FRACTION = 0.20
+# Overall filled share is a *sanity* cap, not the gate. The gate is per grain and
+# is measured against buckets where that grain had service (resample.Window.
+# service_buckets): a small station's week is ~25% overnight, and those hours
+# are the timetable, not a gap. The per-grain figures travel on the record as
+# imputed_<grain>, and check_imputed_fraction re-applies resample's own budget
+# to them. Anything over half the context filled is wrong regardless.
+MAX_IMPUTED_FRACTION = MAX_OVERALL_IMPUTED_FRACTION
 """A fifth of the window filled is the most a record may carry.
 
 Rationale from the coverage measurements in ``facts.py``: an entity seen on 20+
@@ -655,8 +666,13 @@ def check_series_shape(record: Any, profile: TimelineProfile) -> list[Finding]:
 
         std = float(values.std(ddof=1)) if values.size > 1 else 0.0
         if std <= MIN_STD:
+            # Only a delay channel is refused for being flat (resample.must_vary):
+            # a flat cancellation rate or works share is a quiet week, which the
+            # model should see. Reported, so the count is visible, not refused.
+            signal = plan[index][1] if index < len(plan) else ""
+            emit = error if signal and must_vary(signal) else warning
             findings.append(
-                error(
+                emit(
                     "series_constant",
                     subject,
                     f"series {index} ({key}) has std {std:.3e} <= {MIN_STD:.0e}: it is "
@@ -696,18 +712,38 @@ def check_imputed_fraction(
         return [
             error("imputed_fraction", subject, f"{fraction} is not a fraction", value=fraction)
         ]
+    findings: list[Finding] = []
     if fraction > cap:
-        return [
+        findings.append(
             error(
                 "imputed_fraction",
                 subject,
-                f"{fraction:.1%} of timesteps imputed, over the {cap:.0%} cap; past this "
+                f"{fraction:.1%} of timesteps imputed, over the {cap:.0%} sanity cap; past this "
                 f"the series mostly describes the imputation rule",
                 value=fraction,
                 cap=cap,
             )
-        ]
-    return []
+        )
+    # The gate proper: the same per-grain budget resample applied, re-checked
+    # from what the record itself states.
+    annotations = annotation_map(record)
+    for grain, budget in sorted(GRAIN_IMPUTATION_BUDGET.items()):
+        stated = annotations.get(f"imputed_{grain}")
+        if stated is None:
+            continue  # a profile without that grain states nothing for it
+        if float(stated) > budget:
+            findings.append(
+                error(
+                    "imputed_fraction",
+                    subject,
+                    f"{float(stated):.1%} of {grain}-grain service buckets imputed, over the "
+                    f"{budget:.0%} budget resample enforces; this record should not exist",
+                    grain=grain,
+                    value=float(stated),
+                    cap=budget,
+                )
+            )
+    return findings
 
 
 def check_answer_matches_target(record: Any, task: Any, *, eos_token: str = "") -> list[Finding]:
@@ -973,8 +1009,13 @@ def check_phase_alignment(
             )
         ]
     if peak_lag != 0:
+        # One record peaking a bucket off is not evidence of anything: the
+        # station and the network-wide service genuinely lead and lag each
+        # other by an hour depending on where on the route the station sits.
+        # A timezone slip shifts *every* record the same way. So this is a
+        # warning here and an error in check_phase_consensus, over the corpus.
         return [
-            error(
+            warning(
                 "phase_alignment",
                 subject,
                 f"{pair[0]} and {pair[1]} at layer {finest.layer_id!r} peak at lag "
@@ -1008,6 +1049,43 @@ def validate_record(
     return findings
 
 
+PHASE_CONSENSUS_SHARE = 0.80
+PHASE_CONSENSUS_MIN_RECORDS = 20
+
+
+def check_phase_consensus(findings: Sequence[Finding]) -> list[Finding]:
+    """The corpus-level half of the phase check.
+
+    A physical lead or lag between one station and its service's network-wide
+    aggregate goes either way from record to record. A bucketing bug goes one
+    way for everyone. If most conclusive records peak at the same non-zero lag,
+    that is the bug, and it is an error even though no single record was.
+    """
+    lags = [
+        int(f.detail["peak_lag"])
+        for f in findings
+        if f.check == "phase_alignment" and "peak_lag" in f.detail
+    ]
+    if len(lags) < PHASE_CONSENSUS_MIN_RECORDS:
+        return []
+    for lag in (-1, 1):
+        share = sum(1 for x in lags if x == lag) / len(lags)
+        if share >= PHASE_CONSENSUS_SHARE:
+            return [
+                error(
+                    "phase_consensus",
+                    "dataset",
+                    f"{share:.0%} of {len(lags)} off-phase records peak at lag {lag:+d}: a "
+                    f"one-bucket desynchronisation between the station and line aggregates, "
+                    f"which no per-record check can see",
+                    lag=lag,
+                    share=share,
+                    n=len(lags),
+                )
+            ]
+    return []
+
+
 def validate_records(
     dataset: Any, profile: TimelineProfile, *, eos_token: str = ""
 ) -> ValidationReport:
@@ -1031,6 +1109,7 @@ def validate_records(
         for task in tasks:
             n_samples += 1
             report.extend(validate_record(record, task, profile, eos_token=eos_token))
+    report.extend(check_phase_consensus(report.findings))
     report.stats[profile.profile_id] = {
         "records": n_records,
         "samples": n_samples,

@@ -267,8 +267,19 @@ def plan_anchors(
     purge_days: int = PURGE_DAYS,
     half_life_days: float = RECENCY_HALF_LIFE_DAYS,
     repeat_max: int = REPEAT_MAX,
+    history_days: int | None = None,
 ) -> list[Anchor]:
     """Every (entity, anchor) in the corpus, split, weighted and purged.
+
+    ``history_days`` pushes the first anchor past the longest context any
+    profile needs -- by default the deepest layer in ``profiles.PROFILES``, 120
+    days. This is what makes the anchor set *shared*: S could anchor a week
+    into the archive, L cannot, and if each profile took what it could reach, S
+    would train on four extra months and win for a reason that has nothing to
+    do with timescale. Measured before this: every anchor from November to
+    January rejected at XM (44/44), because its season layer reached back past
+    the 2025-11-02 point where the archive expands from ~100 stations to all of
+    them -- the data was not missing, it had never been collected.
 
     ``split_mode`` is ``"temporal"`` by default: the held-out cells are later
     travel dates than the training ones, because the deployed question is
@@ -298,6 +309,17 @@ def plan_anchors(
         raise ValueError(f"splits must sum to 1.0, got {splits}")
     if not 0.0 < entity_holdout < 1.0:
         raise ValueError(f"entity_holdout must be in (0, 1), got {entity_holdout}")
+
+    if history_days is None:
+        from profiles import PROFILES
+
+        history_days = int(max(p.context_days for p in PROFILES.values()))
+    window = (window[0] + dt.timedelta(days=history_days), window[1])
+    if window[0] >= window[1]:
+        raise ValueError(
+            f"no anchor room: {history_days} days of history leaves nothing of "
+            f"{window[0] - dt.timedelta(days=history_days)}..{window[1]}"
+        )
 
     ids = [e.entity_id if isinstance(e, Entity) else str(e) for e in entities]
     ids = sorted(set(ids))
@@ -496,7 +518,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--archive-end", required=True)
     parser.add_argument("--cache", default=Path("~/.cache/db_route").expanduser(), type=Path)
     parser.add_argument("--out", default=None, type=Path)
-    parser.add_argument("--split-mode", default="temporal", choices=("temporal", "entity"))
+    parser.add_argument("--split-mode", default="both", choices=("temporal", "entity", "both"))
     parser.add_argument("--curated", action="store_true", help="use only the curated subset")
     args = parser.parse_args(argv)
 

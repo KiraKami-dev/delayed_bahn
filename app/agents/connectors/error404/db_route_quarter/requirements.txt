@@ -1,0 +1,8 @@
+# duckdb aggregates the archive and joins causes; the fact cache is DuckDB-written parquet.
+duckdb>=1.1
+# pyarrow: parquet I/O for the fact cache and the TimeF writer.
+pyarrow>=15
+# numpy: the window arrays handed to TimeSeries.from_values.
+numpy>=1.26
+# pytz: DuckDB needs it to hand TIMESTAMPTZ notice columns back to Python.
+pytz

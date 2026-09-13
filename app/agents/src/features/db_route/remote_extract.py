@@ -170,7 +170,8 @@ def process_day(args) -> dict:
                 if not xml or "fchg" not in (a or "") or "<m " not in xml:
                     continue
                 m = re.search(r"(\d+)$", u or "")
-                if not m or m.group(1) not in eva_set:
+                # An empty EVA set means every station: the all-Germany run.
+                if not m or (eva_set and m.group(1) not in eva_set):
                     continue
                 cz, nz = parse_stops(xml)
                 for c in cz:

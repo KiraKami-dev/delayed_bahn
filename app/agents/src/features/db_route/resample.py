@@ -64,7 +64,20 @@ DEFAULT_CACHE_DIR = Path.home() / ".cache" / "db_route"
 # structural property of the timetable turns into an empty dataset. The pair
 # budget is therefore set above the structural floor, leaving room to still catch
 # a genuinely broken window.
+# Measured against *service* buckets, not all buckets -- see
+# Window.service_buckets for why the denominator matters more than the number.
+# Station and line channels should be near-complete whenever the station is
+# running, so a tenth is a real quality bar. A single service is not due every
+# hour even during service hours, so its bar stays looser.
 MAX_IMPUTED_FRACTION: dict[str, float] = {"station": 0.10, "line": 0.10, "pair": 0.45}
+
+# The per-grain gate has one blind spot: a station shut for most of the week
+# (a Stammstrecke closure) has *no* gaps during service -- there was no
+# service -- so it passes, and the record is two-thirds interpolation. Measured:
+# München-Hirschgarten, week of 2026-08-17, 65% of the context empty at 302
+# stop events on the days it ran. Half the context filled is where a series
+# stops describing the station and starts describing the imputation rule.
+MAX_OVERALL_IMPUTED_FRACTION = 0.50
 
 # A constant series has zero standard deviation, and the downstream z-score
 # divides by it. The result is NaN or inf in every position, the loss goes to
@@ -143,6 +156,18 @@ def _cause_share(family: str) -> SignalSpec:
     with the same event count. Only the minute-weighted share separates them,
     and the rationale downstream asserts responsibility.
 
+    Zero-imputed, not interpolated, and that is a claim about what an empty
+    bucket means. The denominator is attributed minutes, so the share is
+    undefined exactly when nothing was attributed -- and the honest reading of
+    that is "no delay here was blamed on works", i.e. zero, not a value we lost
+    and must guess between neighbours. Interpolating would assert a works regime
+    in the gaps between the hours that reported one.
+
+    The pairing with `attributed_share` is what keeps zero unambiguous:
+    (works 0.0, attributed 0.0) is "nothing was attributed at all";
+    (works 0.0, attributed 0.4) is "attributed, but not to works". Two channels,
+    two different facts, neither one inferred from the other.
+
     Station grain, not pair. The pair grain would be the more specific claim but
     it does not survive coarsening: causes.py measures 30.1% of stops carrying a
     code at all, and a (service, station) pair sees on the order of a handful of
@@ -150,7 +175,7 @@ def _cause_share(family: str) -> SignalSpec:
     more often than not and the "share" is mostly interpolation. The station's
     cause mix is what a works closure or a storm actually moves.
     """
-    return SignalSpec("station", f"sum_delay_{family}", "sum_delay_attributed", "linear")
+    return SignalSpec("station", f"sum_delay_{family}", "sum_delay_attributed", "zero")
 
 
 SIGNAL_SPECS: dict[str, SignalSpec] = {
@@ -162,8 +187,11 @@ SIGNAL_SPECS: dict[str, SignalSpec] = {
     # other two grains cannot express
     "service_at_station_delay": SignalSpec("pair", "sum_delay", "n_obs", "linear"),
     "station_cancel_rate": SignalSpec("station", "n_cancelled", "n_obs", "linear"),
-    # the one count channel. Not a rate: an empty bucket here is a real zero.
+    # The two count channels. Not rates: an empty bucket here is a real zero,
+    # and each one is the denominator that makes its grain's imputation gate
+    # mean something -- see Window.service_buckets.
     "station_throughput": SignalSpec("station", "n_obs", None, "zero"),
+    "service_throughput": SignalSpec("line", "n_obs", None, "zero"),
     "attributed_share": SignalSpec("station", "n_attributed", "n_obs", "linear"),
     **{f"{family}_share": _cause_share(family) for family in SERIES_FAMILIES},
 }
@@ -191,6 +219,11 @@ GRAIN_COLUMNS: dict[str, tuple[str, ...]] = {
     )
     for grain in FACT_TABLES
 }
+
+
+def must_vary(signal: str) -> bool:
+    """True for the channels a flat series would make meaningless: the delays."""
+    return SIGNAL_SPECS[signal].numerator == "sum_delay"
 
 
 def is_degenerate(values: np.ndarray) -> bool:
@@ -604,23 +637,73 @@ class Window:
     bucket_starts: dict[str, np.ndarray] = field(default_factory=dict)
 
     @property
-    def worst_imputed_fraction(self) -> dict[str, float]:
-        """The gate, measured over the interpolated channels only.
+    def service_buckets(self) -> dict[tuple[str, str], np.ndarray]:
+        """Per (layer, grain), the buckets in which that grain saw any traffic.
 
-        `station_throughput`'s gaps are not imputation -- an empty bucket is a
-        counted zero -- so including it would reject a quiet station for being
-        quiet. Its fraction is still reported per-channel above; it just does
-        not vote.
+        This is the denominator that makes the imputation gate mean something.
+        A 168-hour week contains about 42 overnight hours, and outside the
+        largest hubs no train runs in them -- so a quarter of every week is
+        empty on a perfectly healthy record. Judged against a flat 10% budget
+        that rejected 91% of station-grain records for the crime of it being
+        three in the morning.
 
-        Reported per grain, because absence means different things at
-        different grains -- see MAX_IMPUTED_FRACTION. A single max across all
-        channels would let the structurally-sparse pair grain veto every record.
+        The denominator has to be *per grain*, which the first version of this
+        got wrong: it measured every grain against the station's open hours. A
+        service group runs on its own timetable, not the station's, so an hour
+        when the station was busy and the service simply was not due counted as
+        a gap in the service channel. Measured, that single conflation was 45 of
+        146 rejections. Each grain now supplies its own count channel:
+
+            station -> station_throughput   (trains at this station)
+            line    -> service_throughput   (stops by this service, network-wide)
+            pair    -> both, intersected    (the service could have called here)
+
+        Counts are the right denominators because zero means "no train was
+        observed", which is a fact about the timetable rather than a gap in the
+        data -- which is also why they are the two channels that do not vote.
         """
+        by_layer: dict[str, dict[str, np.ndarray]] = {}
+        for (layer_id, signal), mask in self.present.items():
+            if signal in ("station_throughput", "service_throughput"):
+                by_layer.setdefault(layer_id, {})[signal] = mask
+        out: dict[tuple[str, str], np.ndarray] = {}
+        for layer_id, counts in by_layer.items():
+            station = counts.get("station_throughput")
+            service = counts.get("service_throughput")
+            if station is not None:
+                out[(layer_id, "station")] = station
+            if service is not None:
+                out[(layer_id, "line")] = service
+            if station is not None and service is not None:
+                # A pair bucket was an opportunity only if both ends were live.
+                out[(layer_id, "pair")] = station & service
+        return out
+
+    @property
+    def worst_imputed_fraction(self) -> dict[str, float]:
+        """The gate: imputed buckets as a share of buckets that had service.
+
+        Measured over the interpolated channels only. `station_throughput`'s
+        gaps are not imputation -- an empty bucket is a counted zero -- so it
+        does not vote; it supplies the denominator instead (see
+        `service_buckets`).
+
+        Reported per grain, because absence still means different things at
+        different grains even after the structural correction: a station with
+        no train this hour is a quiet hour, a *service* with no train this hour
+        is simply not due.
+        """
+        service = self.service_buckets
         worst: dict[str, float] = {}
-        for (_, signal), fraction in self.imputed_fraction.items():
+        for (layer_id, signal), fraction in self.imputed_fraction.items():
             spec = SIGNAL_SPECS[signal]
             if spec.impute == "zero":
                 continue
+            in_service = service.get((layer_id, spec.grain))
+            if in_service is not None and in_service.any():
+                filled = ~self.present[(layer_id, signal)]
+                # Only count a gap where the station was actually running.
+                fraction = float(np.count_nonzero(filled & in_service) / np.count_nonzero(in_service))
             worst[spec.grain] = max(worst.get(spec.grain, 0.0), fraction)
         return worst
 
@@ -649,10 +732,28 @@ class Window:
 
     @property
     def degenerate_channels(self) -> tuple[tuple[str, str], ...]:
-        return tuple(cell for cell, v in self.values.items() if is_degenerate(v))
+        # Only the delay channels must vary. A flat mean delay is a service that
+        # did not run, and that record should not exist. Every other channel
+        # has a meaningful zero: `works_share` at zero is "nothing was blamed
+        # on works", `station_cancel_rate` at zero is a week with no
+        # cancellations -- measured at 347 of 2,199 anchors, i.e. a fifth of
+        # the corpus rejected for having had a good week. bridge.normalize
+        # clamps std, so a flat channel cannot NaN; it just reads as flat.
+        return tuple(
+            cell
+            for cell, v in self.values.items()
+            if must_vary(cell[1]) and is_degenerate(v)
+        )
 
     def reject_reason(self) -> str | None:
         """Why this window is unusable, or None. The caller's whole decision."""
+        overall = self.overall_imputed_fraction
+        if overall > MAX_OVERALL_IMPUTED_FRACTION:
+            return (
+                f"context mostly empty: {overall:.0%} of buckets imputed across the "
+                f"interpolated channels (> {MAX_OVERALL_IMPUTED_FRACTION:.0%}); the station "
+                f"or service was not running for most of the window"
+            )
         if not self.within_imputation_budget:
             over = [
                 f"{grain} {fraction:.1%} > {MAX_IMPUTED_FRACTION[grain]:.0%}"
