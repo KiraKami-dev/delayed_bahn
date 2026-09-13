@@ -722,6 +722,28 @@ features (3.462 / 2.759 on the original features).
   XGBoost beyond 30 minutes (+0.076) and overall (+0.015); at 12,000 steps it wins at every lead
   time on the full test set, alone. Validation 2.709 / 2.175.
 
+### Fourth wave: what the time series and the embeddings add (05:00)
+
+Same data (`examples.parquet`), exact-minute plus CRPS loss, 2,000 steps, the same 5,000 test
+examples; only the route by which the four series reach the model changes. Every prompt keeps
+the rationale sentence (current delay, trend, 30-day median), so "no series" still knows the
+summary numbers.
+
+| Series reach the model | Prompt tokens (median) | Median error | CRPS | vs text (CRPS, 95% interval) |
+|---|---|---|---|---|
+| Not at all | 365 | 3.677 | 2.957 | +0.054 (+0.023 to +0.085), worse |
+| As numbers in the text | 844 | 3.621 | 2.903 | |
+| Through the encoder only | 365 + 45 soft | *running* | | |
+| Text plus encoder | 961 + 45 soft | *running* | | |
+| Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | *running* | | |
+
+- **The time series carry the win.** Without them the model is level with XGBoost (-0.014,
+  -0.073 to +0.035); with them it beats it. The series are worth 0.101 CRPS beyond 30 minutes
+  (-0.169 to -0.041) and 0.012 within 15 minutes, where the current delay in the rationale
+  already says most.
+- **The encoder is the compact route:** the four series cost about 480 prompt tokens as numbers
+  and 45 soft tokens through the encoder.
+
 ### Pending at the time of writing
 
 - Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text

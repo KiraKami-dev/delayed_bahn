@@ -38,7 +38,7 @@ def train_label(row: pd.Series) -> str:
     return service
 
 
-SCALINGS = ("z", "fixed")
+SCALINGS = ("z", "fixed", "z4")
 MINUTES_PER_UNIT = 10.0  # fixed scaling: minutes divided by this, shares as they are
 
 
@@ -47,7 +47,8 @@ def normalised(values, label: str, unit: str, scaling: str = "z") -> tuple[str, 
 
     ``z``: z-normalise and state mean and spread, as OpenTSLM's own datasets do; the encoder then
     sees shape only. ``fixed``: keep the level, minutes divided by 10 and shares as they are, so
-    +2 and +40 minutes stay different for the encoder.
+    +2 and +40 minutes stay different for the encoder. ``z4``: ``z`` with every value repeated over
+    one patch of four, so each soft token holds exactly one value instead of blurring four.
     """
     series = np.asarray(values, dtype=np.float64)
     if scaling == "fixed":
@@ -57,7 +58,10 @@ def normalised(values, label: str, unit: str, scaling: str = "z") -> tuple[str, 
     mean = float(series.mean())
     std = max(float(series.std()), MIN_STD)
     unit = "minutes" if unit == "plan" else unit
-    return f"{label}, in {unit}, mean {mean:.2f} and std {std:.2f}:", ((series - mean) / std).tolist()
+    scaled = (series - mean) / std
+    if scaling == "z4":
+        scaled = np.repeat(scaled, 4)
+    return f"{label}, in {unit}, mean {mean:.2f} and std {std:.2f}:", scaled.tolist()
 
 
 def pct(share: float) -> str:
@@ -129,7 +133,7 @@ def as_text(values: np.ndarray) -> str:
     return ", ".join(f"{value:.0f}" for value in values)
 
 
-MODES = ("series", "text", "both", "none")
+MODES = ("series", "text", "both", "none", "split")
 TEXT_HOURS = 72  # the prompt never carries more than this many hourly values; the encoder gets them all
 TEXT_DAYS = 30  # likewise for the daily route history
 
@@ -140,7 +144,9 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
     ``mode`` decides how the four series reach the model: through the time-series encoder
     (``series``), written into the prompt as numbers with no encoder (``text``, the baseline;
     ``text_only`` is the same), both at once (``both``), or not at all (``none``, the ablation:
-    only the timetable facts and the rationale's summary numbers remain).
+    only the timetable facts and the rationale's summary numbers remain), or divided (``split``: the
+    run and the previous trains as text, the long history through the encoder only, so neither
+    route repeats the other).
     """
     if text_only:
         mode = "text"
@@ -175,11 +181,16 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
         raw.append((f"Arrival delay at {stop} of the previous trains on this route today, oldest first"
                     if prev else "No previous train on this route reached the stop in the last 6 hours",
                     prev or [0.0], "minutes"))
-    if mode in ("text", "both"):
+    def long_history(label: str, unit: str) -> bool:
+        return unit == "share" or label.startswith("Daily median")
+
+    if mode in ("text", "both", "split"):
         # The same numbers written into the prompt; in ``text`` no time-series encoder is involved.
         lines = []
         for label, values, unit in raw:
             if unit == "plan":  # trajectory channels are for the encoder; the text has the delays and the lead time
+                continue
+            if mode == "split" and long_history(label, unit):
                 continue
             values = np.asarray(values, dtype=np.float64)
             if unit == "share" and len(values) > TEXT_HOURS:  # long hourly series: the text gets the recent end
@@ -191,6 +202,8 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
             lines.append(f"{label}, in {'percent' if unit == 'share' else unit}: "
                          f"{as_text(values * (100 if unit == 'share' else 1))}")
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)
+    if mode == "split":
+        raw = [(label, values, unit) for label, values, unit in raw if unit == "plan" or long_history(label, unit)]
     series = [] if mode in ("text", "none") else [normalised(values, label, unit, scaling) for label, values, unit in raw]
     post_prompt = (f"How many minutes late will the train arrive at {stop}? Reason from the data, "
                    f"then answer with whole minutes or {CANCELLED}.\nRationale:")
