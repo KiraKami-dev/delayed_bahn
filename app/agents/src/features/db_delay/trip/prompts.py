@@ -102,6 +102,12 @@ def rationale(row: pd.Series) -> str:
                          f"the latest {gaps[-1]:.0f} minutes before this one is due.")
         else:
             parts.append(f"No earlier train of this type towards {name(row['dest'])} reached {stop} in the last 6 hours.")
+    if "xgb_median" in row and np.isfinite(row["xgb_median"]):
+        # The statistical forecast as a starting point; the model's job is to correct it with what
+        # it reads live and to say why.
+        parts.append(f"A statistical model expects about {row['xgb_median']:.0f} minutes late (likely "
+                     f"{row['xgb_q10']:.0f} to {row['xgb_q90']:.0f}), with {pct(row['xgb_p_late'])} chance of being at "
+                     f"least 6 minutes late and {pct(row['xgb_p_cancel'])} of cancellation.")
     if "station_late_same_hour" in row and len(row["station_series"]) >= 168:
         parts.append(f"At this time of day, {pct(row['station_late_same_hour'])} of stops at {stop} ran late over the "
                      f"last {len(row['station_series']) // 24} days, {pct(row['network_late_same_hour'])} nationwide.")
