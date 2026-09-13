@@ -854,6 +854,8 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   language model reading the facts in the rationale; the series add at most a hundredth, as text,
   and nothing through the encoder. Encoder only on v7 (every series as embeddings, no number lists
   in the text) scores 3.451 / 2.773, the same as no series and as split.
+  On September the no-series model scores 2.540 / 2.022 against split 2.023 and text 2.019, and
+  beats XGBoost-v7 by the same margin (-0.041, real): the finding holds out of time.
 - **Six thousand steps on v7 (07:35): the lead candidate.** Stacked text, scored on 30,000 test
   examples: 3.224 / 2.560, validation 2.572 / 2.066 (best of all runs). Against XGBoost-v7 on the
   28,290 that ran: CRPS -0.074 (-0.097 to -0.055), median error -0.072, within 15 minutes -0.104,

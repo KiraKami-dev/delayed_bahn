@@ -164,6 +164,7 @@ XGBoost retrained on those features on May:
 | Model | Median error | CRPS | vs XGBoost with the new series (CRPS) |
 |---|---|---|---|
 | TSLM, split (new series as series through the encoder; their summaries in the rationale), 2k | 2.543 | 2.023 | -0.040 (-0.080 to -0.015) real; median error -0.056 real; within 15 min -0.074 real |
+| TSLM, no series (summaries in the rationale only), v7, 2k | 2.540 | 2.022 | -0.041 (-0.080 to -0.016) real; within 15 min -0.070 real: the same as split and text, so out of time too the gain is the rationale |
 | TSLM, stacked text, v7, 2k | 2.542 | 2.019 | -0.044 (-0.085 to -0.019) real; median error -0.057 real; within 15 min -0.075 real |
 
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the
