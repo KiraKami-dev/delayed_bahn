@@ -26,27 +26,79 @@ export function transferBuffer(legs, i) {
   return minutesBetween(leg.plannedArrival, legs[i + 1].plannedDeparture);
 }
 
-export function createPredictionService({ env = process.env, backend, fetchImpl = fetch } = {}) {
+/** A leg the trip model could not forecast: it answered with the average of its train class. */
+export function isClassAverage(leg) {
+  return (leg.sources || []).some((s) => /^class average/i.test(String(s)));
+}
+
+const LEVELS = { high: 2, medium: 1, low: 0 };
+const lowest = (a, b) => (LEVELS[b] < LEVELS[a] ? b : a);
+
+/**
+ * The two model servers complement each other: the trip model (PREDICT_URL) forecasts a train
+ * from its live DB position, the route model (PREDICT_FALLBACK_URL) forecasts any recorded
+ * service at a station on any date. Legs the trip model could only average go to the route model.
+ */
+export async function complement(journey, primary, secondary) {
+  const idx = primary.legs.map((l, i) => (isClassAverage(l) ? i : -1)).filter((i) => i >= 0);
+  if (!idx.length) return primary;
+  let second;
+  try {
+    second = await secondary.forecast({ ...journey, legs: idx.map((i) => journey.legs[i]) });
+  } catch (e) {
+    for (const i of idx) primary.legs[i].sources = [...primary.legs[i].sources, `route model unavailable for this leg (${e.message})`];
+    return primary;
+  }
+  const legs = primary.legs.map((l) => ({ ...l }));
+  idx.forEach((i, k) => {
+    const r = second.legs[k];
+    if (!r?.arrival?.probs) return;
+    const why = String(primary.legs[i].reasoning || '').split(' Live data')[0];
+    legs[i] = {
+      ...r,
+      trainId: journey.legs[i].trainId,
+      reasoning: `${r.reasoning || ''} Used because the trip model had no matching trip: ${why}`.trim(),
+      sources: [...(r.sources || []), `route model instead of the trip model's class average`],
+      complementedBy: second.modelId,
+    };
+  });
+  const replaced = legs.filter((l) => l.complementedBy).length;
+  const confidence = legs.reduce((c, l) => (l.confidence ? lowest(c, l.confidence) : c), 'high');
+  return {
+    ...primary,
+    legs,
+    confidence: legs.every((l) => l.confidence) ? confidence : lowest(primary.confidence || 'medium', second.confidence || 'medium'),
+    modelId: replaced ? `${primary.modelId} + ${second.modelId} (${replaced} leg${replaced === 1 ? '' : 's'})` : primary.modelId,
+    ...(replaced ? { complementedLegs: idx.filter((i) => legs[i].complementedBy) } : {}),
+  };
+}
+
+export function createPredictionService({ env = process.env, backend, fallbackBackend, fetchImpl = fetch } = {}) {
   const mock = createMockBackend();
   const mode = env.PREDICT_BACKEND || (env.PREDICT_URL ? 'http' : 'mock');
   const chosen = backend ?? (mode === 'http'
     ? createHttpBackend({ url: env.PREDICT_URL, fetchImpl, timeoutMs: Number(env.PREDICT_TIMEOUT_MS || 8000) })
     : mock);
+  const secondary = fallbackBackend ?? (env.PREDICT_FALLBACK_URL
+    ? createHttpBackend({ url: env.PREDICT_FALLBACK_URL, fetchImpl, timeoutMs: Number(env.PREDICT_FALLBACK_TIMEOUT_MS || env.PREDICT_TIMEOUT_MS || 8000) })
+    : null);
   const minTransfer = Number(env.MIN_TRANSFER_MINUTES || 5);
 
   return {
     minTransfer,
     async forecast(journey) {
       validateJourney(journey);
+      let f;
       try {
-        return await chosen.forecast(journey);
+        f = await chosen.forecast(journey);
       } catch (e) {
         if (chosen === mock) throw e;
-        const f = await mock.forecast(journey);
+        f = await mock.forecast(journey);
         f.fallbackFrom = e.message;
         for (const l of f.legs) l.sources = [...l.sources, `fallback: model server unavailable (${e.message})`];
         return f;
       }
+      return secondary ? complement(journey, f, secondary) : f;
     },
 
     /** Pure: journey + per-leg forecasts -> Prediction. Reused by recommendation for what-ifs. */
@@ -82,7 +134,8 @@ export function createPredictionService({ env = process.env, backend, fetchImpl 
 
         return {
           trainId: leg.trainId,
-          expectedDelayMinutes: { value: p50, reasoning: `${headline}. ${f.reasoning || ''}`.trim(), sources, confidence: forecasts.confidence },
+          expectedDelayMinutes: { value: p50, reasoning: `${headline}. ${f.reasoning || ''}`.trim(), sources, confidence: f.confidence || forecasts.confidence },
+          ...(f.complementedBy ? { complementedBy: f.complementedBy } : {}),
           missProbability: miss,
           distribution: binned(f.arrival),
           quantiles: { p10, p50, p90 },
@@ -106,6 +159,7 @@ export function createPredictionService({ env = process.env, backend, fetchImpl 
         },
         modelId: forecasts.modelId,
         ...(forecasts.fallbackFrom ? { fallbackFrom: forecasts.fallbackFrom } : {}),
+        ...(forecasts.complementedLegs ? { complementedLegs: forecasts.complementedLegs } : {}),
       };
     },
 

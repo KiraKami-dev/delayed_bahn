@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { changeProbability, journeyProbability, point, forecast, quantile, onTimeProbability, binned } from './connection.js';
 import { createMockBackend, geometric, trainClass } from './backends/mock.js';
-import { createPredictionService, registerRoutes } from './routes/delay-prediction.js';
+import { createPredictionService, registerRoutes, isClassAverage } from './routes/delay-prediction.js';
 import { Router } from '../../server.js';
 
 const seed = JSON.parse(readFileSync(new URL('../pwa-shell/fixtures/seed-journey.json', import.meta.url), 'utf8'));
@@ -98,4 +98,66 @@ test('route validates the body', async () => {
   assert.equal(ok.legs.length, 2);
   const mock = createMockBackend();
   assert.equal((await mock.forecast(seed)).legs.length, 2);
+});
+
+const spike = (m) => { const probs = new Array(1000).fill(0); probs[m] = 1; return probs; };
+const tripModelReply = () => ({
+  modelId: 'trip-model', confidence: 'low',
+  legs: [
+    { arrival: { probs: spike(2), pCancel: 0 }, reasoning: 'Live forecast.', sources: ['trip-model (live data)'], confidence: 'high' },
+    { arrival: { probs: spike(1), pCancel: 0.02 }, reasoning: 'No recorded trip matches S 8 arriving at the airport at the planned time, so this is the average of recorded S arrivals, not a forecast. Live data could not be used.', sources: ['class average of the recorded trips (no matching record)'], confidence: 'low' },
+  ],
+});
+
+test('a class-average leg is recognised', () => {
+  assert.equal(isClassAverage(tripModelReply().legs[1]), true);
+  assert.equal(isClassAverage(tripModelReply().legs[0]), false);
+});
+
+test('the route model complements the legs the trip model could only average', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push(String(url));
+    if (String(url).includes('route')) {
+      const body = JSON.parse(init.body);
+      assert.equal(body.legs.length, 1, 'only the averaged leg goes to the route model');
+      assert.equal(body.legs[0].trainId, seed.legs[1].trainId);
+      return { ok: true, json: async () => ({ modelId: 'route-model', confidence: 'medium', legs: [{ arrival: { probs: spike(7), pCancel: 0.01 }, reasoning: 'Fine-tuned model forecast for S -> airport.', sources: ['route-model (model forecast)'], confidence: 'medium', origin: 'model forecast' }] }) };
+    }
+    return { ok: true, json: async () => tripModelReply() };
+  };
+  const svc = createPredictionService({ env: { PREDICT_URL: 'http://trip/', PREDICT_FALLBACK_URL: 'http://route/predict' }, fetchImpl });
+  const p = await svc.predict(seed);
+  assert.equal(calls.length, 2);
+  assert.equal(p.modelId, 'trip-model + route-model (1 leg)');
+  assert.deepEqual(p.complementedLegs, [1]);
+  assert.equal(p.legs[0].expectedDelayMinutes.value, 2, 'the live leg is untouched');
+  assert.equal(p.legs[0].expectedDelayMinutes.confidence, 'high');
+  assert.equal(p.legs[1].expectedDelayMinutes.value, 7, 'the averaged leg now carries the route model forecast');
+  assert.equal(p.legs[1].complementedBy, 'route-model');
+  assert.match(p.legs[1].expectedDelayMinutes.reasoning, /Fine-tuned model forecast for S -> airport\. Used because the trip model had no matching trip: No recorded trip matches/);
+  assert.ok(p.legs[1].expectedDelayMinutes.sources.includes('route model instead of the trip model\'s class average'));
+  assert.equal(p.planFailProbability.confidence, 'medium');
+});
+
+test('without a class-average leg the route model is not asked', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => { calls.push(String(url)); return { ok: true, json: async () => ({ ...tripModelReply(), legs: [tripModelReply().legs[0], tripModelReply().legs[0]] }) }; };
+  const svc = createPredictionService({ env: { PREDICT_URL: 'http://trip/', PREDICT_FALLBACK_URL: 'http://route/predict' }, fetchImpl });
+  const p = await svc.predict(seed);
+  assert.equal(calls.length, 1);
+  assert.equal(p.modelId, 'trip-model');
+  assert.equal(p.complementedLegs, undefined);
+});
+
+test('when the route model is down the class average stays and says so', async () => {
+  const fetchImpl = async (url) => {
+    if (String(url).includes('route')) throw new Error('ECONNREFUSED');
+    return { ok: true, json: async () => tripModelReply() };
+  };
+  const svc = createPredictionService({ env: { PREDICT_URL: 'http://trip/', PREDICT_FALLBACK_URL: 'http://route/predict' }, fetchImpl });
+  const p = await svc.predict(seed);
+  assert.equal(p.modelId, 'trip-model');
+  assert.equal(p.legs[1].expectedDelayMinutes.value, 1);
+  assert.ok(p.legs[1].expectedDelayMinutes.sources.some((s) => /route model unavailable.*ECONNREFUSED/.test(s)));
 });

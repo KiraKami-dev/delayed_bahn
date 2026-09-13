@@ -86,8 +86,21 @@ PY
       sleep 2
     done
     # A cold live leg needs 15 to 40 API calls and waits when the minute's budget is spent.
+    # CAUSES_URL (default: the db_route server on :8501 when it answers) keeps the "Why" tab on the
+    # per-station cause families of the route model instead of the bundled fixture.
+    causes_url="${CAUSES_URL:-}"
+    if [ -z "$causes_url" ] && curl -s -m 2 "http://127.0.0.1:8501/health" > /dev/null; then
+      causes_url="http://127.0.0.1:8501/causes"
+    fi
+    # PREDICT_FALLBACK_URL: the route model answers the legs this model can only average (no recorded
+    # or live trip). Default: the db_route relay/serve_route server on :8503, else :8501, when up.
+    fallback_url="${PREDICT_FALLBACK_URL:-}"
+    for port in 8503 8501; do
+      [ -n "$fallback_url" ] && break
+      curl -s -m 2 "http://127.0.0.1:$port/health" > /dev/null && fallback_url="http://127.0.0.1:$port/predict"
+    done
     PORT="$PORT" PREDICT_URL="http://127.0.0.1:$MODEL_PORT/" PREDICT_TIMEOUT_MS="${PREDICT_TIMEOUT_MS:-120000}" \
-      node "$ROOT/app/backend/src/server.js"
+      CAUSES_URL="$causes_url" PREDICT_FALLBACK_URL="$fallback_url" node "$ROOT/app/backend/src/server.js"
     ;;
   *)
     sed -n 2,21p "$0"
