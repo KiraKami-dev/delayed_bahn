@@ -58,3 +58,11 @@ Sources:
 - Supplied team transcript and maintained event decisions/demo/contract.
   Entire graph is unavailable and checkpoint search needs login; historical
   intent is based on those supplied records, not an unread checkpoint.
+
+### Service-specific train visuals
+
+Akshat requested train visuals driven by the selected service and restricted to its supplied track. The frontend now retains timetable category/product/operator metadata, classifies ICE, IC/EC, RE, RB and S-Bahn, and uses matching category silhouettes in the map and journey card. Unrecognized or conflicting categories use a neutral train. These are illustrative silhouettes, not verified fleet models, liveries, carriage counts or live positions.
+
+Each miniature carriage is sampled independently by distance along the provider polyline. Missing, invalid or zero-length geometry produces no miniature; malformed provider segments are rejected rather than bridged. The freestanding delay towers were removed; returned delay information remains in route labels and the journey panel.
+
+Validation: production build and 17 non-browser map/service/track smoke checks pass. No Playwright or visual browser validation was run; mobile rendering and route animation still need Akshat's review. Vite emitted its existing large-map-chunk warning and the concurrent smoke runners reported an occupied HMR socket while all assertions passed.

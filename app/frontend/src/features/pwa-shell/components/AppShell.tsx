@@ -1,3 +1,5 @@
+import { trainVisual } from '@/lib/train-service'
+import type { Leg } from '@/lib/contract'
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, CircleHelp, Clock3, Info, Loader2, Pause, Play, Route, ShieldCheck, TrainFront, Umbrella, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore, type Tab } from '@/lib/store'
@@ -10,6 +12,10 @@ import '@/single-screen.css'
 
 const GlobeMap = lazy(() => import('@/features/globe-map/components/GlobeMap').then(m => ({ default: m.GlobeMap })))
 const tabs: { id: Tab; label: string; icon: typeof Route }[] = [{ id: 'plan', label: 'My journey', icon: Route }, { id: 'advice', label: 'What next?', icon: Umbrella }, { id: 'evidence', label: 'Why?', icon: Info }]
+function ServiceTrain({ leg }: { leg: Leg }) {
+  const style = trainVisual(leg)
+  return <svg width="52" height="67" viewBox="0 0 64 72" role="img" aria-label={`${style.label} illustration`}><rect width="64" height="72" rx="15" fill="#e4ebe5" /><path d="M7 57H57M7 61H57" stroke="#879b91" strokeWidth="2" /><path d={style.kind === 'ice' ? 'M9 29H36Q47 29 56 48H9Z' : 'M9 29H46Q54 29 54 48H9Z'} fill={style.color} stroke="#61766e" /><path d="M10 44H51" stroke={style.kind === 'unknown' ? '#61766e' : '#da3c33'} strokeWidth="3" /><path d="M13 33H39V39H13Z" fill="#263f47" />{Array.from({ length: style.doors }, (_, i) => <rect key={i} x={14 + i * 11} y="32" width="4" height="15" rx="1" fill="#c3cdca" />)}<circle cx="18" cy="51" r="4" fill="#344b43" /><circle cx="44" cy="51" r="4" fill="#344b43" /></svg>
+}
 function Art({ kind = 0 }: { kind?: number }) { return <span className="travel-art" style={{ backgroundPosition: `${kind * 50}% center` }} aria-hidden="true" /> }
 function Pager({ index, count, onChange, label }: { index: number; count: number; onChange: (index: number) => void; label: string }) {
   return <div className="travel-pager"><button type="button" aria-label={`Previous ${label}`} disabled={index <= 0} onClick={() => onChange(index - 1)}><ChevronLeft size={18} /></button><span>{label} {index + 1} / {count}</span><button type="button" aria-label={`Next ${label}`} disabled={index >= count - 1} onClick={() => onChange(index + 1)}><ChevronRight size={18} /></button></div>
@@ -34,7 +40,7 @@ function JourneyPanel() {
   return <div className="travel-panel-body">
     <div className="travel-verdict"><div><span className="travel-kicker">YOUR WHOLE JOURNEY</span><h2>{risk == null ? s.error ? 'Forecast unavailable.' : 'Checking your connections…' : journey.legs.length === 1 ? 'One train. A simpler journey.' : risk < .15 ? 'This connection looks good.' : 'Give your day a backup plan.'}</h2></div><strong>{risk == null ? '—' : direct ? `+${Math.round(forecast?.expectedDelayMinutes.value ?? 0)}` : `${Math.round(risk * 100)}%`}<small>{direct ? 'minutes estimated arrival delay' : 'estimated plan-failure risk'}</small></strong></div>
     <button type="button" className="travel-train-card" onClick={() => s.dispatch({ type: 'selectLeg', index })} aria-label={`Focus map on ${leg.trainId}`}>
-      <Art /><div><span className="travel-kicker">TRAIN {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small></div>
+      <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small></div>
     </button>
     <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
     <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />

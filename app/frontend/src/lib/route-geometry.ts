@@ -5,14 +5,21 @@ export function parseRouteGeometry(value: unknown): RoutePoint[] | undefined {
   const g = value as { type?: string; coordinates?: unknown; geometry?: unknown; features?: unknown[] }
   if (g.type === 'Feature') return parseRouteGeometry(g.geometry)
   if (g.type === 'FeatureCollection' && Array.isArray(g.features)) {
-    const points = g.features.flatMap(f => {
+    const points: RoutePoint[] = []
+    for (const f of g.features) {
       const geometry = (f as { geometry?: { type?: string; coordinates?: unknown } })?.geometry
-      if (geometry?.type === 'Point' && validPoint(geometry.coordinates)) return [geometry.coordinates as RoutePoint]
-      return parseRouteGeometry(f) ?? []
-    })
+      if (geometry?.type === 'Point' && validPoint(geometry.coordinates)) {
+        points.push([geometry.coordinates[0], geometry.coordinates[1]])
+      } else {
+        const part = parseRouteGeometry(f)
+        if (!part) return undefined // Never bridge a missing or malformed track segment.
+        points.push(...part)
+      }
+    }
     return points.length > 1 ? points : undefined
   }
-  if (g.type === 'LineString' && Array.isArray(g.coordinates) && g.coordinates.length > 1 && g.coordinates.every(validPoint)) return g.coordinates as RoutePoint[]
+  if (g.type === 'LineString' && Array.isArray(g.coordinates) && g.coordinates.length > 1 && g.coordinates.every(validPoint)) return g.coordinates.map(p => [p[0], p[1]])
+
   return undefined
 }
 function validPoint(p: unknown): p is RoutePoint {

@@ -129,7 +129,7 @@ export function GlobeMap() {
     void searchJourneys(original.legs[0].from, original.legs.at(-1)!.to, controller.signal, original.legs[0].plannedDeparture).then(options => {
       if (controller.signal.aborted) return
       const match = options.find(j => j.legs.length === original.legs.length && j.legs.every((l, i) => routeMatches(l, original.legs[i])))
-      if (match) setResolved({ ...original, legs: original.legs.map((l, i) => ({ ...l, routeGeometry: match.legs[i].routeGeometry })) })
+      if (match) setResolved({ ...original, legs: original.legs.map((l, i) => ({ ...l, routeGeometry: match.legs[i].routeGeometry, serviceCategory: match.legs[i].serviceCategory, serviceProduct: match.legs[i].serviceProduct, operatorName: match.legs[i].operatorName })) })
     }).catch(() => { /* Preserve the parsed journey and explicitly dashed fallback. */ }).finally(() => window.clearTimeout(timeout))
     return () => { controller.abort(); window.clearTimeout(timeout) }
   }, [s.journey])
@@ -269,7 +269,7 @@ export function GlobeMap() {
       <button type="button" aria-label="Show railway and station detail" title="Railway and station detail" onClick={() => { if (journey) flyToStation(map, journey.legs[s.selectedLeg ?? 0].to, 13); else map.easeTo({ zoom: Math.max(8, map.getZoom()), duration: motionOff() ? 0 : 1200 }) }}><TrainFront size={16} /></button>
       <button type="button" aria-label={tilted ? "Switch to flat map" : "Switch to 3D map"} aria-pressed={tilted} onClick={() => map.easeTo({ pitch: tilted ? 0 : 50, bearing: tilted ? 0 : -15, duration: motionOff() ? 0 : 700 })}>{tilted ? "2D" : "3D"}</button>
     </div>}
-    <div className="geometry-note">{journey ? journey.legs.every(l => (l.routeGeometry?.length ?? 0) > 1) ? "Colored route: timetable geometry" : "Dashed colored links: route geometry unavailable" : basemapMode === "earth" ? "Satellite imagery · not live weather" : "OpenStreetMap borders · zoom in for railway tracks"}<span>Blue-gray lines: mapped rail network. {journey ? "3D trains are illustrative, not live positions. Delay towers capped at 30 min." : "Photographic land and oceans, with mapped borders and railway detail."}</span></div>
+    <div className="geometry-note">{journey ? journey.legs.every(l => (l.routeGeometry?.length ?? 0) > 1) ? "Timetable route · illustrative trains, not live" : "Dashed colored links: route geometry unavailable" : basemapMode === "earth" ? "Satellite imagery · not live weather" : "OpenStreetMap borders · zoom in for railway tracks"}<span>Blue-gray lines: mapped rail network. {journey ? "Train silhouettes reflect returned service categories; exact fleet, livery and carriage count are not supplied." : "Photographic land and oceans, with mapped borders and railway detail."}</span></div>
     {(tileError || imageryUnavailable) && <div className="map-warning" role="status">{imageryUnavailable ? "Satellite imagery is unavailable. Showing the geographic map instead." : "Some map details are unavailable. Your trip summary is still available."}</div>}
   </>
 }

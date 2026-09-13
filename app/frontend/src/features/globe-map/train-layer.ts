@@ -2,15 +2,16 @@ import * as THREE from 'three'
 import { MercatorCoordinate, type CustomLayerInterface, type Map } from 'maplibre-gl'
 import type { Journey, Prediction } from '@/lib/contract'
 import { motionOff } from '@/lib/motion'
-import { riskColour } from '@/lib/geo'
+import { trainVisual } from '@/lib/train-service'
+import { buildTrack, sampleTrack, validTrack } from '@/lib/track-path'
 
 // Exaggerated miniature trains, not live vehicle positions. Uses the map's own
 // globe/mercator projection so models stay attached during the camera flight.
-export function createTrainLayer(journey: Journey, prediction?: Prediction): CustomLayerInterface {
+export function createTrainLayer(journey: Journey, _prediction?: Prediction): CustomLayerInterface {
   let renderer: THREE.WebGLRenderer
   let map: Map
   const camera = new THREE.Camera()
-  const assets: { scene: THREE.Scene; line: [number, number][]; pillar: boolean }[] = []
+  const assets: { scene: THREE.Scene; track: ReturnType<typeof buildTrack>; car: number }[] = []
   const box = (group: THREE.Group, size: [number, number, number], position: [number, number, number], color: string) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), new THREE.MeshStandardMaterial({ color, roughness: .45 }))
     mesh.position.set(...position); group.add(mesh)
@@ -21,24 +22,28 @@ export function createTrainLayer(journey: Journey, prediction?: Prediction): Cus
     const light = new THREE.DirectionalLight(0xffffff, 3); light.position.set(2, 5, 4); scene.add(light, group)
     return scene
   }
-  journey.legs.forEach((leg, i) => {
-    if (!leg.routeGeometry?.length) return
-    const train = new THREE.Group()
-    const regional = /^(RB|RE|S\s)/.test(leg.trainId)
+  journey.legs.forEach(leg => {
+    if (!validTrack(leg.routeGeometry)) return
+    const track = buildTrack(leg.routeGeometry)
+    const style = trainVisual(leg)
     for (let car = 0; car < 3; car++) {
-      const z = car * 3.4
-      box(train, [1.1, .9, 3.1], [0, .8, z], regional ? '#c84438' : '#f8faf7')
-      box(train, [1.13, .12, 3.05], [0, .6, z], '#d83a32')
-      box(train, [1.15, .27, 2.35], [0, .98, z], '#233e47')
-      box(train, [.85, .25, 2.6], [0, .2, z], '#28312d')
-    }
-    assets.push({ scene: sceneFor(train), line: leg.routeGeometry, pillar: false })
-    const delay = prediction?.legs[i]?.expectedDelayMinutes.value
-    if (delay != null) {
-      const pillar = new THREE.Group()
-      const height = .4 + Math.min(30, Math.max(0, delay)) / 3
-      box(pillar, [.8, height, .8], [0, height / 2, 0], riskColour(Math.min(1, delay / 30)))
-      assets.push({ scene: sceneFor(pillar), line: [leg.routeGeometry.at(-1)!], pillar: true })
+      const train = new THREE.Group()
+      box(train, [1.1, .85, 2.7], [0, .75, 0], style.color)
+      box(train, [1.12, .12, 2.7], [0, .52, 0], style.kind === 'unknown' ? '#415951' : '#d73c34')
+      box(train, [1.13, .28, 2.25], [0, .9, 0], '#233e47')
+      box(train, [.85, .22, 2.3], [0, .2, 0], '#28312d')
+      for (let door = 0; door < style.doors; door++) {
+        const z = style.doors === 1 ? -.95 : -.95 + door * 1.9 / (style.doors - 1)
+        box(train, [1.15, .65, .23], [0, .73, z], style.kind === 'sbahn' ? '#edd8a0' : '#bac5c3')
+      }
+      if (car === 0) {
+        // Category silhouette, not a claim about the operator's exact fleet.
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshStandardMaterial({ color: style.color, roughness: .45 }))
+        nose.scale.set(.55, .42, style.nose); nose.position.set(0, .73, 1.25); train.add(nose)
+        box(train, [.78, .22, .12], [0, .96, 1.35 + style.nose * .6], '#233e47')
+        box(train, [.65, .07, .12], [0, .58, 1.35 + style.nose * .8], '#fff2bb')
+      }
+      assets.push({ scene: sceneFor(train), track, car })
     }
   })
   return {
@@ -52,11 +57,11 @@ export function createTrainLayer(journey: Journey, prediction?: Prediction): Cus
       const moving = !motionOff() && !document.hidden
       const t = moving ? (performance.now() % 24000) / 24000 : .35
       for (const asset of assets) {
-        const position = t * (asset.line.length - 1)
-        const index = Math.min(Math.floor(position), Math.max(0, asset.line.length - 2))
-        const a = asset.line[index], b = asset.line[Math.min(index + 1, asset.line.length - 1)]
-        const fraction = position - index
-        const lon = a[0] + (b[0] - a[0]) * fraction, lat = a[1] + (b[1] - a[1]) * fraction
+        // Each carriage has its own track anchor and tangent, including at bends.
+        const scale = Math.min(asset.track.length / 30, Math.max(18, Math.min(2200, 1800 / 2 ** (map.getZoom() - 6))))
+        const distance = t * asset.track.length - asset.car * 3.5 * scale
+        if (distance < 0) continue
+        const { point: [lon, lat], heading } = sampleTrack(asset.track, distance)
         const globe = args.defaultProjectionData.projectionTransition > 0
         let model: THREE.Matrix4
         if (globe) {
@@ -74,9 +79,8 @@ export function createTrainLayer(journey: Journey, prediction?: Prediction): Cus
             .scale(new THREE.Vector3(-scale, scale, scale))
         }
         // Keep the miniature legible as the camera changes scale.
-        const scale = Math.max(18, Math.min(2200, 1800 / 2 ** (map.getZoom() - 6)))
         model.scale(new THREE.Vector3(scale, scale, scale))
-        if (!asset.pillar) model.multiply(new THREE.Matrix4().makeRotationY(Math.atan2((b[0] - a[0]) * Math.cos(lat * Math.PI / 180), b[1] - a[1])))
+        model.multiply(new THREE.Matrix4().makeRotationY(heading))
         camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix).multiply(model)
         renderer.resetState(); renderer.render(asset.scene, camera)
       }
