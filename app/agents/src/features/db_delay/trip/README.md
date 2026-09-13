@@ -47,18 +47,18 @@ Needs `duckdb`, `pandas`, `pyarrow`, `xgboost`, `torch`, `transformers`, `peft` 
 
 ## Final model
 
-The submission checkpoint is **stacked text on the v7 examples, 6,000 steps**: the train's own
+The submission checkpoint is **stacked text on the v7 examples, 12,000 steps**: the train's own
 delays and the previous trains written into the prompt, plus one rationale sentence with the
 same-train and corridor gains and XGBoost's out-of-fold forecast. Loss: exact minute plus CRPS.
 
 | | |
 |---|---|
-| Checkpoint | bucket `models/db-trip-delay-final.pt` (same bytes as `models/db-trip-delay-v7-text-6k.pt`) |
+| Checkpoint | bucket `models/db-trip-delay-final.pt` (same bytes as `models/db-trip-delay-v7-text-12k.pt`; the 6,000-step model is `models/db-trip-delay-v7-text-6k.pt`) |
 | Base | `unsloth/Llama-3.2-3B` with the `OpenTSLM/llama-3.2-3b-m4-sp` start checkpoint, LoRA |
 | Examples | `examples_v7.parquet` (298,430 examples; train November to April, validation May, test June to August) |
 | Prompt mode | `text` |
-| Test, 30,000 examples | median error 3.224, CRPS 2.560; against XGBoost with the same features -0.074 (-0.097 to -0.055) |
-| September, 10,000 examples | median error 2.524, CRPS 2.001; against XGBoost -0.062 (-0.102 to -0.036) |
+| Test, all 93,738 examples | median error 3.192, CRPS 2.537; against XGBoost with the same features -0.079 (-0.090 to -0.069) |
+| September, 10,000 examples | median error 2.515, CRPS 1.992; against XGBoost -0.071 (-0.116 to -0.042) |
 
 Rebuild and retrain:
 
@@ -68,8 +68,8 @@ python trip/baselines.py --examples data/trip/examples_v7_base.parquet --out out
     --extra-examples data/trip/forward_v7_base.parquet
 python trip/stack.py --examples data/trip/examples_v7_base.parquet --baselines out/trip/baselines_v7f \
     --out data/trip/examples_v7.parquet                           # out-of-fold forecasts on the training split
-python trip/train.py --examples data/trip/examples_v7.parquet --max-steps 6000 --val-limit 3000 \
-    --test-limit 30000 --generate 48 --loss-mode plain_crps --prompt-mode text --eval-batch-size 32
+python trip/train.py --examples data/trip/examples_v7.parquet --max-steps 12000 --val-limit 3000 \
+    --test-limit 0 --generate 48 --loss-mode plain_crps --prompt-mode text --eval-batch-size 32
 ```
 
 The September set (`forward_v7_base.parquet`) is built with the same code from the September feeds, see `run_forward_eval.sh`; its forecasts come from XGBoost
