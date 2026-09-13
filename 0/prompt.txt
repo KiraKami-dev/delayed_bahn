@@ -1,0 +1,8 @@
+can you make the ui of route look good on the google earth and spawn trains and follow them as slow animation and trains should be realistic about it
+
+---
+
+remove the germany with a little lesss guesss work 
+Munchen Hbg to stuttgart Hbf
+
+also remove the popover of track routes make sure the route is following the track route when plottting the route
