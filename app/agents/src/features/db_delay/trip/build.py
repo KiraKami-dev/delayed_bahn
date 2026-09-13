@@ -179,9 +179,23 @@ def attach_sequences(con: duckdb.DuckDBPyConnection, cfg: Config) -> None:
     """Attach the run so far, key history, and station and network hours to every example."""
     con.execute(
         """
+        CREATE OR REPLACE TABLE stop_plan AS
+        SELECT run, num,
+               date_diff('minute', dep_pt, lead(arr_pt) OVER (PARTITION BY run ORDER BY num)) AS run_next,
+               date_diff('minute', arr_pt, dep_pt) AS dwell
+        FROM stops
+        """
+    )
+    con.execute(
+        """
         CREATE OR REPLACE TABLE ex_run AS
-        SELECT e.example_id, list(s.dep_delay ORDER BY s.num) AS run_delays
-        FROM ex e JOIN stops s ON s.run = e.run
+        SELECT e.example_id, list(s.dep_delay ORDER BY s.num) AS run_delays,
+               -- The planned trajectory alongside the delays: running time to the next stop, dwell,
+               -- and planned minutes left to the target at each departure. Channels for the encoder.
+               list(coalesce(sp.run_next, 0) ORDER BY s.num) AS run_plan_next,
+               list(coalesce(sp.dwell, 0) ORDER BY s.num) AS run_plan_dwell,
+               list(date_diff('minute', s.dep_pt, e.k_arr_pt) ORDER BY s.num) AS run_plan_left
+        FROM ex e JOIN stops s ON s.run = e.run LEFT JOIN stop_plan sp ON sp.run = s.run AND sp.num = s.num
         WHERE NOT e.pre_departure AND s.num <= e.j_num AND s.dep_ct IS NOT NULL
               AND s.dep_delay IS NOT NULL AND NOT s.dep_canc AND s.dep_ct <= e.t0
         GROUP BY e.example_id
@@ -305,7 +319,8 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
     )
     table = con.execute(
         f"""
-        SELECT {select}, r.run_delays, v.via, p.prev_arr_delays, p.prev_gaps, {level_cols},
+        SELECT {select}, r.run_delays, r.run_plan_next, r.run_plan_dwell, r.run_plan_left, v.via,
+               p.prev_arr_delays, p.prev_gaps, {level_cols},
                st.late AS st_late, st.n AS st_n, nw.late AS nw_late, nw.n AS nw_n
         FROM ex e
         LEFT JOIN ex_run r USING (example_id) LEFT JOIN ex_via v USING (example_id)
@@ -390,6 +405,9 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
 
     out |= {
         "run_delays": pa.array([[float(x) for x in d] if d else [] for d in run_delays], type=pa.list_(pa.float32())),
+        "run_plan_next": pa.array([[float(x) for x in d] if d else [] for d in table["run_plan_next"].to_pylist()], type=pa.list_(pa.float32())),
+        "run_plan_dwell": pa.array([[float(x) for x in d] if d else [] for d in table["run_plan_dwell"].to_pylist()], type=pa.list_(pa.float32())),
+        "run_plan_left": pa.array([[float(x) for x in d] if d else [] for d in table["run_plan_left"].to_pylist()], type=pa.list_(pa.float32())),
         "prev_arr_delays": pa.array([[float(x) for x in d] for d in prev], type=pa.list_(pa.float32())),
         "prev_gaps": pa.array([[float(x) for x in g] for g in prev_gaps], type=pa.list_(pa.float32())),
         "prev_n": pa.array(prev_n),
