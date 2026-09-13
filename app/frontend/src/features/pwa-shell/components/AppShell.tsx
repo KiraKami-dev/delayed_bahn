@@ -30,15 +30,20 @@ function TextPages({ text }: { text: string }) {
   const index = Math.min(page, Math.max(0, pages.length - 1))
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
-// The model's first summary sentence in one line: the same facts and numbers in fewer words.
+// The model's first summary sentence as one short sentence: the same facts and numbers in fewer words.
 function compactTake(summary: string) {
   const first = summary.split(/(?<=\.)\s+(?=[A-Z])/)[0] ?? summary
   let m: RegExpMatchArray | null
-  if ((m = first.match(/^The train left (.+?) (-?\d+) minutes late/))) return `Left ${m[1]} ${m[2]} min late`
-  if ((m = first.match(/^Today the previous \d+ trains? .*?reached .+? ((?:-?\d+, )*-?\d+) minutes late/))) return `Earlier trains today: ${m[1]} min late`
-  if (first.startsWith('No earlier train')) return 'No earlier train of this type in 6 hours'
-  if ((m = first.match(/^At .+?, (\d+%) of stops ran at least 6 minutes late in the last 3 hours/))) return `${m[1]} of stops here ran late in the last 3 hours`
-  return first.replace(/(;|, the latest|, against).*$/, '').replace(/\.$/, '')
+  if ((m = first.match(/^The train left (.+?) (-?\d+) minutes late/))) return `The train left ${m[1]} ${m[2]} min late.`
+  if ((m = first.match(/^Today the previous (\d+) trains? .*?reached (.+?) ((?:-?\d+, )*-?\d+) minutes late/))) {
+    const delays = m[3].split(', ').map(Number)
+    if (delays.length === 1) return `The train before it reached ${m[2]} ${delays[0]} min late.`
+    const list = delays.length <= 3 ? `${delays.slice(0, -1).join(', ')} and ${delays.at(-1)}` : `between ${Math.min(...delays)} and ${Math.max(...delays)}`
+    return `The last ${delays.length} trains reached ${m[2]} ${list} min late.`
+  }
+  if ((m = first.match(/^No earlier train of this type towards .+? reached (.+?) in the last 6 hours/))) return `No earlier train of this type reached ${m[1]} in 6 hours.`
+  if ((m = first.match(/^At (.+?), (\d+%) of stops ran at least 6 minutes late in the last 3 hours/))) return `${m[2]} of stops at ${m[1]} ran late in the last 3 hours.`
+  return first.replace(/(;|, the latest|, against).*$/, '').replace(/\.?$/, '.')
 }
 function TrainTake({ index }: { index: number }) {
   // The model's own take on this train in one line, woven into its card once written (about 15 s).
