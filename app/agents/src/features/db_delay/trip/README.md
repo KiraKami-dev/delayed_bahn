@@ -81,6 +81,22 @@ Checked end to end: `POST /api/predict` on the team backend with two real Septem
 returns the app's `Prediction` (expected delay, transfer-miss and plan-fail probabilities) from
 our forecasts, with `fallbackFrom` unset and our rationale as the explanation.
 
+### Live on a laptop (Apple silicon)
+
+The 3B model fits an Apple silicon laptop: `run_local.sh` builds the environment, then serves a
+checkpoint live on MPS and starts the team backend and PWA in front of it. Forecasts are computed
+for any recorded September trip, not only for saved ones.
+
+```bash
+trip/run_local.sh setup <dir> models/db-trip-delay-v7-text-2k.pt september_v7_test.parquet
+trip/run_local.sh start <dir>    # model on :8502, app on http://localhost:8000
+```
+
+Checked: v7 text on MPS reproduces the H100's saved test forecasts (same median and 10 to 90%
+range on the sampled trips, distributions within bf16 noise), loads in a few seconds and answers
+a two-leg journey in about two seconds. For an unstacked checkpoint such as final-v2-text, pass
+`DROP_XGB=1` at setup so its prompt has no XGBoost sentence.
+
 ## Demo: a traveller's connection
 
 `predict.py` turns a trained checkpoint into the traveller view for recorded trips. With two
