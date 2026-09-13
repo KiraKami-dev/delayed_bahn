@@ -9,7 +9,15 @@ const station = (s: Stop): Station => ({ evaNumber: s.id!, name: s.name!, lat: s
 
 export async function searchJourneys(from: Station, to: Station, signal: AbortSignal, departure = new Date().toISOString()): Promise<Journey[]> {
   const query = new URLSearchParams({ from: from.evaNumber, to: to.evaNumber, results: '5', departure, polylines: 'true', stopovers: 'true', startWithWalking: 'false', bus: 'false', ferry: 'false', tram: 'false', taxi: 'false', subway: 'false', language: 'en', remarks: 'true' })
-  const response = await fetch(`https://v6.db.transport.rest/journeys?${query}`, { signal })
+  let response: Response
+  try {
+    response = await fetch(`https://v6.db.transport.rest/journeys?${query}`, { signal })
+  } catch (cause) {
+    // Browsers hide an upstream error without CORS headers as a network failure.
+    // Preserve cancellation so stale requests never become visible errors.
+    if (signal.aborted) throw cause
+    throw new Error('We couldn’t reach the timetable service. Your stations are saved. Retry shortly, or open DB and paste the shared journey here.', { cause })
+  }
   if (!response.ok) throw new Error(response.status === 429 ? 'The timetable service is busy. Please wait a moment and retry, or open DB Navigator below.' : `The timetable service is unavailable (HTTP ${response.status}). Your stations are saved. Open DB Navigator below, then share the chosen journey back here.`)
   const data = await response.json() as { journeys?: { legs?: TimetableLeg[] }[] }
   if (!Array.isArray(data.journeys)) throw new Error('The timetable returned an incomplete response. Please try again.')

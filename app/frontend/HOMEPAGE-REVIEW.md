@@ -80,3 +80,7 @@ Only returned warning notices produce obstacle assets: works barriers, weather c
 Find my route now accepts exact station names/aliases, Enter selects a suggestion, and pointer handling keeps suggestions selectable. Provider errors remain truthful, endpoints are retained, and recovery offers Copy stations, Open DB and Paste DB journey. A live public request returned HTTP 503 during this pass; provider availability remains unresolved. Invalid arrival timestamps are excluded. No replacement schedules are invented.
 
 Validation: 27 non-browser camera, service, route, delay-timeline and timetable-failure checks pass. Production build passes with the existing map-chunk warning. Browser/visual verification remains with Akshat; no Playwright was run. API reference: https://v6.db.transport.rest/api.html.
+
+### Browser “Failed to fetch” diagnosis
+
+The live provider response inspected with an Origin header returned HTTP 503 and no Access-Control-Allow-Origin header (13 September 2026). This is consistent with the browser reporting an unreadable network response instead of exposing the HTTP status. Route search now translates fetch rejection into a timetable-unavailable message, preserves the original diagnostic cause, and retains cancellation behavior. It does not claim the provider is repaired. Production build and all 15 focused route/service checks pass, including rejected-fetch and aborted-request regression cases. Browser CORS behavior reference: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#making_cross-origin_requests.

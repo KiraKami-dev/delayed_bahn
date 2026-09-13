@@ -175,3 +175,14 @@ test('lookup preserves service notices and rejects malformed arrival times', asy
   globalThis.fetch = async () => ({ok:false,status:503})
   await assert.rejects(search.searchJourneys({evaNumber:origin.id},{evaNumber:destination.id},new AbortController().signal), /HTTP 503/)
 })
+
+test('browser fetch failures have a traveler-facing message and cancellation is preserved', async t => {
+  const originalFetch = globalThis.fetch
+  t.after(() => { globalThis.fetch = originalFetch })
+  const error = new TypeError('Failed to fetch')
+  globalThis.fetch = async () => { throw error }
+  const from = seed.legs[0].from, to = seed.legs[0].to
+  await assert.rejects(search.searchJourneys(from,to,new AbortController().signal), e => e.message.includes('couldn’t reach the timetable service') && e.cause === error)
+  const aborted = new AbortController(); aborted.abort()
+  await assert.rejects(search.searchJourneys(from,to,aborted.signal), e => e === error)
+})
