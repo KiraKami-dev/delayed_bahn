@@ -84,3 +84,9 @@ Validation: 27 non-browser camera, service, route, delay-timeline and timetable-
 ### Browser “Failed to fetch” diagnosis
 
 The live provider response inspected with an Origin header returned HTTP 503 and no Access-Control-Allow-Origin header (13 September 2026). This is consistent with the browser reporting an unreadable network response instead of exposing the HTTP status. Route search now translates fetch rejection into a timetable-unavailable message, preserves the original diagnostic cause, and retains cancellation behavior. It does not claim the provider is repaired. Production build and all 15 focused route/service checks pass, including rejected-fetch and aborted-request regression cases. Browser CORS behavior reference: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#making_cross-origin_requests.
+
+### Date-aware From/To search
+
+Added a required travel date, defaulting to today in Europe/Berlin. Find my route passes the selected date to the timetable request (today: now; future dates: 08:00 German time, stated in the form). Past and invalid dates are rejected. Result cards show both dates for overnight journeys. Copy stations includes the chosen date.
+
+Build and 16 focused non-browser checks pass, including summer/winter offsets, local midnight, invalid dates and fetch failure recovery. Live search is not restored: transport.rest returned 503, and a single direct DB web timetable probe returned 403 OPS_BLOCKED. No access-control workaround was attempted. Backend wiring is outside the recorded frontend delegation; a scope question is pending, but accessible timetable data is also required. No backend files were edited.

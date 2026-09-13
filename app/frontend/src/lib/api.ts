@@ -1,4 +1,4 @@
-import type { Causes, Journey, Prediction, Recommendation, Reroute } from "./contract"
+import type { Causes, Generations, Journey, Prediction, Recommendation, Reroute } from "./contract"
 
 // Serverless cold starts and slow mobile links need patience: 20 s per try,
 // one retry on network failure, timeout or 5xx. 4xx is returned immediately.
@@ -70,6 +70,7 @@ export const api = {
     request<Recommendation>("/api/recommend", post({ journey, prediction, doorToStationMin, acceptableRisk })),
   reroute: (journey: Journey, missedLegIndex: number) =>
     request<Reroute>("/api/reroute", post({ journey, missedLegIndex })),
+  generations: () => request<Generations>("/api/predict/generations"),
   causes: (evaNumber: string, name?: string) =>
     request<Causes>(`/api/causes?eva=${encodeURIComponent(evaNumber)}${name ? `&station=${encodeURIComponent(name)}` : ""}`),
 }

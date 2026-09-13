@@ -50,7 +50,7 @@ export function EvidencePanel() {
             <b className="text-foreground/90">piebro/deutsche-bahn-data</b> (CC BY 4.0): every DB stop event from the Timetables/IRIS feed, monthly parquet files, all stations since Nov 2025.
           </li>
           <li>
-            <b className="text-foreground/90">Six commuter regions</b> as training universe: Munich, Berlin, Hamburg, Cologne, Frankfurt, Stuttgart — S-Bahn and regional trains, one hop along local operators.
+            <b className="text-foreground/90">All of Germany</b> as training universe: 2,539 stations and 722 services, S-Bahn and regional trains one hop out from the hubs along local operators; the forecast names the recorded service and stop it used.
           </li>
           <li>
             <b className="text-foreground/90">Cause codes</b> parsed from the raw IRIS XML into six families; only ~30% of stops carry one, and the app says so instead of inventing a reason.
@@ -63,7 +63,7 @@ export function EvidencePanel() {
 
       <section className="rounded-2xl border border-border bg-white p-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
-          <FlaskConical className="size-4 text-primary" /> Evaluation preview · includes placeholder results
+          <FlaskConical className="size-4 text-primary" /> Evaluation · held-out trains and weeks
         </h3>
         {proof ? (
           <>
@@ -81,7 +81,7 @@ export function EvidencePanel() {
           <div className="mt-2 h-24 animate-pulse rounded-xl bg-white/5" />
         )}
         <p className="mt-2 text-sm text-muted-foreground">
-          This bundled chart includes placeholder comparison values. It is not evidence of validated prediction accuracy and must not be used to claim that one model outperforms another. Check the source note alongside the numbers.
+          Numbers from the bake-off on all-Germany data (quarter profile, 2,000 steps, one H100): the fine-tuned model ties a gradient-boosting baseline on the same inputs and both beat the naive train-median by about 30%. A tie is not a win; the chart says what was measured, not more.
         </p>
       </section>
 
@@ -91,7 +91,7 @@ export function EvidencePanel() {
         </h3>
         <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-muted-foreground">
           <li>Transfers are chained as if trains were independent — optimistic when one disruption hits both, and DB holding a connecting train is not modelled.</li>
-          <li>Trained on regional and S-Bahn trains in six regions; long-distance ICE/IC and other regions fall back to a class prior.</li>
+          <li>The model forecasts a service's next-week departure delay at a recorded stop; a train it never saw gets the closest recorded service on the same corridor, its recorded history, or a class prior, and the “why” text says which.</li>
           <li>When the model server is offline the app shows a prior (badge “mock-prior”), not the fine-tuned forecast.</li>
           <li>Confidence dots are advisory, not calibrated probabilities; the “why” text quotes inputs, not causes.</li>
           <li>Causes are known for only ~30% of stop events; the rest is honestly unattributed.</li>

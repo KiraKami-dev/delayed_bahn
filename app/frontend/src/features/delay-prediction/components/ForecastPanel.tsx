@@ -2,17 +2,20 @@ import { animate } from "motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { Journey, LegDelay, Prediction } from "@/lib/contract"
 import { rechain, transferBuffer } from "@/lib/chain"
-import { pct, riskColour } from "@/lib/geo"
+import { journeyOutlook, pct, riskColour } from "@/lib/geo"
 import { useReducedMotion } from "@/lib/motion"
 import { useStore } from "@/lib/store"
 import { LegCard } from "@/features/share-parser/components/LegCard"
 import { WhyDisclosure } from "./WhyDisclosure"
 
 /* ---------- headline count-up ---------- */
-export function FailHeadline({ value, label = "Probability your plan fails" }: { value: number; label?: string }) {
+export function FailHeadline({ value, label }: { value: number; label?: string }) {
   const still = useReducedMotion()
-  const [shown, setShown] = useState(still ? value : 0)
-  const prev = useRef(0)
+  // A good plan counts up to "96% you make it", a shaky one to its risk; both start from zero.
+  const outlook = journeyOutlook(value)
+  const start = outlook.level === "low" ? 1 : 0
+  const [shown, setShown] = useState(still ? value : start)
+  const prev = useRef(start)
   useEffect(() => {
     if (still) {
       setShown(value)
@@ -22,14 +25,16 @@ export function FailHeadline({ value, label = "Probability your plan fails" }: {
     prev.current = value
     return () => controls.stop()
   }, [value, still])
-  const colour = riskColour(value)
+  const shownPercent = Math.round((outlook.level === "low" ? 1 - shown : shown) * 100)
   return (
     <div className="rounded-2xl border border-border bg-white p-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="headline-number mt-1 text-6xl font-semibold" style={{ color: colour }}>
-        {Math.round(shown * 100)}
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label ?? outlook.unit}</div>
+      <div className="headline-number mt-1 text-6xl font-semibold" style={{ color: outlook.colour }}>
+        {shownPercent}
         <span className="text-3xl">%</span>
+        <span className="ml-2 text-base font-medium">{outlook.short}</span>
       </div>
+      <div className="mt-1 text-sm font-medium" style={{ color: outlook.colour }}>{outlook.heading}</div>
     </div>
   )
 }
@@ -107,8 +112,8 @@ export function BufferSlider({ journey, prediction }: { journey: Journey; predic
         <span>
           What if I had <b>+{s.bufferExtra} min</b> at every change?
         </span>
-        <span className="font-mono" style={{ color: riskColour(result.planFail) }}>
-          {pct(result.planFail)}
+        <span className="font-mono" style={{ color: journeyOutlook(result.planFail).colour }}>
+          {journeyOutlook(result.planFail).percent}% {journeyOutlook(result.planFail).short}
         </span>
       </div>
       <input
@@ -163,6 +168,11 @@ export function ForecastPanel() {
                 )}
               </div>
               <DelayBars leg={d} />
+              {d.modelText && (
+                <blockquote className="mt-2 rounded-lg border-l-4 border-primary bg-secondary/60 px-3 py-1.5 text-xs">
+                  <span className="text-muted-foreground">The model, in its own words: </span>“{d.modelText}”
+                </blockquote>
+              )}
               <div className="mt-1 flex flex-wrap gap-3">
                 <WhyDisclosure item={d.expectedDelayMinutes} label="Why this delay?" />
                 {i < journey.legs.length - 1 && <WhyDisclosure item={d.missProbability} label="Why this change?" />}

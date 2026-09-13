@@ -57,6 +57,33 @@ export type LegDelay = {
   pCancel?: number
   // Full per-minute pmf when the backend provides it; used by the buffer slider.
   probs?: number[]
+  // The fine-tuned model's own generated sentence for the matched record, when one was saved.
+  modelText?: string
+  generation?: Generation
+}
+
+// One held-out sample the model generated text for (from generate_route.py's job log).
+export type Generation = {
+  recordId: string
+  kind: "ScalarPredictionTask" | "ClassificationTask" | "AnswerTask"
+  question?: string
+  options?: string[]
+  model: string
+  truth: string
+  distribution?: string
+  quantiles?: { p10: number; p50: number; p90: number }
+  actualMinutes?: number
+  station?: string
+  service?: string
+  travelDate?: string
+}
+
+export type Generations = {
+  modelId: string
+  count: number
+  samples: Generation[]
+  job?: string
+  note?: string
 }
 
 export type Prediction = {

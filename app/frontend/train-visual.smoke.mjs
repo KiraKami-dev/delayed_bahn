@@ -3,9 +3,10 @@ import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-let server, service, track, geometry, osm, search, cached, seed, story
+let server, service, track, geometry, osm, search, cached, seed, story, travelDate
 before(async () => {
   server = await createServer({ root: fileURLToPath(new URL('.', import.meta.url)), server: { middlewareMode: true }, appType: 'custom' })
+  travelDate = await server.ssrLoadModule('/src/lib/travel-date.ts')
   story = await server.ssrLoadModule('/src/lib/train-story.ts')
   service = await server.ssrLoadModule('/src/lib/train-service.ts')
   track = await server.ssrLoadModule('/src/lib/track-path.ts')
@@ -185,4 +186,14 @@ test('browser fetch failures have a traveler-facing message and cancellation is 
   await assert.rejects(search.searchJourneys(from,to,new AbortController().signal), e => e.message.includes('couldn’t reach the timetable service') && e.cause === error)
   const aborted = new AbortController(); aborted.abort()
   await assert.rejects(search.searchJourneys(from,to,aborted.signal), e => e === error)
+})
+
+test('travel date sends today as now and future dates at 08:00 Germany time', () => {
+  const now = new Date('2026-09-13T03:00:00Z')
+  assert.equal(travelDate.dateDeparture('2026-09-13',now),now.toISOString())
+  assert.equal(travelDate.dateDeparture('2026-09-14',now),'2026-09-14T06:00:00.000Z')
+  assert.equal(travelDate.dateDeparture('2026-12-14',now),'2026-12-14T07:00:00.000Z')
+  assert.equal(travelDate.germanyDate(new Date('2026-09-13T23:30:00Z')),'2026-09-14')
+  assert.throws(() => travelDate.dateDeparture('2026-09-12',now), /future/)
+  assert.throws(() => travelDate.dateDeparture('2026-09-31',now), /valid|exist/)
 })

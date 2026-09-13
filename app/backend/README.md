@@ -37,11 +37,26 @@ Feature folders live in `src/features/`, one per feature, matching
 
 Any other path serves the PWA (`STATIC_DIR`, default `app/frontend/dist`) with an
 SPA fallback, so `/share?text=...` loads the app. Env knobs are listed in the
-root `.env.example` (`PORT`, `CORS_ORIGIN`, `STATIC_DIR`, `PREDICT_URL`, ...).
+root `.env.example` (`PORT`, `CORS_ORIGIN`, `STATIC_DIR`, `PREDICT_URL`, `CAUSES_URL`, ...).
+
+## Real forecasts: the route model server
+
+`/api/predict` and `/api/causes` answer from the fine-tuned db-route model when
+`PREDICT_URL` and `CAUSES_URL` point at the Python route server
+(`app/agents/src/features/db_route/serve_route.py`, needs only pandas/pyarrow/numpy).
+Without them, or when that server is down, `/api/predict` serves the deterministic
+mock prior (`modelId: mock-prior-v1`, `fallbackFrom` set) and `/api/causes` the
+bundled fixture (`illustrative: true`), so the app never shows sample data unlabelled.
 
 ```bash
-npm --prefix ../frontend run build && npm run dev   # then open http://localhost:8000
+bash ../agents/src/features/db_route/fetch_serving_data.sh      # once: ~35 MB from the Nebius bucket (S3 key in the root .env)
+../agents/src/features/db_route/serve_route.sh --port 8501       # model server: POST /predict, GET /causes?station=, GET /health
+# root .env: PREDICT_URL=http://127.0.0.1:8501/predict  CAUSES_URL=http://127.0.0.1:8501/causes
+npm --prefix ../frontend run build && npm run dev                 # then open http://localhost:8000
 ```
+
+`GET /api/predict` replies carry `modelId: OpenTSLM db-route-quarter (route-2k)` and,
+per leg, the recorded service and stop the forecast came from in the reasoning text.
 
 Owner: see `../../team-setup/state/owners.md` (decided fresh per event,
 not fixed here).

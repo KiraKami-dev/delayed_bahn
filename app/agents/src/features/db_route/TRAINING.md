@@ -35,6 +35,21 @@ A multi-GPU preset runs the same script under `torchrun`, with rank *i* → prof
 minute. Inputs: `code/db_route.tar.gz` and `registry/` in the bucket. Outputs:
 `runs/<tag>/<profile>/{metrics.json, checkpoint.pt, scalar_<cell>.npz}`.
 
+## Serving the results to the app
+
+`serve_route.py` turns a finished run into the model server the Node backend expects
+(`PREDICT_URL`, `CAUSES_URL`): it loads the profile's registry (records, annotations, the
+six-hourly series) and the run's `scalar_<cell>.npz`, matches each journey leg to a recorded
+(service group, station) and answers with the model's held-out minute distribution, that stop's
+recorded history when the model did not score it, or a class prior -- each labelled as such in the
+reply. `GET /causes?station=` reads the station's cause-share series for the seven days before its
+latest travel date. No torch, no checkpoint: pandas, pyarrow and numpy.
+
+```bash
+bash fetch_serving_data.sh route-2k quarter   # ~35 MB from the bucket into app/agents/data/db-route (S3 key in the root .env)
+./serve_route.sh --port 8501                  # POST /predict, GET /causes?station=, GET /health
+```
+
 ## What gets scored
 
 Per split cell (`val`, `test_seen_entity`, `test`, `test_seen_time`): median error, CRPS,
