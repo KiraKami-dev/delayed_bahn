@@ -1,0 +1,178 @@
+{
+  "profile": "quarter",
+  "registry": "/private/tmp/claude-501/-Users-gaurav-Downloads-zurich-lates-temporal-ai-error404-ai/6f11fbbe-b41b-4ac6-96cf-af296c485bf7/scratchpad/registry_allde",
+  "noise_floor": 0.02,
+  "channels": [
+    "quarter/attributed_share",
+    "quarter/knock_on_share",
+    "quarter/service_at_station_delay",
+    "quarter/service_delay",
+    "quarter/service_throughput",
+    "quarter/station_delay",
+    "quarter/station_throughput",
+    "quarter/technical_share",
+    "quarter/weather_share",
+    "quarter/works_share"
+  ],
+  "history": [
+    {
+      "round": 0,
+      "keep": [
+        "quarter/attributed_share",
+        "quarter/knock_on_share",
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/service_throughput",
+        "quarter/station_delay",
+        "quarter/station_throughput",
+        "quarter/technical_share",
+        "quarter/weather_share",
+        "quarter/works_share"
+      ],
+      "hypothesis": "incumbent: every channel",
+      "val": {
+        "n": 427,
+        "crps": 1.388,
+        "median_error": 1.7827,
+        "coverage_10_90": 0.684
+      },
+      "accepted": true
+    },
+    {
+      "round": 1,
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/weather_share"
+      ],
+      "hypothesis": "This variant focuses on the most relevant channels directly related to service delays and weather, which should provide a clearer signal for forecasting than the broader set used by the incumbent.",
+      "val": {
+        "n": 427,
+        "crps": 1.3918,
+        "median_error": 1.798,
+        "coverage_10_90": 0.67
+      },
+      "gain_vs_incumbent": -0.0038,
+      "accepted": false
+    },
+    {
+      "round": 2,
+      "keep": [
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/weather_share",
+        "quarter/service_throughput"
+      ],
+      "hypothesis": "By retaining channels that directly influence delays and throughput while removing less relevant ones, this variant should enhance the model's ability to capture essential patterns, potentially leading to improved forecasting accuracy.",
+      "val": {
+        "n": 427,
+        "crps": 1.5256,
+        "median_error": 1.9473,
+        "coverage_10_90": 0.684
+      },
+      "gain_vs_incumbent": -0.1376,
+      "accepted": false
+    },
+    {
+      "round": 3,
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/technical_share"
+      ],
+      "hypothesis": "This variant retains key channels that are closely tied to service delays and technical factors, which may provide a more focused and effective signal for forecasting delays compared to the previous variants.",
+      "val": {
+        "n": 427,
+        "crps": 1.403,
+        "median_error": 1.8198,
+        "coverage_10_90": 0.689
+      },
+      "gain_vs_incumbent": -0.015,
+      "accepted": false
+    },
+    {
+      "round": 4,
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/knock_on_share"
+      ],
+      "hypothesis": "This variant combines critical delay-related channels with knock-on effects, which may capture the cascading impacts of delays more effectively, potentially leading to improved forecasting performance.",
+      "val": {
+        "n": 427,
+        "crps": 1.4047,
+        "median_error": 1.8179,
+        "coverage_10_90": 0.677
+      },
+      "gain_vs_incumbent": -0.0167,
+      "accepted": false
+    },
+    {
+      "round": 5,
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/service_throughput",
+        "quarter/weather_share"
+      ],
+      "hypothesis": "This variant includes essential delay-related channels while also incorporating throughput and weather factors, which are crucial for understanding the dynamics of service delays, potentially leading to better forecasting outcomes.",
+      "val": {
+        "n": 427,
+        "crps": 1.3874,
+        "median_error": 1.7988,
+        "coverage_10_90": 0.672
+      },
+      "gain_vs_incumbent": 0.0006,
+      "accepted": false
+    }
+  ],
+  "winner": {
+    "keep": [
+      "quarter/attributed_share",
+      "quarter/knock_on_share",
+      "quarter/service_at_station_delay",
+      "quarter/service_delay",
+      "quarter/service_throughput",
+      "quarter/station_delay",
+      "quarter/station_throughput",
+      "quarter/technical_share",
+      "quarter/weather_share",
+      "quarter/works_share"
+    ],
+    "dropped": [],
+    "scores": {
+      "val": {
+        "n": 427,
+        "crps": 1.388,
+        "median_error": 1.7827,
+        "coverage_10_90": 0.684
+      },
+      "test_seen_entity": {
+        "n": 1134,
+        "crps": 1.3116,
+        "median_error": 1.6773,
+        "coverage_10_90": 0.681
+      },
+      "test": {
+        "n": 462,
+        "crps": 1.3648,
+        "median_error": 1.7871,
+        "coverage_10_90": 0.654
+      },
+      "test_seen_time": {
+        "n": 3015,
+        "crps": 1.1854,
+        "median_error": 1.5325,
+        "coverage_10_90": 0.722
+      }
+    }
+  },
+  "agent": {
+    "model": "gpt-4o-mini",
+    "calls": 5
+  }
+}

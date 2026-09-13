@@ -96,7 +96,18 @@ def caption_stats(captions: list[str]) -> list[float]:
     return out
 
 
-def build_rows(dataset, bridge, caption_only: bool = False) -> list[dict]:
+class _Masked:
+    """A record whose series are restricted to the kept signals; everything else delegates."""
+
+    def __init__(self, record, keep: set[str]):
+        self._r = record
+        self.time_series = [t for t in record.time_series if t.signal in keep]
+
+    def __getattr__(self, name):
+        return getattr(self._r, name)
+
+
+def build_rows(dataset, bridge, caption_only: bool = False, keep_signals: set[str] | None = None) -> list[dict]:
     """Every (record, task) as a training sample with the fields the loop and the scorer need."""
     options: dict[str, set[str]] = {}
     for record in dataset.records:
@@ -125,7 +136,7 @@ def build_rows(dataset, bridge, caption_only: bool = False) -> list[dict]:
                 y = float(target)
                 target = int(min(999, max(0, round(y))))  # one token: the readout's alphabet is 0..999
             proxy = types.SimpleNamespace(target=target, rationale=getattr(task, "rationale", None))
-            row = bridge.BridgeRow(record, proxy)
+            row = bridge.BridgeRow(_Masked(record, keep_signals) if keep_signals else record, proxy)
             menu = menus.get(getattr(task, "target_schema", ""), ()) if kind == "ClassificationTask" else ()
             sample = bridge.build_sample(row, eos_token="", label_options=menu, caption_only=caption_only)
             sample["prefix"] = sample["answer"].rsplit(" Answer:", 1)[0] + " Answer:"
@@ -262,6 +273,8 @@ def main() -> int:
     ap.add_argument("--grad-checkpointing", action="store_true")
     ap.add_argument("--caption-only", action="store_true", help="zero every series, keep the captions: the encoder ablation")
     ap.add_argument("--lora-lr", type=float, default=None, help="alias of --lr")
+    ap.add_argument("--keep-signals", default="", help="comma-separated series signals to keep (v3 variant search); empty = all")
+    ap.add_argument("--val-rows", type=int, default=300, help="validation rows scored at every save for checkpoint selection")
     ap.add_argument("--checkpoint", default=None,
                     help="score a saved checkpoint instead of training: pass --steps 0 and --eval-limit 0 for every row")
     args = ap.parse_args()
@@ -297,7 +310,10 @@ def main() -> int:
     dataset_id = f"error404/db-route-{profile}"
     t = time.time()
     dataset = TimeNet(args.registry).load(dataset_id)
-    rows = build_rows(dataset, bridge, caption_only=args.caption_only)
+    keep = {x for x in args.keep_signals.split(",") if x}
+    rows = build_rows(dataset, bridge, caption_only=args.caption_only, keep_signals=keep or None)
+    if keep:
+        log(rank, f"{profile}: keeping {len(keep)} series channels: {sorted(keep)}")
     train = [r for r in rows if r["split"] == "train"]
     by_cell = {c: [r for r in rows if r["cell"] == c] for c in CELLS}
     log(rank, f"{dataset_id}: {len(rows)} samples, train {len(train)}, "
@@ -327,6 +343,22 @@ def main() -> int:
     trainable = [p for g in groups for p in g["params"]]
     model.train()
     started, step, window, skipped, run_log = time.time(), 0, [], 0, []
+    val_scalar = [r for r in by_cell.get("val", []) if r["kind"] == "ScalarPredictionTask"]
+    if args.val_rows and len(val_scalar) > args.val_rows:
+        val_scalar = [val_scalar[i] for i in sorted(np.random.default_rng(0).choice(len(val_scalar), args.val_rows, replace=False))]
+    val_curve: list[dict] = []
+    best_val = {"step": 0, "crps": float("inf")}
+
+    def quick_val() -> dict:
+        model.eval(); probs = []
+        with torch.no_grad():
+            for i in range(0, len(val_scalar), args.eval_batch_size):
+                probs.append(model.predict_distribution(collate(val_scalar[i:i + args.eval_batch_size]))["probs"].float().cpu().numpy())
+        model.train()
+        pn = np.concatenate(probs).astype(np.float64); q = metrics.quantiles_from_distribution(pn); yv = np.array([r["y"] for r in val_scalar])
+        return {"step": step, "crps": float(metrics.crps_from_quantiles(yv, q).mean()), "median_error": float(np.abs(q[:, 9] - yv).mean()),
+                "coverage_10_90": float(((yv >= q[:, 1]) & (yv <= q[:, 17])).mean())}
+
     order = rng.permutation(len(train))
     cursor = 0
     while step < total and time.time() - started < args.max_hours * 3600:
@@ -354,14 +386,26 @@ def main() -> int:
             run_log.append({"step": step, "seconds": round(el, 1)} | mean); window = []
         if step % args.save_every == 0:
             model.store_to_file(str(local / "checkpoint.pt"))
+            if val_scalar:
+                v = quick_val(); val_curve.append(v)
+                log(rank, f"{profile} val@{step}: crps {v['crps']:.3f} median {v['median_error']:.3f} cov {v['coverage_10_90']:.2f}")
+                if v["crps"] < best_val["crps"]:
+                    best_val = v; model.store_to_file(str(local / "best.pt"))
     if step:
         model.store_to_file(str(local / "checkpoint.pt"))
+        if val_scalar:
+            v = quick_val(); val_curve.append(v)
+            if v["crps"] < best_val["crps"]:
+                best_val = v; model.store_to_file(str(local / "best.pt"))
+        if (local / "best.pt").exists() and best_val["step"] != step:
+            model.load_from_file(str(local / "best.pt"))
+            log(rank, f"{profile}: selected the step-{best_val['step']} checkpoint by validation CRPS {best_val['crps']:.3f} (final step {step}: {val_curve[-1]['crps']:.3f})")
     log(rank, f"{profile}: trained {step} steps in {time.time() - started:.0f}s, {skipped} skipped")
 
     # -- evaluate
     model.eval()
     results: dict = {"profile": profile, "dataset_id": dataset_id, "steps": step, "args": vars(args),
-                     "checkpoint": args.checkpoint, "cells": {}}
+                     "checkpoint": args.checkpoint, "val_curve": val_curve, "selected_step": best_val["step"] if val_curve else step, "cells": {}}
     train_scalar = [r for r in train if r["kind"] == "ScalarPredictionTask"]
     for cell, cell_rows in by_cell.items():
         scalar = [r for r in cell_rows if r["kind"] == "ScalarPredictionTask"]

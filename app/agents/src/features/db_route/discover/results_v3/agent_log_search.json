@@ -1,0 +1,153 @@
+[
+  {
+    "purpose": "dataset variant",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "a7ff0eaa87f2",
+    "usage": {
+      "prompt_tokens": 386,
+      "completion_tokens": 69,
+      "total_tokens": 455,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/weather_share"
+      ],
+      "hypothesis": "This variant focuses on the most relevant channels directly related to service delays and weather, which should provide a clearer signal for forecasting than the broader set used by the incumbent.",
+      "stop": false
+    }
+  },
+  {
+    "purpose": "dataset variant",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "546e9d47ca7a",
+    "usage": {
+      "prompt_tokens": 496,
+      "completion_tokens": 71,
+      "total_tokens": 567,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "keep": [
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/weather_share",
+        "quarter/service_throughput"
+      ],
+      "hypothesis": "By retaining channels that directly influence delays and throughput while removing less relevant ones, this variant should enhance the model's ability to capture essential patterns, potentially leading to improved forecasting accuracy.",
+      "stop": false
+    }
+  },
+  {
+    "purpose": "dataset variant",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "e342387aad42",
+    "usage": {
+      "prompt_tokens": 609,
+      "completion_tokens": 71,
+      "total_tokens": 680,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/technical_share"
+      ],
+      "hypothesis": "This variant retains key channels that are closely tied to service delays and technical factors, which may provide a more focused and effective signal for forecasting delays compared to the previous variants.",
+      "stop": false
+    }
+  },
+  {
+    "purpose": "dataset variant",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "a1fa30e2dccd",
+    "usage": {
+      "prompt_tokens": 721,
+      "completion_tokens": 69,
+      "total_tokens": 790,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/knock_on_share"
+      ],
+      "hypothesis": "This variant combines critical delay-related channels with knock-on effects, which may capture the cascading impacts of delays more effectively, potentially leading to improved forecasting performance.",
+      "stop": false
+    }
+  },
+  {
+    "purpose": "dataset variant",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "88af71b357db",
+    "usage": {
+      "prompt_tokens": 832,
+      "completion_tokens": 76,
+      "total_tokens": 908,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "keep": [
+        "quarter/service_at_station_delay",
+        "quarter/service_delay",
+        "quarter/station_delay",
+        "quarter/service_throughput",
+        "quarter/weather_share"
+      ],
+      "hypothesis": "This variant includes essential delay-related channels while also incorporating throughput and weather factors, which are crucial for understanding the dynamics of service delays, potentially leading to better forecasting outcomes.",
+      "stop": false
+    }
+  }
+]
