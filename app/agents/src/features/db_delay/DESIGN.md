@@ -717,10 +717,17 @@ features (3.462 / 2.759 on the original features).
 | same, within 15 min (36,556) | | | -0.091 (-0.116 to -0.069), real |
 | same, beyond 30 min (39,829) | | | -0.046 (-0.063 to -0.029), real |
 | its lead-time blend | 3.387 | 2.692 | -0.067 (-0.078 to -0.056), real |
+| Text, combined data (previous trains, 720 h), exact-minute plus CRPS loss (05:10) | 3.322 | 2.644 | -0.076 (-0.088 to -0.065) against XGBoost on the combined features (3.414 / 2.720), real |
+| same, within 15 min | | | -0.092 (-0.117 to -0.070), real |
+| same, beyond 30 min | | | -0.073 (-0.087 to -0.059), real |
+| same, against text plus encoder with the plain loss | | | -0.054 (-0.062 to -0.047), real |
 
 - **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
   XGBoost beyond 30 minutes (+0.076) and overall (+0.015); at 12,000 steps it wins at every lead
   time on the full test set, alone. Validation 2.709 / 2.175.
+- **Better data and the exact-minute loss add another 0.054.** The text model on the combined
+  data beats XGBoost trained on the same features by 0.076 on the full test, with the lead-time
+  blend choosing weight 1.0: nothing left for XGBoost to add. Validation 2.665 / 2.139.
 
 ### Fourth wave: what the time series and the embeddings add (05:00)
 
