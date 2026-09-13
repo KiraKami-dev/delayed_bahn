@@ -1,39 +1,90 @@
-import { Download, WifiOff } from "lucide-react"
+import { Download, WifiOff, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
 
+// The install event is captured once, app-wide, so any button rendered later
+// (header, help dialog) can still trigger the native prompt.
+let captured: BeforeInstallPromptEvent | null = null
+const listeners = new Set<() => void>()
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault()
+    captured = e as BeforeInstallPromptEvent
+    listeners.forEach((l) => l())
+  })
+  window.addEventListener("appinstalled", () => {
+    captured = null
+    listeners.forEach((l) => l())
+  })
+}
+
+function platformHint(): string {
+  const ua = navigator.userAgent
+  const ios = /iPhone|iPad|iPod/.test(ua)
+  const android = /Android/.test(ua)
+  if (ios) return "On iPhone: tap the Share button in Safari, then “Add to Home Screen”. iOS has no share-sheet target, so paste the DB text into the app instead."
+  if (android) return "On Android Chrome: open the ⋮ menu and choose “Install app” (or “Add to Home screen”). After that, error404 appears in the DB app’s Share list."
+  return "On desktop Chrome or Edge: click the install icon at the right end of the address bar, or open the ⋮ menu → “Cast, save and share” → “Install page as app”."
+}
+
 export function InstallButton({ big = false }: { big?: boolean }) {
-  const [evt, setEvt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [installed, setInstalled] = useState(false)
+  const [, force] = useState(0)
+  const [hint, setHint] = useState(false)
+  const [installed, setInstalled] = useState(() => window.matchMedia("(display-mode: standalone)").matches)
   useEffect(() => {
-    const onPrompt = (e: Event) => {
-      e.preventDefault()
-      setEvt(e as BeforeInstallPromptEvent)
-    }
+    const l = () => force((n) => n + 1)
+    listeners.add(l)
     const onInstalled = () => setInstalled(true)
-    window.addEventListener("beforeinstallprompt", onPrompt)
     window.addEventListener("appinstalled", onInstalled)
-    if (window.matchMedia("(display-mode: standalone)").matches) setInstalled(true)
     return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt)
+      listeners.delete(l)
       window.removeEventListener("appinstalled", onInstalled)
     }
   }, [])
-  if (installed) return big ? <span className="text-sm text-muted-foreground">Installed — find error404 in your share sheet.</span> : null
-  if (!evt) return big ? <span className="text-sm text-muted-foreground">Open in Chrome on Android and choose “Install app” to get error404 into the share sheet.</span> : null
-  return (
-    <button
-      type="button"
-      onClick={() => void evt.prompt()}
-      className={
-        big
-          ? "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
-          : "inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs text-foreground backdrop-blur"
+  if (installed) return big ? <span className="text-sm text-muted-foreground">Installed — error404 is in your share sheet.</span> : null
+
+  const onClick = async () => {
+    if (captured) {
+      try {
+        await captured.prompt()
+        const choice = await captured.userChoice
+        if (choice.outcome === "accepted") setInstalled(true)
+        captured = null
+        force((n) => n + 1)
+        return
+      } catch {
+        /* fall through to the hint */
       }
-    >
-      <Download className="size-4" /> Install app
-    </button>
+    }
+    setHint((h) => !h)
+  }
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={() => void onClick()}
+        className={
+          big
+            ? "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
+            : "install-btn inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs text-foreground"
+        }
+      >
+        <Download className="size-4" /> Install app
+      </button>
+      {hint && (
+        <span
+          role="dialog"
+          className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-border bg-white p-3 text-left text-xs leading-relaxed text-foreground shadow-xl"
+        >
+          <button type="button" aria-label="Close" onClick={() => setHint(false)} className="absolute right-2 top-2 text-muted-foreground">
+            <X className="size-3.5" />
+          </button>
+          {platformHint()}
+        </span>
+      )}
+    </span>
   )
 }
 
@@ -43,7 +94,10 @@ export function OfflinePill() {
     const update = () => setOffline(!navigator.onLine)
     window.addEventListener("online", update)
     window.addEventListener("offline", update)
-    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update) }
+    return () => {
+      window.removeEventListener("online", update)
+      window.removeEventListener("offline", update)
+    }
   }, [])
   if (!offline) return null
   return (

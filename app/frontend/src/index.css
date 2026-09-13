@@ -411,3 +411,19 @@ html[data-motion="0"] *, html[data-motion="0"] *::before, html[data-motion="0"] 
 .map-experience[data-sheet-open="false"] .site-footer { display: none; }
 .map-experience main[hidden] { display: none; }
 @media (max-width: 767px) { .map-sheet-toggle { bottom: max(20px, env(safe-area-inset-bottom)); right: 16px; } .map-experience .site-footer { margin-bottom: 70px; } .station-factor { font-size: 9px; max-width: 190px; } }
+
+/* header install button: keep it a pill, not a squeezed icon button */
+.travel-header div button.install-btn {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .travel-header div button.install-btn { padding: 6px 9px; font-size: 11px; }
+}

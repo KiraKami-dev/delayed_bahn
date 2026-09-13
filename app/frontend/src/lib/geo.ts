@@ -31,11 +31,19 @@ export function riskLevel(p: number): "low" | "mid" | "high" {
   return "high"
 }
 
+// Muted tones for text and cards on the light UI.
 export const RISK_COLOUR = { low: "#26704c", mid: "#916019", high: "#b54534", none: "#52794a" } as const
+// Saturated, luminous tones for lines and pins on the satellite globe.
+export const RISK_MAP_COLOUR = { low: "#4dffb4", mid: "#ffc83d", high: "#ff5d5d", none: "#6ee7ff" } as const
 
 export function riskColour(p: number | undefined): string {
   if (p == null) return RISK_COLOUR.none
   return RISK_COLOUR[riskLevel(p)]
+}
+
+export function riskMapColour(p: number | undefined): string {
+  if (p == null) return RISK_MAP_COLOUR.none
+  return RISK_MAP_COLOUR[riskLevel(p)]
 }
 
 export function fmtTime(iso: string): string {

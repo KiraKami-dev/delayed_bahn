@@ -2,7 +2,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { useEffect, useId, useRef, useState } from "react"
 import type { Journey } from "@/lib/contract"
 import { useStore } from "@/lib/store"
-import { searchStations, type StationEntry } from "@/lib/stations"
+import { searchStations, normaliseName, type StationEntry } from "@/lib/stations"
 
 import { searchJourneys } from "@/lib/journey-search"
 import { fmtTime } from "@/lib/geo"
@@ -18,13 +18,17 @@ function StationField({ label, value, onPick, disabled }: { label: string; value
   const pick = (station: StationEntry) => { onPick(station); setQ(station.name); setOpen(false); setActive(-1) }
   return <div className="relative">
     <label className="field-label" htmlFor={id}>{label}</label>
-    <input id={id} role="combobox" aria-autocomplete="list" aria-expanded={open && hits.length > 0} aria-controls={`${id}-options`} aria-activedescendant={active >= 0 && hits[active] ? `${id}-option-${active}` : undefined} value={q} disabled={disabled} autoComplete="off" onChange={e => { setQ(e.target.value); onPick(undefined); setOpen(true); setActive(-1) }} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={e => {
+    <input id={id} role="combobox" aria-autocomplete="list" aria-expanded={open && hits.length > 0} aria-controls={`${id}-options`} aria-activedescendant={active >= 0 && hits[active] ? `${id}-option-${active}` : undefined} value={q} disabled={disabled} autoComplete="off" onChange={e => { setQ(e.target.value); const exact = searchStations(e.target.value).filter(st => [st.name, ...st.aliases].some(name => normaliseName(name) === normaliseName(e.target.value))); onPick(exact.length === 1 ? exact[0] : undefined); setOpen(true); setActive(-1) }} onFocus={() => setOpen(true)} onBlur={() => {
+      setOpen(false)
+      const exact = searchStations(q).filter(st => [st.name, ...st.aliases].some(name => normaliseName(name) === normaliseName(q)))
+      if (!value && exact.length === 1) pick(exact[0])
+    }} onKeyDown={e => {
       if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setActive(i => Math.min(i + 1, hits.length - 1)) }
       if (e.key === "ArrowUp") { e.preventDefault(); setActive(i => Math.max(0, i - 1)) }
-      if (e.key === "Enter" && open && active >= 0 && hits[active]) { e.preventDefault(); pick(hits[active]) }
+      if (e.key === "Enter" && open && hits.length) { e.preventDefault(); pick(hits[Math.max(0, active)]) }
       if (e.key === "Escape") { e.preventDefault(); setOpen(false) }
     }} placeholder="Search a station" className={fieldClass} />
-    {open && hits.length > 0 && <ul role="listbox" id={`${id}-options`} aria-label={label} className="station-options absolute z-10 mt-1 w-full rounded-lg border border-border bg-white shadow-xl">{hits.map((h, i) => <li key={h.evaNumber} role="presentation"><button id={`${id}-option-${i}`} role="option" aria-selected={active === i} type="button" tabIndex={-1} className="w-full px-3 py-3 text-left text-sm hover:bg-secondary" onMouseDown={e => e.preventDefault()} onClick={() => pick(h)}>{h.name}</button></li>)}</ul>}
+    {open && hits.length > 0 && <ul role="listbox" id={`${id}-options`} aria-label={label} className="station-options absolute z-10 mt-1 w-full rounded-lg border border-border bg-white shadow-xl">{hits.map((h, i) => <li key={h.evaNumber} role="presentation"><button id={`${id}-option-${i}`} role="option" aria-selected={active === i} type="button" tabIndex={-1} className="w-full px-3 py-3 text-left text-sm hover:bg-secondary" onPointerDown={e => e.preventDefault()} onClick={() => pick(h)}>{h.name}</button></li>)}</ul>}
     {open && q.trim() && !hits.length && <p role="status" className="mt-1 text-xs text-muted-foreground">No match in our station list. Try the full station name, or paste your DB journey.</p>}
   </div>
 }
@@ -42,17 +46,18 @@ export function germanTime(date: string, hhmm: string): string {
   throw new Error("That time does not exist in Germany because the clocks change. Please check the timetable.")
 }
 
-export function JourneyBuilder() {
+export function JourneyBuilder({ onPaste }: { onPaste: () => void }) {
   const s = useStore()
   const [from, setFrom] = useState<StationEntry>()
   const [to, setTo] = useState<StationEntry>()
   const [results, setResults] = useState<Journey[] | null>(null)
   const [error, setError] = useState("")
+  const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [optionIndex, setOptionIndex] = useState(0)
   const request = useRef<AbortController | null>(null)
   useEffect(() => () => request.current?.abort(), [])
-  const clear = () => { request.current?.abort(); request.current = null; setLoading(false); setResults(null); setError("") }
+  const clear = () => { request.current?.abort(); request.current = null; setLoading(false); setResults(null); setError(""); setCopied(false) }
   const submit = async () => {
     if (!from || !to || from.evaNumber === to.evaNumber || loading) return
     clear()
@@ -63,8 +68,8 @@ export function JourneyBuilder() {
     try {
       const journeys = await searchJourneys(from, to, controller.signal)
       if (request.current === controller) { setResults(journeys); setOptionIndex(0) }
-    } catch {
-      if (request.current === controller) setError("We couldn’t load connections. Your stations are saved here. Try again, or paste a DB journey.")
+    } catch (cause) {
+      if (request.current === controller) setError(controller.signal.aborted ? 'The timetable took too long. Your stations are saved. Retry or continue in DB Navigator.' : cause instanceof Error ? cause.message : 'Connections are unavailable. Retry or continue in DB Navigator.')
     } finally {
       window.clearTimeout(timeout)
       if (request.current === controller) setLoading(false)
@@ -77,10 +82,10 @@ export function JourneyBuilder() {
   return <form className="station-search-form" onSubmit={e => { e.preventDefault(); void submit() }}>
     <StationField label="From station" value={from} onPick={v => { clear(); setFrom(v) }} disabled={s.busy} />
     <StationField label="To station" value={to} onPick={v => { clear(); setTo(v) }} disabled={s.busy} />
-    <p className="field-hint">Leaving now · We’ll find the trains and changes for you.</p>
+    <p className="field-hint">Leaving now · Select a station suggestion or press Enter.</p>
     {from && to && from.evaNumber === to.evaNumber && <p role="status">Choose two different stations.</p>}
     <button type="submit" className="primary-button check-button" disabled={!from || !to || from.evaNumber === to.evaNumber || loading || s.busy}>{loading ? <><Loader2 size={18} className="animate-spin" /> Finding connections…</> : <>Find my route <ArrowRight size={18} /></>}</button>
-    {error && <p className="error-banner" role="alert">{error}</p>}
+    {error && <div className="route-recovery"><p className="error-banner" role="alert">{error}</p><div><button type="button" onClick={async () => { try { await navigator.clipboard.writeText(`${from?.name} → ${to?.name}`); setCopied(true) } catch { setError('Copy is unavailable. Your stations are shown above; enter them in DB Navigator.') } }}>{copied ? 'Stations copied' : 'Copy stations'}</button><a href="https://int.bahn.de/en" target="_blank" rel="noreferrer">Open DB ↗</a><button type="button" onClick={onPaste}>Paste DB journey</button></div></div>}
 
     <p className="lookup-source">Timetable lookup via <a href="https://v6.db.transport.rest/api.html" target="_blank" rel="noreferrer">transport.rest</a>. Confirm live departures in DB Navigator.</p>
   </form>

@@ -3,7 +3,7 @@ import type { Journey, Leg, Station } from "@/lib/contract"
 import { journeyBounds, type LngLat } from "@/lib/geo"
 import { DUR, motionOff } from "@/lib/motion"
 
-export const HOME = { center: [10.5, 35] as LngLat, zoom: 1.3, pitch: 0, bearing: 0 }
+export const HOME = { center: [10.5, 51] as LngLat, zoom: 4.8, pitch: 0, bearing: 0 }
 
 /** Padding that keeps the route clear of the overlay panel. */
 export function panelPadding(): { top: number; bottom: number; left: number; right: number } {
@@ -25,7 +25,7 @@ const dur = (ms: number) => (motionOff() ? 0 : ms)
 export function goHome(map: maplibregl.Map) {
   const portrait = window.innerWidth < 768 && window.innerWidth < window.innerHeight
   const padding = panelPadding()
-  const zoom = portrait ? padding.bottom > 150 ? 0.1 : 0.65 : window.innerHeight < 520 ? 0.4 : HOME.zoom
+  const zoom = portrait ? 4.2 : window.innerHeight < 520 ? 4.2 : HOME.zoom
   map.flyTo({ ...HOME, zoom, padding, duration: dur(DUR.fly), essential: true })
 }
 
@@ -78,33 +78,3 @@ export function flyToStation(map: maplibregl.Map, station: Station, zoom = 11) {
   })
 }
 
-/** Slow idle rotation of the globe until the user touches it. */
-export function startIdleSpin(map: maplibregl.Map): () => void {
-  if (motionOff()) return () => {}
-  let raf = 0
-  let stopped = false
-  const stop = () => {
-    stopped = true
-    cancelAnimationFrame(raf)
-  }
-  const start = performance.now()
-  const tick = () => {
-    if (stopped) return
-    if (!document.hidden && !map.isMoving()) {
-      const elapsed = (performance.now() - start) / 1000
-      map.jumpTo({ center: [HOME.center[0] + Math.sin(elapsed / 25) * 12, HOME.center[1]], bearing: Math.sin(elapsed / 30) * 4 })
-    }
-    raf = requestAnimationFrame(tick)
-  }
-  raf = requestAnimationFrame(tick)
-  const onInteract = () => stop()
-  map.on("mousedown", onInteract)
-  map.on("touchstart", onInteract)
-  map.on("wheel", onInteract)
-  return () => {
-    stop()
-    map.off("mousedown", onInteract)
-    map.off("touchstart", onInteract)
-    map.off("wheel", onInteract)
-  }
-}

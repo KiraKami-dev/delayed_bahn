@@ -181,3 +181,7 @@
   .travel-map-title .travel-kicker { display: none; }
   .travel-map-title h1 { font-size: 20px; }
 }
+
+.travel-app .route-recovery { grid-column: 1 / -1; font-size: 11px; }
+.travel-app .route-recovery > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.travel-app .route-recovery button, .travel-app .route-recovery a { display: inline-flex; align-items: center; min-height: 36px; padding: 5px 9px; border-radius: 8px; background: #e8eee2; color: #304737; font-weight: 600; }

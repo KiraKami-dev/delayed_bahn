@@ -3,15 +3,16 @@ import * as maplibregl from "maplibre-gl"
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "@/lib/store"
-import { riskColour } from "@/lib/geo"
+import { riskColour, riskMapColour } from "@/lib/geo"
 import { motionOff, useReducedMotion } from "@/lib/motion"
 import { createTrainLayer } from "../train-layer"
 import { applyBasemapMode, createEarthBasemap, type BasemapMode } from "../basemap"
-import { searchJourneys } from "@/lib/journey-search"
-import { routeMatches } from "@/lib/route-geometry"
+import { resolveJourneyGeometry } from "@/lib/journey-search"
+import { validTrack } from "@/lib/track-path"
+import { reuseMappedServiceGeometry } from "@/lib/osm-route"
 import type { Journey } from "@/lib/contract"
 import { clearRoute, drawRoute, recolourRoute } from "../hooks/useRouteLayers"
-import { fitJourney, flyToLeg, flyToStation, goHome, HOME, startIdleSpin } from "../camera"
+import { fitJourney, flyToLeg, flyToStation, goHome, HOME } from "../camera"
 
 // Two keyless basemaps. Default: Esri dark grey raster (renders everywhere, cheap).
 // ?tiles=vector switches to OpenFreeMap's dark vector style (streets + labels).
@@ -55,6 +56,8 @@ export function GlobeMap() {
   const s = useStore()
   const still = useReducedMotion()
   const [resolved, setResolved] = useState<Journey | null>(null)
+  const [geometryLoading, setGeometryLoading] = useState(false)
+  const [geometryAttempt, setGeometryAttempt] = useState(0)
 
   const [failed, setFailed] = useState<string | null>(null)
   const [tileError, setTileError] = useState(false)
@@ -74,10 +77,11 @@ export function GlobeMap() {
         style: pickStyle(basemapMode),
         center: HOME.center,
         zoom: HOME.zoom,
+        minZoom: 0,
         attributionControl: { compact: true },
         dragRotate: true,
         pitchWithRotate: true,
-        scrollZoom: false,
+        scrollZoom: true,
         cooperativeGestures: true,
         maxPitch: 65,
         fadeDuration: 200,
@@ -123,34 +127,36 @@ export function GlobeMap() {
   useEffect(() => {
     const original = s.journey
     setResolved(null)
-    if (!original || original.source === "seed" || original.legs.every(l => (l.routeGeometry?.length ?? 0) > 1)) return
+    setGeometryLoading(false)
+    if (!original || original.legs.every(l => validTrack(l.routeGeometry))) return
     const controller = new AbortController()
-    const timeout = window.setTimeout(() => controller.abort(), 12000)
-    void searchJourneys(original.legs[0].from, original.legs.at(-1)!.to, controller.signal, original.legs[0].plannedDeparture).then(options => {
-      if (controller.signal.aborted) return
-      const match = options.find(j => j.legs.length === original.legs.length && j.legs.every((l, i) => routeMatches(l, original.legs[i])))
-      if (match) setResolved({ ...original, legs: original.legs.map((l, i) => ({ ...l, routeGeometry: match.legs[i].routeGeometry, serviceCategory: match.legs[i].serviceCategory, serviceProduct: match.legs[i].serviceProduct, operatorName: match.legs[i].operatorName })) })
-    }).catch(() => { /* Preserve the parsed journey and explicitly dashed fallback. */ }).finally(() => window.clearTimeout(timeout))
-    return () => { controller.abort(); window.clearTimeout(timeout) }
-  }, [s.journey])
+    let active = true
+    setGeometryLoading(true)
+    const timeout = window.setTimeout(() => controller.abort(), 30000)
+    void resolveJourneyGeometry(original, controller.signal).then(next => {
+      if (active && !controller.signal.aborted) setResolved(next)
+    }).catch(() => { /* Preserve the parsed journey and explicitly dashed fallback. */ }).finally(() => {
+      window.clearTimeout(timeout)
+      if (active) setGeometryLoading(false)
+    })
+    return () => { active = false; controller.abort(); window.clearTimeout(timeout) }
+  }, [s.journey, geometryAttempt])
   const prediction = s.prediction
   const legColours = prediction
     ? prediction.legs.map((l, i) => {
         const last = i === prediction.legs.length - 1
         const p = last ? Math.min(1, l.expectedDelayMinutes.value / 30) : l.missProbability.value
-        return riskColour(p)
+        return riskMapColour(p)
       })
     : undefined
 
-  // Idle: home view with a slow spin.
+  // Keep Germany in view until a journey is selected.
   useEffect(() => {
     if (!map) return
     if (journey) return
     clearRoute(map, "main")
     clearRoute(map, "alt")
     goHome(map)
-    const stop = startIdleSpin(map)
-    return stop
   }, [map, journey, still])
 
   // Journey drawn and framed.
@@ -219,20 +225,22 @@ export function GlobeMap() {
     if (!map || !journey) return
     clearRoute(map, "alt")
     if (s.overlay === "alternative" && s.recommendation?.alternative) {
-      drawRoute(map, "alt", s.recommendation.alternative, { dashed: true, labels: false, colours: journey.legs.map(() => "#6ee7b7") })
-      fitJourney(map, [journey, s.recommendation.alternative])
+      const alternative = reuseMappedServiceGeometry(s.recommendation.alternative, journey)
+      drawRoute(map, "alt", alternative, { dashed: true, labels: false, colours: alternative.legs.map(() => "#6ee7b7") })
+      fitJourney(map, [journey, alternative])
     } else if (s.overlay === "reroute" && s.reroute) {
       const opt = s.reroute.options[s.rerouteChoice] ?? s.reroute.options[0]
       if (opt) {
-        drawRoute(map, "alt", opt.journey, { dashed: true, labels: false, colours: opt.journey.legs.map(() => "#6ee7b7"), width: 5 })
-        fitJourney(map, [opt.journey], { maxZoom: 11 })
+        const reroute = reuseMappedServiceGeometry(opt.journey, journey)
+        drawRoute(map, "alt", reroute, { dashed: true, labels: false, colours: reroute.legs.map(() => "#6ee7b7"), width: 5 })
+        fitJourney(map, [reroute], { maxZoom: 11 })
       }
     } else if (s.tab === "advice" || s.tab === "plan") {
       fitJourney(map, [journey])
     }
   }, [map, journey, s.overlay, s.recommendation?.alternative, s.reroute, s.rerouteChoice, s.tab])
 
-  // Causes tab → dive into the selected station; Evidence → pull back to the globe.
+  // Causes tab → dive into the selected station; Evidence → pull back to the journey.
   useEffect(() => {
     if (!map || !journey) return
     if (s.tab === "causes") {
@@ -269,7 +277,7 @@ export function GlobeMap() {
       <button type="button" aria-label="Show railway and station detail" title="Railway and station detail" onClick={() => { if (journey) flyToStation(map, journey.legs[s.selectedLeg ?? 0].to, 13); else map.easeTo({ zoom: Math.max(8, map.getZoom()), duration: motionOff() ? 0 : 1200 }) }}><TrainFront size={16} /></button>
       <button type="button" aria-label={tilted ? "Switch to flat map" : "Switch to 3D map"} aria-pressed={tilted} onClick={() => map.easeTo({ pitch: tilted ? 0 : 50, bearing: tilted ? 0 : -15, duration: motionOff() ? 0 : 700 })}>{tilted ? "2D" : "3D"}</button>
     </div>}
-    <div className="geometry-note">{journey ? journey.legs.every(l => (l.routeGeometry?.length ?? 0) > 1) ? "Timetable route · illustrative trains, not live" : "Dashed colored links: route geometry unavailable" : basemapMode === "earth" ? "Satellite imagery · not live weather" : "OpenStreetMap borders · zoom in for railway tracks"}<span>Blue-gray lines: mapped rail network. {journey ? "Train silhouettes reflect returned service categories; exact fleet, livery and carriage count are not supplied." : "Photographic land and oceans, with mapped borders and railway detail."}</span></div>
+    <div className="geometry-note" aria-live="polite">{journey ? geometryLoading ? "Loading service track routes…" : journey.legs.every(l => validTrack(l.routeGeometry)) ? journey.legs.some(l => l.routeGeometrySource === "osm") ? "Mapped service tracks · not live diversions" : "Timetable route · illustrative trains, not live" : "Some track geometry is unavailable; dashed links are schematic" : basemapMode === "earth" ? "Satellite imagery · not live weather" : "OpenStreetMap borders · zoom in for railway tracks"}{journey && !geometryLoading && journey.legs.some(l => !validTrack(l.routeGeometry)) && <button type="button" onClick={() => setGeometryAttempt(attempt => attempt + 1)} style={{ pointerEvents: "auto" }} className="ml-2 min-h-8 underline">Retry tracks</button>}<span>{journey?.legs.some(l => l.routeGeometrySource === "osm") ? "Track paths: © OpenStreetMap contributors (ODbL). They describe the mapped service, not today's diversions. " : "Blue-gray lines: mapped rail network. "}{journey ? "Slow illustrative replay · not live positions. Delay labels are model estimates; obstacle locations are illustrative and require a service notice." : "Photographic land and oceans, with mapped borders and railway detail."}</span></div>
     {(tileError || imageryUnavailable) && <div className="map-warning" role="status">{imageryUnavailable ? "Satellite imagery is unavailable. Showing the geographic map instead." : "Some map details are unavailable. Your trip summary is still available."}</div>}
   </>
 }

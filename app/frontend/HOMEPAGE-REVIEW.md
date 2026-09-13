@@ -66,3 +66,17 @@ Akshat requested train visuals driven by the selected service and restricted to 
 Each miniature carriage is sampled independently by distance along the provider polyline. Missing, invalid or zero-length geometry produces no miniature; malformed provider segments are rejected rather than bridged. The freestanding delay towers were removed; returned delay information remains in route labels and the journey panel.
 
 Validation: production build and 17 non-browser map/service/track smoke checks pass. No Playwright or visual browser validation was run; mobile rendering and route animation still need Akshat's review. Vite emitted its existing large-map-chunk warning and the concurrent smoke runners reported an occupied HMR socket while all assertions passed.
+
+### Germany framing update
+
+The initial and reset camera now center on Germany at country scale, with a minimum zoom of 4 and no idle drift. Selecting a journey still fits its track geometry around the mobile panel. Production build and 24 non-browser camera/route/service checks passed; visual verification remains with Akshat.
+
+### Globe exploration, slow trains and route-entry recovery
+
+Germany remains the initial view; minimum zoom is now zero and wheel/pinch/button zoom can reveal the full globe. Trains are enlarged (capped to their supplied track length), run on a 90-second illustrative travel timeline, pause briefly for matching model delays, and carry service/estimated-delay labels. A matching journey ID and train ID are required for a delay label. Visibility changes resume animation without jumping through elapsed background time. Orientation follows the direction of travel.
+
+Only returned warning notices produce obstacle assets: works barriers, weather clouds or warning signals. Locations and replay are explicitly illustrative. Notices are readable in the journey card; no obstacle is inferred from station-level historical causes. Existing fixtures have no service notices, so they show delay visuals without fabricated obstacles.
+
+Find my route now accepts exact station names/aliases, Enter selects a suggestion, and pointer handling keeps suggestions selectable. Provider errors remain truthful, endpoints are retained, and recovery offers Copy stations, Open DB and Paste DB journey. A live public request returned HTTP 503 during this pass; provider availability remains unresolved. Invalid arrival timestamps are excluded. No replacement schedules are invented.
+
+Validation: 27 non-browser camera, service, route, delay-timeline and timetable-failure checks pass. Production build passes with the existing map-chunk warning. Browser/visual verification remains with Akshat; no Playwright was run. API reference: https://v6.db.transport.rest/api.html.

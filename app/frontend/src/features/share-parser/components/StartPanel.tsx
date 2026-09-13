@@ -52,7 +52,7 @@ export function StartPanel() {
             {s.busy ? <><Loader2 size={18} className="animate-spin" /> Checking your journey…</> : <>Check my trip <ArrowRight size={18} /></>}
           </button>
         </form>
-      ) : <JourneyBuilder />}
+      ) : <JourneyBuilder onPaste={() => setMode("paste")} />}
       <div className="example-row"><span>Just having a look?</span><button type="button" disabled={s.busy} onClick={() => void s.runFromSeed()}>Try an example trip <ArrowRight size={14} /></button></div>
       <div className="form-reassurance"><Check size={13} /> Your journey stays in this session. No sign-up needed.</div>
     </section>

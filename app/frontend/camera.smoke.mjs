@@ -33,12 +33,14 @@ function mapFixture(t, width, height, rect, hidden = false) {
   })
   let padding = { top: 0, bottom: 0, left: 0, right: 0 }
   const fits = []
+  const flights = []
   const mapHeight = height - (height < 520 && width > height ? 48 : width >= 768 ? 66 : 58)
   return {
     fits,
+    flights,
     setPadding(next) { padding = { ...next }; return this },
     getPadding() { return padding },
-    flyTo(options) { if (options.padding) padding = { ...options.padding }; return this },
+    flyTo(options) { flights.push(options); if (options.padding) padding = { ...options.padding }; return this },
     fitBounds(bounds, options) {
       const requested = options.padding
       const availableWidth = width - padding.left - padding.right - requested.left - requested.right
@@ -60,6 +62,9 @@ for (const [width, height, rect] of [
   test(`example trip fits after the padded globe at ${width}x${height}`, t => {
     const map = mapFixture(t, width, height, rect)
     camera.goHome(map)
+    assert.deepEqual(map.flights[0].center, [10.5, 51], 'The initial view is centered on Germany')
+    assert.ok(map.flights[0].zoom >= 4, 'Keep country-level detail instead of showing the whole globe')
+    assert.ok(camera.HOME.zoom >= 4, 'The first map paint must also start at country scale')
     camera.fitJourney(map, [journey], { duration: 0 })
     assert.equal(map.fits[0].options.pitch, 48)
     assert.equal(map.fits[0].options.duration, 0)

@@ -1,6 +1,6 @@
 import * as maplibregl from "maplibre-gl"
 import type { Journey } from "@/lib/contract"
-import { legLine, RISK_COLOUR } from "@/lib/geo"
+import { legLine, RISK_MAP_COLOUR } from "@/lib/geo"
 import { DUR, motionOff } from "@/lib/motion"
 
 export type RouteKind = "main" | "alt"
@@ -46,6 +46,11 @@ function partial(line: [number, number][], t: number): [number, number][] {
   return [...line.slice(0, index + 1), lerp(line[index], line[index + 1], position - index)]
 }
 
+/** Thicker when zoomed out (globe view), slimmer at street level. */
+function lineWidth(base: number): maplibregl.ExpressionSpecification {
+  return ["interpolate", ["linear"], ["zoom"], 1, base * 1.6, 5, base * 1.25, 9, base, 13, base * 0.8]
+}
+
 export type DrawOptions = {
   colours?: (string | undefined)[] // per leg
   dashed?: boolean
@@ -59,7 +64,7 @@ export type DrawOptions = {
 export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey, opts: DrawOptions = {}) {
   clearRoute(map, kind)
   const h = handles(map, kind)
-  const base = kind === "main" ? RISK_COLOUR.none : "#a7f3d0"
+  const base = kind === "main" ? RISK_MAP_COLOUR.none : "#b9ffe0"
   const width = opts.width ?? (kind === "main" ? 4.5 : 3.5)
   const animate = (opts.animate ?? true) && !motionOff()
   const beforeLabels = map.getStyle().layers?.find(layer => layer.type === "symbol")?.id
@@ -71,17 +76,27 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
     const sourceId = `route-${kind}-${i}`
     map.addSource(sourceId, {
       type: "geojson",
+      ...(leg.routeGeometrySource === "osm" ? { attribution: 'Track routes © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL)' } : {}),
       data: { type: "Feature", properties: { leg: i }, geometry: { type: "LineString", coordinates: animate ? partial(line, 0) : line } },
     })
     h.sourceIds.push(sourceId)
     const glowId = `${sourceId}-glow`
     const lineId = `${sourceId}-line`
+    const casingId = `${sourceId}-casing`
     map.addLayer({
       id: glowId,
       type: "line",
       source: sourceId,
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": colour, "line-width": width * 3, "line-opacity": 0.22, "line-blur": 6 },
+      paint: { "line-color": colour, "line-width": lineWidth(width * 3.2), "line-opacity": 0.35, "line-blur": 8 },
+    }, beforeLabels)
+    // Dark casing under the coloured line so it reads on satellite imagery, sea and snow alike.
+    map.addLayer({
+      id: casingId,
+      type: "line",
+      source: sourceId,
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": "#0b1020", "line-width": lineWidth(width * 1.9), "line-opacity": 0.85 },
     }, beforeLabels)
     map.addLayer({
       id: lineId,
@@ -90,12 +105,12 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": colour,
-        "line-width": width,
-        "line-opacity": 0.95,
+        "line-width": lineWidth(width),
+        "line-opacity": 1,
         ...((opts.dashed || (leg.routeGeometry?.length ?? 0) < 2) ? { "line-dasharray": [1.5, 1.5] } : {}),
       },
     }, beforeLabels)
-    h.layerIds.push(glowId, lineId)
+    h.layerIds.push(glowId, casingId, lineId)
   })
 
   // Station markers: HTML so they work without glyph fonts and offline.
@@ -160,7 +175,7 @@ export function recolourRoute(map: maplibregl.Map, kind: RouteKind, journey: Jou
     const line = legLine(leg)
     const source = map.getSource(`route-${kind}-${i}`) as maplibregl.GeoJSONSource | undefined
     if (line && source) source.setData({ type: "Feature", properties: { leg: i }, geometry: { type: "LineString", coordinates: line } })
-    const colour = colours[i] ?? RISK_COLOUR.none
+    const colour = colours[i] ?? RISK_MAP_COLOUR.none
     for (const suffix of ["glow", "line"]) {
       const id = `route-${kind}-${i}-${suffix}`
       if (map.getLayer(id)) map.setPaintProperty(id, "line-color", colour)
@@ -173,6 +188,6 @@ export function recolourRoute(map: maplibregl.Map, kind: RouteKind, journey: Jou
     // Marker order mirrors leg iteration: recompute colour by matching label to the leg ends.
     const name = el.getAttribute("aria-label")
     const idx = journey.legs.findIndex((l) => l.to.name === name)
-    if (idx >= 0) dot.style.setProperty("--c", colours[idx] ?? RISK_COLOUR.none)
+    if (idx >= 0) dot.style.setProperty("--c", colours[idx] ?? RISK_MAP_COLOUR.none)
   })
 }
