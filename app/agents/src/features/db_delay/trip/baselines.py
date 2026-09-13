@@ -25,7 +25,9 @@ NUMERIC = [
 ]
 # Columns that newer builds add; used when the frame has them, so old and new builds both score.
 OPTIONAL_NUMERIC = ["prev_n", "prev_last", "prev_mean", "prev_gap_last", "hist_median_long", "hist_p90_long",
-                    "hist_median_7", "station_late_same_hour", "network_late_same_hour"]
+                    "hist_median_7", "station_late_same_hour", "network_late_same_hour",
+                    "same_train_days", "same_train_gain_median", "same_train_gain_median_7", "same_train_expected",
+                    "corridor_n", "corridor_gain_mean", "corridor_gain_last"]
 CATEGORICAL = ["cls", "train_type", "hist_level"]
 Prediction = tuple[np.ndarray, np.ndarray, np.ndarray | None]
 

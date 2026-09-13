@@ -121,6 +121,37 @@ class BuildTest(unittest.TestCase):
             self.assertEqual(row["target_minutes"], expected)
         self.assertFalse(self.df["cancelled"].any())
 
+    def test_same_train_gain_comes_from_earlier_days(self) -> None:
+        """Yesterday's gain of the same train number from the start station to the target is the last value."""
+        rows = self.df[(self.df["k_station"] == STATIONS[-1]) & (pd.to_datetime(self.df["t0"]).dt.date
+                                                                  >= FIRST_DAY + dt.timedelta(days=40))]
+        self.assertGreater(len(rows), 100)
+        for _, row in rows.iterrows():
+            day = (pd.Timestamp(row["t0"]).date() - FIRST_DAY).days
+            offset = 0 if row["train_type"] == "ICE" else 100
+            start = row["first_station"] if row["pre_departure"] else row["j_station"]
+            start_delay = 1 if start == STATIONS[0] else 3
+            self.assertEqual(row["same_train_days"], 28)
+            self.assertEqual(float(row["same_train_gains"][-1]), float(last_stop_delay(day - 1, offset) - start_delay))
+
+    def test_corridor_counts_only_arrivals_before_the_prediction_moment(self) -> None:
+        """The RE leaving Bdorf sees the ICE ahead only when that ICE reached Cstadt before the RE left."""
+        rows = self.df[(self.df["k_station"] == STATIONS[-1]) & ~self.df["pre_departure"]
+                       & (self.df["j_station"] == STATIONS[1])]
+        seen = 0
+        for _, row in rows.iterrows():
+            day = (pd.Timestamp(row["t0"]).date() - FIRST_DAY).days
+            if row["train_type"] == "ICE":
+                self.assertEqual(row["corridor_n"], 0)
+                continue
+            ice_delay = last_stop_delay(day, 0)  # ICE due at Cstadt 10:00; the RE leaves Bdorf at 10:05
+            arrived = ice_delay < 5
+            self.assertEqual(row["corridor_n"], 1 if arrived else 0)
+            if arrived:
+                seen += 1
+                self.assertEqual(list(row["corridor_gains"]), [float(ice_delay - 3)])
+        self.assertGreater(seen, 5)
+
     def test_series_have_fixed_lengths(self) -> None:
         """History, station and network series have the configured lengths."""
         self.assertTrue((self.df["hist_series"].map(len) == 30).all())

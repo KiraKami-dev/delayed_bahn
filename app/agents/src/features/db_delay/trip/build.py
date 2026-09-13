@@ -41,6 +41,9 @@ class Config:
     series_hours: int = 72
     pre_departure_permille: int = 200
     pre_departure_max_minutes: int = 120
+    same_train_days: int = 28  # earlier days of the same train number between the start station and the target
+    corridor_hours: int = 3  # other trains that left the start station this recently and already arrived
+    corridor_trains: int = 8
     train_start: str = "2025-11-15"
     val_start: str = "2026-05-02"
     test_start: str = "2026-06-02"
@@ -175,6 +178,76 @@ def sample_examples(con: duckdb.DuckDBPyConnection, cfg: Config) -> None:
                     f"OR t0 >= TIMESTAMP '{cfg.label_cutoff}'")
 
 
+START_STATION = "CASE WHEN e.pre_departure OR e.j_station IS NULL THEN e.first_station ELSE e.j_station END"
+
+
+def attach_corridor(con: duckdb.DuckDBPyConnection, cfg: Config) -> None:
+    """Delay gained between the start station and the target stop, by earlier runs of the same train
+    number on previous days and by other trains that made that trip in the hours before t0.
+
+    The start station is the first station before departure and the last departed station otherwise.
+    A gain is the arrival delay at the target minus the departure delay at the start station. Every
+    counted arrival happened strictly before t0: a late run from yesterday can arrive after it.
+    """
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE ex_same AS
+        WITH e AS (
+            SELECT e.example_id, e.t0, e.train_type, e.train_number, e.k_station, {START_STATION} AS f_station
+            FROM ex e
+        ),
+        starts AS (
+            SELECT e.example_id, e.t0, e.k_station, a.run, a.num, a.dep_delay,
+                   date_diff('day', CAST(a.dep_pt AS DATE), CAST(e.t0 AS DATE)) AS o
+            FROM e JOIN stops a ON a.train_type = e.train_type AND a.train_number = e.train_number
+                 AND a.station = e.f_station
+            WHERE CAST(a.dep_pt AS DATE) < CAST(e.t0 AS DATE)
+                  AND CAST(a.dep_pt AS DATE) >= CAST(e.t0 AS DATE) - {cfg.same_train_days}
+                  AND a.dep_ct IS NOT NULL AND a.dep_ct < e.t0 AND a.dep_delay IS NOT NULL AND NOT a.dep_canc
+        ),
+        days AS (
+            SELECT s.example_id, s.o, median(b.arr_delay - s.dep_delay) AS gain
+            FROM starts s JOIN stops b ON b.run = s.run AND b.station = s.k_station AND b.num > s.num
+            WHERE b.arr_ct IS NOT NULL AND b.arr_ct < s.t0 AND b.arr_delay IS NOT NULL AND NOT b.arr_canc
+            GROUP BY ALL
+        )
+        SELECT example_id, list(gain ORDER BY o) AS gains, list(o ORDER BY o) AS offsets
+        FROM days GROUP BY example_id
+        """
+    )
+    # Departures bucketed by hour, so the corridor join matches on station and hour instead of
+    # scanning every departure a busy station ever had.
+    con.execute(
+        """
+        CREATE OR REPLACE TABLE dep_hour AS
+        SELECT run, num, station, dep_ct, dep_delay, date_trunc('hour', dep_ct) AS hr
+        FROM stops WHERE dep_ct IS NOT NULL AND dep_delay IS NOT NULL AND NOT dep_canc
+        """
+    )
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE ex_corr AS
+        WITH e AS (
+            SELECT e.example_id, e.run, e.t0, e.k_station, {START_STATION} AS f_station, date_trunc('hour', e.t0) - to_hours(t.h::BIGINT) AS hr
+            FROM ex e CROSS JOIN range(0, {cfg.corridor_hours + 1}) t(h)
+        ),
+        starts AS (
+            SELECT e.example_id, e.t0, e.k_station, a.run, a.num, a.dep_delay
+            FROM e JOIN dep_hour a ON a.station = e.f_station AND a.hr = e.hr
+            WHERE a.run <> e.run AND a.dep_ct >= e.t0 - to_hours({cfg.corridor_hours}) AND a.dep_ct < e.t0
+        ),
+        cand AS (
+            SELECT s.example_id, b.arr_delay - s.dep_delay AS gain, b.arr_delay,
+                   row_number() OVER (PARTITION BY s.example_id ORDER BY b.arr_ct DESC, s.run) AS rn
+            FROM starts s JOIN stops b ON b.run = s.run AND b.station = s.k_station AND b.num > s.num
+            WHERE b.arr_ct IS NOT NULL AND b.arr_ct < s.t0 AND b.arr_delay IS NOT NULL AND NOT b.arr_canc
+        )
+        SELECT example_id, list(gain ORDER BY rn DESC) AS gains, list(arr_delay ORDER BY rn DESC) AS arr_delays
+        FROM cand WHERE rn <= {cfg.corridor_trains} GROUP BY example_id
+        """
+    )
+
+
 def attach_sequences(con: duckdb.DuckDBPyConnection, cfg: Config) -> None:
     """Attach the run so far, key history, and station and network hours to every example."""
     con.execute(
@@ -218,6 +291,7 @@ def attach_sequences(con: duckdb.DuckDBPyConnection, cfg: Config) -> None:
         FROM cand WHERE rn <= 5 GROUP BY example_id
         """
     )
+    attach_corridor(con, cfg)
     con.execute(
         """
         CREATE OR REPLACE TABLE ex_via AS
@@ -321,12 +395,14 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
         f"""
         SELECT {select}, r.run_delays, r.run_plan_next, r.run_plan_dwell, r.run_plan_left, v.via,
                p.prev_arr_delays, p.prev_gaps, {level_cols},
-               st.late AS st_late, st.n AS st_n, nw.late AS nw_late, nw.n AS nw_n
+               st.late AS st_late, st.n AS st_n, nw.late AS nw_late, nw.n AS nw_n,
+               sm.gains AS same_gains, sm.offsets AS same_offsets, co.gains AS corr_gains, co.arr_delays AS corr_arr
         FROM ex e
         LEFT JOIN ex_run r USING (example_id) LEFT JOIN ex_via v USING (example_id)
         {' '.join(f'JOIN ex_h_{lv} h_{lv} USING (example_id)' for lv in HISTORY_LEVELS)}
         JOIN ex_st st USING (example_id) JOIN ex_nw nw USING (example_id)
         LEFT JOIN ex_prev p USING (example_id)
+        LEFT JOIN ex_same sm USING (example_id) LEFT JOIN ex_corr co USING (example_id)
         ORDER BY example_id
         """
     ).to_arrow_table()
@@ -393,6 +469,28 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
     change3 = np.array([d[-1] - d[max(0, len(d) - 4)] if d else 0 for d in run_delays], dtype=np.float64)
     run_len = np.array([len(d) if d else 0 for d in run_delays], dtype=np.float64)
 
+    # Same train number on earlier days: one gain per day, oldest first, gaps forward-filled like the history.
+    days = cfg.same_train_days
+    same = np.full((rows, days), np.nan)
+    gains = table["same_gains"].combine_chunks()
+    lengths = gains.value_lengths().fill_null(0).to_numpy(zero_copy_only=False)
+    row_idx = np.repeat(np.arange(rows), lengths)
+    offsets = table["same_offsets"].combine_chunks().flatten().to_numpy(zero_copy_only=False).astype(np.int64)
+    same[row_idx, days - offsets] = gains.flatten().to_numpy(zero_copy_only=False).astype(np.float64)
+    same_days = np.isfinite(same).sum(axis=1)
+    with np.errstate(all="ignore"):
+        same_median = np.nanmedian(same, axis=1)
+        same_median_7 = np.nanmedian(same[:, -7:], axis=1)
+    same_median_7 = np.where(np.isnan(same_median_7), same_median, same_median_7)
+    same_filled = pd.DataFrame(same).ffill(axis=1).to_numpy()
+    same_filled = np.where(np.isnan(same_filled), np.nan_to_num(same_median)[:, None], same_filled)
+    # Other trains on the corridor that already arrived: the latest few, oldest arrival first.
+    corr = [list(d) if d else [] for d in table["corr_gains"].to_pylist()]
+    corr_arr = [list(d) if d else [] for d in table["corr_arr"].to_pylist()]
+    corr_n = np.array([len(d) for d in corr], dtype=np.float64)
+    corr_mean = np.array([float(np.mean(d)) if d else np.nan for d in corr], dtype=np.float64)
+    corr_last = np.array([float(d[-1]) if d else np.nan for d in corr], dtype=np.float64)
+
     t0 = pd.to_datetime(table["t0"].to_pandas())
     arr = pd.to_datetime(table["k_arr_pt"].to_pandas())
     pre = table["pre_departure"].to_numpy(zero_copy_only=False)
@@ -414,6 +512,16 @@ def assemble(con: duckdb.DuckDBPyConnection, cfg: Config) -> pa.Table:
         "prev_last": pa.array(prev_last),
         "prev_mean": pa.array(prev_mean),
         "prev_gap_last": pa.array(prev_gap_last),
+        "same_train_gains": pa.FixedSizeListArray.from_arrays(pa.array(same_filled.astype(np.float32).ravel()), days),
+        "same_train_days": pa.array(same_days.astype(np.float64)),
+        "same_train_gain_median": pa.array(same_median),
+        "same_train_gain_median_7": pa.array(same_median_7),
+        "same_train_expected": pa.array(np.clip(current + same_median, 0, None)),
+        "corridor_gains": pa.array([[float(x) for x in d] for d in corr], type=pa.list_(pa.float32())),
+        "corridor_arr_delays": pa.array([[float(x) for x in d] for d in corr_arr], type=pa.list_(pa.float32())),
+        "corridor_n": pa.array(corr_n),
+        "corridor_gain_mean": pa.array(corr_mean),
+        "corridor_gain_last": pa.array(corr_last),
         "via": table["via"],
         "hist_series": pa.FixedSizeListArray.from_arrays(pa.array(filled.astype(np.float32).ravel()), cfg.history_days),
         "station_series": pa.FixedSizeListArray.from_arrays(pa.array(np.nan_to_num(st_late).astype(np.float32).ravel()), cfg.series_hours),
