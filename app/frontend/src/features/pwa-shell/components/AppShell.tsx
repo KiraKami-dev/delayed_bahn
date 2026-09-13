@@ -1,6 +1,6 @@
 import { trainVisual } from '@/lib/train-service'
 import type { Leg } from '@/lib/contract'
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, CircleHelp, Clock3, Info, Loader2, Pause, Play, Route, ShieldCheck, Sparkles, TrainFront, Umbrella, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock3, Info, Loader2, Pause, Play, Route, ShieldCheck, Sparkles, TrainFront, Umbrella, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore, type Tab } from '@/lib/store'
 import { fmtDate, fmtTime } from '@/lib/geo'
@@ -30,21 +30,31 @@ function TextPages({ text }: { text: string }) {
   const index = Math.min(page, Math.max(0, pages.length - 1))
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
-// The model's first summary sentence without its detail clause, so it fits one line of the card.
-const oneLine = (summary: string) => (summary.split(/(?<=\.)\s+(?=[A-Z])/)[0] ?? summary).replace(/(;|, the latest|, against).*$/, '').replace(/\.?$/, '.')
+// The model's first summary sentence in one line: the same facts and numbers in fewer words.
+function compactTake(summary: string) {
+  const first = summary.split(/(?<=\.)\s+(?=[A-Z])/)[0] ?? summary
+  let m: RegExpMatchArray | null
+  if ((m = first.match(/^The train left (.+?) (-?\d+) minutes late/))) return `Left ${m[1]} ${m[2]} min late`
+  if ((m = first.match(/^Today the previous \d+ trains? .*?reached .+? ((?:-?\d+, )*-?\d+) minutes late/))) return `Earlier trains today: ${m[1]} min late`
+  if (first.startsWith('No earlier train')) return 'No earlier train of this type in 6 hours'
+  if ((m = first.match(/^At .+?, (\d+%) of stops ran at least 6 minutes late in the last 3 hours/))) return `${m[1]} of stops here ran late in the last 3 hours`
+  return first.replace(/(;|, the latest|, against).*$/, '').replace(/\.$/, '')
+}
 function TrainTake({ index }: { index: number }) {
   // The model's own take on this train in one line, woven into its card once written (about 15 s).
   const e = useStore().explanations[index]
   if (!e || e.status === 'error') return null
   if (e.status === 'loading') return <span className="mt-2 block" aria-live="polite"><span className="sr-only">The model is reading this train.</span><span className="block h-1.5 w-10/12 animate-pulse rounded-full bg-[#e3e8da]" /></span>
-  const line = oneLine(e.summary)
-  return <span className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite" title={line}><Sparkles size={12} className="shrink-0 text-[#7c9070]" /><span className="truncate">{line}</span></span>
+  return <span className="mt-2 flex items-center gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="shrink-0 text-[#7c9070]" /><span>{compactTake(e.summary)}</span></span>
 }
 function ModelReasoning({ index }: { index: number }) {
-  // The full rationale the model wrote, at the bottom of the panel, taking the space that is left.
+  // The full rationale the model wrote: a dropdown at the bottom of the panel that opens downwards.
   const e = useStore().explanations[index]
   if (e?.status !== 'done') return null
-  return <section className="flex-1 border-t border-[#e6eadf] pt-2.5 animate-in fade-in duration-700"><span className="travel-kicker">IN THE MODEL’S OWN WORDS</span><p className="travel-copy mt-1.5 text-[#55624d]">{e.text}</p><p className="travel-fine mt-1.5">Written freely by the model, so it can misstate numbers; the estimate above reads the exact inputs.</p></section>
+  return <details className="group flex-1 border-t border-[#e6eadf] pt-2.5 animate-in fade-in duration-700">
+    <summary className="flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden"><span className="travel-kicker">IN THE MODEL’S OWN WORDS</span><ChevronDown size={12} className="text-[#687f5d] transition-transform group-open:rotate-180" /></summary>
+    <p className="travel-copy mt-1.5 text-[#55624d]">{e.text}</p><p className="travel-fine mt-1.5">Written freely by the model, so it can misstate numbers; the estimate above reads the exact inputs.</p>
+  </details>
 }
 function JourneyPanel() {
   const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)
