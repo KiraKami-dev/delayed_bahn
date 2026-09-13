@@ -7,24 +7,24 @@ Times are Zurich.
 
 ## Result in one table
 
-The submission model (stacked text on the v7 examples, 6,000 steps, `trip/README.md` "Final model")
+The submission model (stacked text on the v7 examples, 12,000 steps, `trip/README.md` "Final model")
 against the strongest baseline, XGBoost trained on exactly the same features, and against carrying
 the current delay forward. CRPS scores the whole forecast distribution; the other columns read
 the predicted median. Differences are paired bootstraps, 95% intervals.
 
 | | Persistence | XGBoost (same features) | TSLM | TSLM minus XGBoost |
 |---|---|---|---|---|
-| Test, June to August (28,290 trains): CRPS | | 2.63 | 2.56 | -0.074 (-0.097 to -0.055), real |
-| same: average miss | 3.75 min | 3.30 min | 3.22 min | -0.072 min, real |
-| same: within 1 minute | 61% | 59% | 67% | |
-| September, out of time (9,573 trains): CRPS | | 2.06 | 2.00 | -0.062 (-0.102 to -0.036), real |
-| same: average miss | 3.06 min | 2.60 min | 2.52 min | -0.076 min, real |
+| Test, June to August (88,479 trains): CRPS | | 2.616 | 2.537 | -0.079 (-0.090 to -0.069), real |
+| same: average miss | 3.75 min | 3.28 min | 3.19 min | -0.087 min, real |
+| same: within 1 minute | 62% | 59% | 67% | |
+| September, out of time (9,573 trains): CRPS | | 2.063 | 1.992 | -0.071 (-0.116 to -0.042), real |
+| same: average miss | 3.06 min | 2.60 min | 2.52 min | -0.084 min, real |
 | same: within 1 minute | 65% | 62% | 70% | |
 
-The model wins within 15 minutes of arrival (-0.104 CRPS on test, -0.095 on September) and beyond
-30 minutes (-0.060 on test), and its forecasts are trained and tuned on data before May only.
-What carries the win, and what does not (the time-series encoder, delay causes), is in section 6
-and `DESIGN.md` section 16.
+The model wins within 15 minutes of arrival (-0.097 CRPS on test, -0.104 on September) and beyond
+30 minutes (-0.071 on test), and it was trained and tuned on data before May only. What carries
+the win, and what does not (the time-series encoder, delay causes), is in section 6 and `DESIGN.md`
+section 16.
 
 ## 1. The task being scored
 
@@ -200,7 +200,8 @@ XGBoost retrained on those features on May:
 | Model | Median error | CRPS | vs XGBoost with the new series (CRPS) |
 |---|---|---|---|
 | TSLM, split (new series as series through the encoder; their summaries in the rationale), 2k | 2.543 | 2.023 | -0.040 (-0.080 to -0.015) real; median error -0.056 real; within 15 min -0.074 real |
-| **Submission: TSLM, stacked text, v7, 6k** | **2.524** | **2.001** | **-0.062 (-0.102 to -0.036) real; median error -0.076 real; within 15 min -0.095 real; May blend weights 1.0** |
+| **Submission: TSLM, stacked text, v7, 12k** | **2.515** | **1.992** | **-0.071 (-0.116 to -0.042) real; median error -0.084 real; within 15 min -0.104 real; May blend weights 1.0** |
+| TSLM, stacked text, v7, 6k | 2.524 | 2.001 | -0.062 (-0.102 to -0.036) real; median error -0.076 real; within 15 min -0.095 real |
 | TSLM, no series (summaries in the rationale only), v7, 2k | 2.540 | 2.022 | -0.041 (-0.080 to -0.016) real; within 15 min -0.070 real: the same as split and text, so out of time too the gain is the rationale |
 | TSLM, stacked text, v7, 2k | 2.542 | 2.019 | -0.044 (-0.085 to -0.019) real; median error -0.057 real; within 15 min -0.075 real |
 

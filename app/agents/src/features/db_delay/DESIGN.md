@@ -835,9 +835,9 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | TSLM, no series (summaries in the rationale only), v7, 2k | 3.442 / 2.769 | | |
 | TSLM, encoder only (all series as embeddings, summaries in the rationale), v7, 2k | 3.451 / 2.773 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
-| TSLM, stacked text, v7, 6k (submission model, 30,000 test examples) | 3.224 / 2.560 on its 30,000 | | 2.524 / 2.001 (10,000) |
+| TSLM, stacked text, v7, 6k (30,000 test examples) | 3.224 / 2.560 on its 30,000 | | 2.524 / 2.001 (10,000) |
 | TSLM, split, v7, 6k (30,000 test examples) | 3.234 / 2.570 on its 30,000 | | |
-| TSLM, stacked text, v7, 12k (final) | | 3.192 / 2.537 | *running* |
+| TSLM, stacked text, v7, 12k (submission model) | | 3.192 / 2.537 | 2.515 / 1.992 (10,000) |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
   XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
@@ -872,7 +872,13 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   validation 2.562 / 2.054. Against XGBoost-v7 (3.278 / 2.616) on the 88,479 that ran: CRPS -0.079
   (-0.090 to -0.069), median error -0.087, within 15 minutes -0.097, beyond 30 minutes -0.071, all
   real; the blend weight fitted on validation is 1.0. Against the 6,000-step model on their shared
-  28,290 examples -0.018 (-0.024 to -0.011), real. September test running.
+  28,290 examples -0.018 (-0.024 to -0.011), real.
+- **The submission model (09:40).** On September the 12,000-step model scores 2.515 / 1.992: CRPS
+  -0.071 (-0.116 to -0.042), median error -0.084, within 15 minutes -0.104, all real against
+  XGBoost-v7 alone, with the May blend weights at 1.0 everywhere; against the 6,000-step model
+  -0.009 (-0.024 to +0.002), no clear difference. Better on the full test and at least as good out
+  of time, so it replaces the 6,000-step model: `models/db-trip-delay-final.pt` is now the 12k
+  checkpoint (same bytes as `models/db-trip-delay-v7-text-12k.pt`).
 - **Split at 6,000 steps stays a hundredth behind (07:50).** 3.234 / 2.570 on the same 30,000:
   against XGBoost-v7 -0.063 (-0.086 to -0.045), real; against the text candidate +0.010 (+0.007 to
   +0.014), real. The same gap as at 2,000 steps.
@@ -889,11 +895,10 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   because it largely repeats the forecast written into the prompt, and none of its 16 generated
   answers follows the answer format. Training adds the calibrated distribution and the answers.
 
-### Open at the time of writing (08:10)
+### Open at the time of writing (09:45)
 
-- The September test of stacked text on v7 at 12,000 steps (full test done, 09:00).
-  It replaces the 6,000-step submission model only if it is clearly better on both.
-- Every other run of the night is finished and recorded above; `trip/RUNS.md` lists them all.
+- The September test of the 6,000-step split model, for the text against encoder comparison out of
+  time. Every other run is finished and recorded above; `trip/RUNS.md` lists them all.
 
 ### Still open
 
