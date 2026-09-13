@@ -775,6 +775,23 @@ summary numbers.
 - **The encoder is the compact route:** the four series cost about 480 prompt tokens as numbers
   and 45 soft tokens through the encoder.
 
+### Delay causes from the raw feeds (05:40)
+
+The team's cause extraction (`db_route`: IRIS cause codes and planned-works notices from the raw
+DB XML) rerun over November to August and joined as one sentence in the stacked prompt
+(`trip/cause_text.py`, `examples_v6`). Leakage rule: cause codes only from stops already passed
+before `t0` (earlier stops of this run, other trains at the target station in the last 3 hours),
+never the target stop; notices only if issued before `t0` and valid at the planned arrival.
+Coverage 82% of examples.
+
+| Model | Median error | CRPS | vs stacked text (CRPS, 95% interval) |
+|---|---|---|---|
+| Stacked text, 2k | 3.573 | 2.860 | |
+| same plus the cause sentence, 2k | 3.583 | 2.863 | +0.002 (-0.006 to +0.013), no difference |
+
+- **Causes add nothing measurable.** The codes are archived after the fact, so only codes of
+  stops already passed are usable, and those mostly restate the delay the run already shows.
+
 ### Fifth wave: series the text did not have (05:20)
 
 A probe of what XGBoost still gets wrong pointed at two histories no input carried
