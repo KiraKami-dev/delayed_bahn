@@ -3,22 +3,21 @@
   "checkpoint_id": "01M2CRKQFXQY4TYGR70PY23CCJ",
   "session_id": "cd860853-789b-4793-89dd-f90596af0281",
   "strategy": "manual-commit",
-  "created_at": "2026-09-13T06:52:25.912803Z",
+  "created_at": "2026-09-13T06:52:26.785228Z",
   "branch": "main",
   "checkpoints_count": 1,
+  "save_step_count": 1,
   "files_touched": [],
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
   "turn_id": "b392b6e48ae4",
-  "checkpoint_transcript_start": 434,
-  "transcript_lines_at_start": 434,
-  "compact_transcript_start": 66,
+  "compact_transcript_start": 0,
   "token_usage": {
-    "input_tokens": 12,
-    "cache_creation_tokens": 97531,
-    "cache_read_tokens": 696713,
-    "output_tokens": 1318,
-    "api_call_count": 6
+    "input_tokens": 120,
+    "cache_creation_tokens": 259983,
+    "cache_read_tokens": 5996726,
+    "output_tokens": 33243,
+    "api_call_count": 60
   },
   "skill_events_version": 1,
   "skill_events": [
@@ -56,51 +55,5 @@
   ],
   "session_metrics": {
     "turn_count": 7
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 579,
-      "user_lines_removed": 226,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "app/backend/README.md": 21,
-        "app/backend/src/features/journey-search/README.md": 18,
-        "app/backend/src/features/journey-search/journey-search.test.js": 114,
-        "app/backend/src/features/journey-search/routes/journey-search.js": 210,
-        "app/backend/src/features/training-jobs/README.md": 10,
-        "app/backend/src/features/training-jobs/cli.js": 1,
-        "app/backend/src/features/training-jobs/nebius/spec.js": 8,
-        "app/backend/src/features/training-jobs/training-jobs.test.js": 5,
-        "app/backend/src/server.js": 2,
-        "app/frontend/index.html": 1,
-        "app/frontend/src/features/evidence/components/EvidencePanel.tsx": 5,
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 10,
-        "app/frontend/src/features/pwa-shell/components/StatusPills.tsx": 83,
-        "app/frontend/src/features/recommendation/components/AdvicePanel.tsx": 3,
-        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 19,
-        "app/frontend/src/lib/journey-search.ts": 49,
-        "app/frontend/src/single-screen.css": 18,
-        "app/frontend/vite.config.ts": 2
-      },
-      "user_removed_per_file": {
-        "app/backend/README.md": 2,
-        "app/backend/src/features/training-jobs/README.md": 1,
-        "app/backend/src/features/training-jobs/cli.js": 1,
-        "app/backend/src/features/training-jobs/nebius/spec.js": 4,
-        "app/frontend/index.html": 1,
-        "app/frontend/src/features/evidence/components/EvidencePanel.tsx": 5,
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 6,
-        "app/frontend/src/features/pwa-shell/components/StatusPills.tsx": 25,
-        "app/frontend/src/features/recommendation/components/AdvicePanel.tsx": 3,
-        "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx": 87,
-        "app/frontend/src/features/share-parser/components/StartPanel.tsx": 31,
-        "app/frontend/src/lib/journey-search.ts": 8,
-        "app/frontend/src/single-screen.css": 3,
-        "app/frontend/traveler.smoke.mjs": 47,
-        "app/frontend/vite.config.ts": 2
-      }
-    }
-  ]
+  }
 }
