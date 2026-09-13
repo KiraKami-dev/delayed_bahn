@@ -833,6 +833,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
 | TSLM, no series (summaries in the rationale only), v7, 2k | 3.442 / 2.769 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
+| TSLM, stacked text, v7, 6k (candidate, 30,000 test examples) | 3.224 / 2.560 on its 30,000 | | *queued* |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
@@ -851,6 +852,11 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   -0.023), real. On the new data, as on the old, the win over the tabular model comes from the
   language model reading the facts in the rationale; the series add at most a hundredth, as text,
   and nothing through the encoder.
+- **Six thousand steps on v7 (07:35): the lead candidate.** Stacked text, scored on 30,000 test
+  examples: 3.224 / 2.560, validation 2.572 / 2.066 (best of all runs). Against XGBoost-v7 on the
+  28,290 that ran: CRPS -0.074 (-0.097 to -0.055), median error -0.072, within 15 minutes -0.104,
+  beyond 30 minutes -0.060, all real; against the 2,000-step v7 text model -0.019 (-0.037 to
+  -0.002), real. Checkpoint in the bucket as `models/db-trip-delay-v7-text-6k.pt`.
 - **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
