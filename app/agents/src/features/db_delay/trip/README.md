@@ -97,6 +97,34 @@ range on the sampled trips, distributions within bf16 noise), loads in a few sec
 a two-leg journey in about two seconds. For an unstacked checkpoint such as final-v2-text, pass
 `DROP_XGB=1` at setup so its prompt has no XGBoost sentence.
 
+### Live DB data
+
+With the statistical forecast refitted once (`live_xgb.py`, same features and settings as
+`baselines.py`; it reproduces the September `xgb_*` columns with correlation 0.999), `serve.py
+--xgb` answers legs that have no recorded trip from the DB Timetables API (`live.py`, reusing the
+client and plan/change merge of `scripts/db_live_extract.py`). The row follows `build.py` at
+t0 = now:
+
+| Input | Source |
+|---|---|
+| Run delays (origin and the 4 stops before boarding), previous trains at the target (6 h), corridor trains (3 h), the target's last 3 hours | Live: `plan` per station hour, `fchg` per station |
+| 90-day history at the target, same train number's earlier days | Latest stored rows (September scrape) |
+| Older station hours, nationwide hours | Stored, filled by hour of day |
+| `xgb_*` | Refitted XGBoost-v7 on the assembled row |
+
+A cold leg costs 15 to 40 calls (station lookups and plan hours cached for the process, change
+feeds for a minute), so one key at 60 calls per minute serves about two new legs per minute. The
+nationwide and multi-day inputs need a collector over all ~5,300 stations (about 3 keys at the
+archive's cadence) or the public archive to become fully live.
+
+```bash
+trip/run_local.sh setup <dir> <checkpoint.pt> september_v7_test.parquet examples_v7.parquet
+ENV_FILE=<repo root>/.env trip/run_local.sh start <dir>
+```
+
+Checked: a real two-leg journey planned for the next half hour through `POST /api/predict` on the
+team backend, answered in 9 seconds with 22 API calls per leg and no fallback.
+
 ## Demo: a traveller's connection
 
 `predict.py` turns a trained checkpoint into the traveller view for recorded trips. With two

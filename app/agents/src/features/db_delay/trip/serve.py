@@ -114,9 +114,10 @@ class Forecaster:
     """Recorded trips, their saved forecasts, and an optional live model."""
 
     def __init__(self, frame: pd.DataFrame, predictions: list[Path] | None = None, model=None,
-                 mode: str = "both", scaling: str = "z", model_id: str = "db-trip-delay"):
+                 mode: str = "both", scaling: str = "z", model_id: str = "db-trip-delay", live=None):
         self.frame = frame.reset_index(drop=True)
         self.model, self.mode, self.scaling, self.model_id = model, mode, scaling, model_id
+        self.live = live  # live.Live: examples built from the Timetables API for legs without a record
         arrivals = pd.to_datetime(self.frame["k_arr_pt"])
         self.by_minute: dict[pd.Timestamp, list[int]] = {}
         for i, ts in enumerate(arrivals.dt.floor("min")):
@@ -173,11 +174,36 @@ class Forecaster:
             probs = arrays["probs"][j].astype(np.float64) if "probs" in arrays else probs_from_quantiles(arrays["quantiles"][j])
             return probs / probs.sum(), float(arrays["p_cancel"][j]), "saved forecast"
         if self.model is not None:
-            from train import collate  # noqa: PLC0415  (torch stays optional for the precomputed mode)
-
-            out = self.model.predict_distribution(collate([prompts.sample(row, mode=self.mode, scaling=self.scaling)]))
-            return out["probs"][0].float().cpu().numpy().astype(np.float64), float(out["p_cancel"][0]), "live model"
+            probs, p_cancel = self.model_forecast(row)
+            return probs, p_cancel, "live model"
         raise LookupError("no saved forecast and no model")
+
+    def model_forecast(self, row: pd.Series) -> tuple[np.ndarray, float]:
+        """The loaded model's minute distribution and P(cancelled) for one example row."""
+        from train import collate  # noqa: PLC0415  (torch stays optional for the precomputed mode)
+
+        out = self.model.predict_distribution(collate([prompts.sample(row, mode=self.mode, scaling=self.scaling)]))
+        return out["probs"][0].float().cpu().numpy().astype(np.float64), float(out["p_cancel"][0])
+
+    def live_forecast(self, leg: dict) -> dict:
+        """The leg forecast from an example built live from the Timetables API."""
+        row, sources = self.live.example(leg)
+        probs, p_cancel = self.model_forecast(row)
+        q = metrics.quantiles_from_distribution(probs[None])[0]
+        lead = float(row["lead_minutes"])
+        return {
+            "trainId": leg.get("trainId"),
+            "arrival": {"probs": rounded(probs), "pCancel": round(p_cancel, 4)},
+            "reasoning": prompts.rationale(row),
+            "sources": [f"{self.model_id} (live data)"] + sources,
+            "confidence": "high" if lead <= 30 else "medium",
+            "leadMinutes": lead,
+            "forecastAt": str(row["t0"]),
+            "matched": {"train": prompts.train_label(row), "station": prompts.name(row["k_station"]),
+                        "plannedArrival": str(row["k_arr_pt"])},
+            "quantiles": {"p10": int(q[metrics.LOW]), "p50": int(q[metrics.MEDIAN]), "p90": int(q[metrics.HIGH])},
+            "pOnTime": round(float(probs[:metrics.LATE_MINUTES].sum()) * (1 - p_cancel), 4),
+        }
 
     def leg_forecast(self, leg: dict, now: pd.Timestamp | None) -> dict:
         """The contract's leg forecast, from a recorded trip or the class prior."""
@@ -211,6 +237,13 @@ class Forecaster:
                     out["actual"] = {"cancelled": bool(row["cancelled"]),
                                      "delayMinutes": None if bool(row["cancelled"]) else int(row["target_minutes"])}
                 return out
+        live_failure = ""
+        if self.live is not None and self.model is not None:
+            try:
+                return self.live_forecast(leg)
+            except (LookupError, RuntimeError, OSError, ValueError, KeyError) as error:
+                live_failure = f" Live data could not be used: {error}."
+                print(f"live example failed for {leg.get('trainId')}: {error!r}", flush=True)
         prefix = re.match(r"[A-Za-z]+", str(leg.get("trainId") or ""))
         kind = prefix.group(0).upper() if prefix else ""
         probs, p_cancel = self.priors.get(kind) or self.priors.get(train_class(leg.get("trainId")), (None, None))
@@ -221,7 +254,8 @@ class Forecaster:
             "arrival": {"probs": rounded(probs), "pCancel": round(float(p_cancel), 4)},
             "reasoning": (f"No recorded trip matches {leg.get('trainId')} arriving at "
                           f"{(leg.get('to') or {}).get('name') or 'the target station'} at the planned time, so this is "
-                          f"the average of recorded {kind or train_class(leg.get('trainId'))} arrivals, not a forecast."),
+                          f"the average of recorded {kind or train_class(leg.get('trainId'))} arrivals, not a forecast."
+                          f"{live_failure}"),
             "sources": ["class average of the recorded trips (no matching record)"],
             "confidence": "low",
         }
@@ -264,7 +298,9 @@ def make_handler(forecaster: Forecaster):
 
         def do_GET(self) -> None:  # noqa: N802
             self._reply(200, {"ok": True, "modelId": forecaster.model_id, "examples": len(forecaster.frame),
-                              "savedForecasts": len(forecaster.saved), "live": forecaster.model is not None})
+                              "savedForecasts": len(forecaster.saved), "live": forecaster.model is not None,
+                              "liveData": forecaster.live is not None,
+                              "apiCalls": forecaster.live.feeds.client.calls if forecaster.live is not None else 0})
 
         def do_POST(self) -> None:  # noqa: N802
             try:
@@ -294,16 +330,24 @@ def main() -> None:
     parser.add_argument("--model-id", default="OpenTSLM db-trip-delay")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8501)
+    parser.add_argument("--xgb", help="saved statistical forecast (live_xgb.py): enables live examples from the Timetables API")
+    parser.add_argument("--env", help=".env with DB_CLIENT_ID and DB_API_KEY (default: the repo root's)")
+    parser.add_argument("--calls-per-minute", type=int, default=55)
     args = parser.parse_args()
 
     frame = pd.read_parquet(args.examples)
     if args.split:
         frame = frame[frame["split"] == args.split]
     model = load_model(args.checkpoint, args.start_checkpoint, args.device) if args.checkpoint else None
+    live_builder = None
+    if args.xgb:
+        import live  # noqa: PLC0415  (xgboost and the API client only when live examples are wanted)
+
+        live_builder = live.create(args.examples, args.xgb, args.env, args.calls_per_minute)
     forecaster = Forecaster(frame, [Path(p) for p in args.predictions], model, args.prompt_mode, args.series_scaling,
-                            args.model_id)
-    print(f"{len(forecaster.frame)} recorded trips, {len(forecaster.saved)} saved forecasts, live model: {model is not None}",
-          flush=True)
+                            args.model_id, live_builder)
+    print(f"{len(forecaster.frame)} recorded trips, {len(forecaster.saved)} saved forecasts, live model: {model is not None}, "
+          f"live data: {live_builder is not None}", flush=True)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(forecaster))
     print(f"serving on http://{args.host}:{args.port}", flush=True)
     server.serve_forever()
