@@ -823,7 +823,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 |---|---|---|---|
 | XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
-| TSLM, stacked text, v7, 2k | *running* | | |
+| TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
@@ -836,6 +836,10 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   XGBoost-v7 on the shared test: CRPS -0.052 (-0.095 to -0.020) and median error -0.058, real;
   within 15 minutes -0.086 and beyond 30 minutes -0.038, both real; against the stacked text
   model on v4 -0.089 (-0.130 to -0.050). Validation 2.605 / 2.102, the best of all runs.
+- **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
+  steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
+  beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
+  but small; the encoder route costs a hundredth of a CRPS point for a shorter prompt.
 
 ### Pending at the time of writing
 
