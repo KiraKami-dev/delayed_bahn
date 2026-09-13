@@ -1,0 +1,219 @@
+switch to db_train_model branch
+
+---
+
+get both the remote branches which are mentioned here and look at their entire logs, entire dot i o. And so here, it... all the logic and whatever the output of these models trained on the data are living. So look at both of them. Just give me the accuracy of both the models from both the branches and so that I can compare them side by side. The... both of their accuracies and, yeah, also give me what they... like, the conclusion of both of them and how can I improve the model accuracy 
+further.db-train-model 
+feat/db-route-multiscale
+
+---
+
+which one is better and accurate
+
+---
+
+- not yet trained on 12k steps
+
+---
+
+And can you look at both the data on which you are trained on? And why does the why does the multiscale one, uh, even with the more, uh, yeah, clean data or whatever the data which is, uh, retrieved using agent tech data retrieval one compared to, uh, the DB compared to the DB train model, which just has access to a hugging phase normal model. why does the first one does not over perform the second one by a significant margin? What does the problem there? Look at both of the datasets. At least, yeah, a small quantity. And, yeah, give me conclusion.
+
+---
+
+<task-notification>
+<task-id>aaaeff0178c094265</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/5fa1c294-6fcf-4181-8e05-bf5e499c7467/tasks/aaaeff0178c094265.output</output-file>
+<status>completed</status>
+<summary>Agent "Fact sheet: db_delay trip dataset" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>All files below live **only on `origin/db-train-model`** (paths given as repo-absolute; read with `git show origin/db-train-model:&lt;path&gt;`). Root: `/Users/akshatkhair/Documents/Projects/temporal_ai_error404.ai/app/agents/src/features/db_delay/`.
+
+## 1. Raw data source
+
+| Item | Value | Evidence |
+|---|---|---|
+| Dataset | Hugging Face `piebro/deutsche-bahn-data`, CC BY 4.0, monthly *processed* parquet (~600 MB/month) | `DESIGN.md:184-187`; URL in `trip/timenet_connector/connector.py:26`, `extract.py:13` |
+| Months | 2025-11 … 2026-08 (10 files), default list `trip/build.py:587-589`; same default in `connector.py:27` | |
+| Why that window | Scrape jumps ~107 → ~5,200 stations in Oct 2025; earlier months are a different dataset | `DESIGN.md:185-187`, `HANDOFF.md:56-67` |
+| Stations/regions | All German stations, buses excluded (`WHERE train_type IS DISTINCT FROM 'Bus'`, `trip/build.py:84`); no top-N restriction | `DESIGN.md:188-192` |
+| Retrieval | Purely scripted, no agent/LLM: `urllib.request.urlretrieve` per month (`connector.py:44-51`), DuckDB `read_parquet` (`build.py:83`); September forward set re-scraped with upstream's own MIT release script | `DESIGN.md:434-443` |
+| Cause shards (v6) | IRIS cause codes + planned-works notices from the raw DB XML via the team's `db_route/remote_extract.py` | `trip/cause_text.py:3-12` |
+| Scale | 142,183,754 stops loaded → 298,430 examples, ~70 s build | `DESIGN.md:344` |
+
+## 2. What one training example is
+
+One (run, target stop, prediction moment t0) triple (`trip/build.py:1-10`, `EVALUATION.md:10-15`).
+
+- **Entity:** one train run on one day = `id` minus trailing stop number (`build.py:67`).
+- **t0:** the change-time of a randomly chosen already-departed stop *j* before the target (`build.py:132-141, 161-167`); with probability 200/1000 the example is *pre-departure*, t0 placed 0–120 min before the first planned departure (`build.py:42-43, 157, 164`). 23% pre-departure (`DESIGN.md:350-352`).
+- **Target stop k:** one random stop with a planned arrival per run (`build.py:120-130`).
+- **Target:** arrival delay in whole minutes, `round((arrival_change_time − arrival_planned_time)/60)`, clipped 0…999, or `cancelled` from the cancel flags (`build.py:78, 557-558`; `DESIGN.md:334-341` — `delay_in_min` is the *departure* delay, so it is **not** the label).
+- **Answer format:** a single integer minute token, or the literal `cancelled` (`trip/prompts.py:13, 165-167, 262-263`); Llama 3.2 tokenises 0–999 as one token (`DESIGN.md:875-878`).
+- **Horizon/lead:** minutes from t0 to planned arrival (`build.py:546`); buckets ≤15, 15–30, 30–60, 60–120, &gt;120 (`EVALUATION.md:51-52`); 4.4% of examples have negative lead (train already past planned arrival) (`DESIGN.md:363-364`).
+
+## 3. Inputs
+
+Four base series (`prompts.py:205-213`): run departure delays so far; 30-day daily median arrival delay at k; 72 hourly late-share at the station; 72 hourly late-share for the class nationwide — each z-normalised with mean/std stated (`prompts.py:48-67`). Scalars = the XGBoost feature list (§7). Prompt template `prompts.py:200-204`, rationale `prompts.py:86-162`, which is written **from inputs only and never names the target** (`prompts.py:3-6`, `DESIGN.md:368-376`). Modes: `series|text|both|none|split` (`prompts.py:175`).
+
+| Variant | Adds | Evidence |
+|---|---|---|
+| base `examples.parquet` | 4 series + timetable scalars | `DESIGN.md:379-382` |
+| v2 | arrival delays of up to 5 previous trains of same type/destination at k within 6 h, arrived before t0 (77% coverage); 720-hour series build | `EVALUATION.md:33-36`, `build.py:277-292`, `DESIGN.md:608-613`, `RUNS.md:39-40` |
+| v3 | same combined data, 72-hour series (plus multi-scale history: 7-day/long-window medians, same-hour shares) | `DESIGN.md:660`, `build.py:426-439, 538-539`, `RUNS.md:41` |
+| v4 | stacked XGBoost forecast as one rationale sentence (`xgb_median/q10/q90/p_late/p_cancel`), out-of-fold (5 folds) on train | `trip/stack.py:1-9, 30-37`, `prompts.py:146-151`, `DESIGN.md:668-672` |
+| v5 | planned-trajectory encoder channels (run time, dwell, minutes left) — no gain | `build.py:264-275`, `prompts.py:214-218`, `DESIGN.md:716-717` |
+| v6 | delay-cause sentence (82% coverage) — no gain | `cause_text.py`, `DESIGN.md:792-807` |
+| v7 | same-train 28-day gains (start→target, 98%) + corridor: last 8 trains that left start ≤3 h ago and already arrived (82%); as series and as XGBoost scalars | `build.py:44-46, 184-248`, `prompts.py:224-236`, `DESIGN.md:809-822` |
+
+## 4. Sizes
+
+| Split | Period (t0) | Examples |
+|---|---|---|
+| Train | 15 Nov 2025 – 30 Apr 2026 | 174,070 |
+| Validation | 2–31 May 2026 | 30,622 |
+| Test | 2 Jun – 31 Aug 2026 | 93,738 |
+| **Total** | | **298,430** |
+
+`DESIGN.md:344-349`, config dates `build.py:47-49`. Per-class quotas 112k long-distance / 128k regional / 80k S-Bahn (`build.py:36-38`), i.e. 48%/1.9%/2.3% of runs sampled (`DESIGN.md:350-352`). September forward set: 21,982 examples from 1 Sep, 10,000 scored (`EVALUATION.md:29-32`); the combined-feature September build has 32,553 test examples (`DESIGN.md:704-707`). Eval subsets: 3,000 val / 30,000 test, plus a shared 5,000-test subset for short runs (`DESIGN.md:400-402`, `EVALUATION.md:26-28`). Finals: **12,000 steps at batch 8 ≈ 96k examples ≈ a little over half an epoch** (`DESIGN.md:396-399`); one final ran 24,000 steps (`DESIGN.md:729`). Prompts: 370 median / 493 max text tokens + 72 series tokens (`DESIGN.md:417-420`); by mode 365 / 844 / 961 + 45 soft (`DESIGN.md:762-772, 789-791`).
+
+## 5. Leakage safeguards and caveats
+
+- Every input strictly before t0 (`build.py:3-6`); corridor/same-train require `arr_ct &lt; t0` (`build.py:206, 211, 237, 243`); previous trains `arr_ct &lt;= t0` (`build.py:288`); history uses days `1..30` back only (`build.py:332`); hourly series offsets start at 1 (`build.py:361`).
+- Gap day dropped before val and before test (`build.py:169-171`) — asserted in `trip/test_build.py:87-92`; history-only-earlier-days `test_build.py:94-101`; run stops at last departed stop `test_build.py:103-113`; same-train gains from earlier days `test_build.py:124-135`; corridor counts only arrivals before t0 `test_build.py:137-153`; fixed series lengths `test_build.py:155-159`.
+- Stacking is out-of-fold on train (`stack.py:3-6`); causes only from already-passed stops, notices only if issued ≤ t0 (`cause_text.py:5-12`).
+- Caveats: upstream fills missing change time with planned time → `--label-cutoff` needed for partial months (`build.py:50-52, 176-178`, `DESIGN.md:439-442`); cancelled stops still carry a delay value so cancellation comes from flags (`DESIGN.md:341`); 61 target stations and 136 via-lists have no name → "an unnamed station" (`prompts.py:26-28`, `DESIGN.md:417`); 0.1–0.3% of examples have no history key with ≥10 obs (`DESIGN.md:359-361`); 29 Mar 2026 DST gap appears as one empty hour (`build.py:8-9`); rationale never states the answer, otherwise the read-out distribution collapses (`DESIGN.md:368-376`).
+
+## 6. Concrete sample
+
+Prompt template (`trip/prompts.py:200-204, 262-263`):
+
+&gt; "You predict how late a German train will arrive, for a traveller. Train {label} from {origin} to {dest}. It has just left {j_station}. Target stop: {stop} via …, planned arrival {Wed} {HH:MM}." … "How many minutes late will the train arrive at {stop}? Reason from the data, then answer with whole minutes or cancelled.\nRationale:"
+
+A real rendered rationale (`trip/demo/goettingen_connection.json`, ICE 78 → Göttingen, 12 Sep 2026):
+
+&gt; "The train left Kassel-Wilhelmshöhe 4 minutes late; Göttingen is 1 stops ahead, planned to arrive in 14 minutes. Over the last stops the delay has grown, from 1 to 4 minutes; the most so far was 4. In the last 30 days trains on this route reached Göttingen with a median delay of 0 minutes (90th percentile 4) and 0% cancelled. At Göttingen, 12% of stops ran at least 6 minutes late in the last 3 hours, against 32% over 3 days. Nationwide, 20% of long-distance stops were late in the last 3 hours, against 53% over 3 days."
+
+with `"actual": "2"`. `trip/inspect_examples.py:41-48` prints exactly such a sample for the first non-pre-departure long-distance test row.
+
+## 7. XGBoost baseline features
+
+`trip/baselines.py:20-31, 89-95`: **numeric** `current_delay, max_delay_so_far, delay_change_3, run_len, lead_minutes, stops_ahead, arr_hour, arr_weekday, hist_n, hist_cancel_share, hist_median, hist_p90, hist_mean, hist_days, station_late_3h/24h/72h, station_stops_24h, network_late_3h/24h/72h`; **optional (newer builds)** `prev_n, prev_last, prev_mean, prev_gap_last, hist_median_long, hist_p90_long, hist_median_7, station_late_same_hour, network_late_same_hour, same_train_days, same_train_gain_median, same_train_gain_median_7, same_train_expected, corridor_n, corridor_gain_mean, corridor_gain_last`; **categorical** `cls, train_type, hist_level` plus `pre_departure`. Three models: 19-quantile `reg:quantileerror`, a P(late ≥ 6 min) classifier, a cancellation classifier (`baselines.py:98-125`; hist tree method, lr 0.05, depth 8, `min_child_weight` 20, subsample/colsample 0.8, early stopping 50).</result>
+<usage><subagent_tokens>111715</subagent_tokens><tool_uses>27</tool_uses><duration_ms>142435</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a73c9ef07021ffee2</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-akshatkhair-Documents-Projects-temporal-ai-error404-ai/5fa1c294-6fcf-4181-8e05-bf5e499c7467/tasks/a73c9ef07021ffee2.output</output-file>
+<status>completed</status>
+<summary>Agent "Fact sheet: db_route dataset" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I have everything needed. Here is the fact sheet.
+
+---
+
+# db_route dataset fact sheet
+
+## 1. Raw source, coverage, retrieval
+
+| item | value | evidence |
+|---|---|---|
+| Feed | `piebro/deutsche-bahn-data` on HuggingFace (archive of the DB Timetables/IRIS API), CC-BY-4.0 | `sources.py:16-22` |
+| Paths | `monthly_processed_data/data-YYYY-MM.parquet` (delays), `raw_data/year=/month=/day=/*.parquet` (IRIS XML → cause codes, HIM notices) | `sources.py:18-19,46-69`; `causes.py:1-12` |
+| Months used (all-Germany run) | `2025-11` … `2026-08` (`DB_ROUTE_MONTHS` default) | `remote_build.py:45` |
+| Why that start | archive covers only ~100 busiest stations from 2024-07; **all** stations only from 2025-11-02, so anchors start after the expansion | `sources.py:24-29`; `pipeline.py:70`; `profiles.py:157-169` |
+| Stations | RESULTS run = **all Germany**: every station observed after 2025-11-02 (~5,300) via `evas=[]`, fingerprint `"all"` | `remote_build.py:1-5,119-138` |
+| Six regions | a *smaller* alternative catchment (`munich, berlin, hamburg, cologne, frankfurt, stuttgart`, seed name-match + one hop along local operators only). Laptop/connector default is `munich` alone | `facts.py:117-149,152-176`; `pipeline.py:183` |
+| Extra sources | OpenHolidays per-Bundesland public/school holidays (6 Länder), `db-stations` hub (EVA → Bundesland, category 1-7, footfall weight, 5,388 stations) | `pipeline.py:80-97` |
+| Retrieval mechanism | **scripts only, no agent/LLM.** DuckDB + httpfs range-reads over HTTPS; `convert()` is explicitly CPU-only, no network, no LLM | `sources.py:1-7,80-96`; `connector.py:37-38,274`; `pipeline.py:10-18` |
+
+## 2. One training example
+
+- **Entity** = a *stop event*: `(service_group, station)` where `service_group = train_type || ' -&gt; ' || final_destination_station` (line_number is blank for 100% of ICE/IC/EC/RJ/NJ/TGV) — `entities.py:1-12`; `sources.py:39-43`. Not a train number, not an itinerary (`entities.py:4-8`).
+- **Prediction moment** = an *anchor*, a travel date. Context = `[anchor − context_days + 1, anchor]`; horizon = the **7 days after** the anchor (`anchors.py:1-9`; `profiles.py:249-254`).
+- **Target** = `departure_delay_min` = `avg(delay_in_min)` over every stop event of that pair in the 7-day horizon (`labels.py:_horizon_rows`, `labels.py:698`). `delay_in_min` is verified to be the *departure* delay (99.998% of rows with a departure) — `labels.py:33-46`.
+- **Answer format**: `rationale + " Answer: " + target`; scalar rounded to 0.1 min; in the RESULTS build no rationale skeleton is passed, so the body is empty (`bridge.py:162-166,374-384`; `connector.py:215-228,272`).
+- Four tasks per record (`connector.py:204-253`): `ScalarPredictionTask` delay · `ClassificationTask` late≥5 min · `ClassificationTask` dominant IRIS cause family · `AnswerTask` traveller sentence, chained `from_tasks=(cause,)`.
+
+## 3. Inputs per profile
+
+| profile | dataset id | layers (bucket × span) | series | encoder tokens (patches) |
+|---|---|---|---|---|
+| S `week` | `error404/db-route-week` | 1 h × 7 d (168 steps) | 7 | 7×42 = **294** |
+| M `quarter` | `…-quarter` | 6 h × 60 d (240) | 10 | 10×60 = **600** |
+| L `season` | `…-season` | 1 d × 120 d (120) | 10 | 10×30 = **300** |
+| XM `multiscale` | `…-multiscale` | 1h×7d + 6h×60d + 1d×120d | 19, 3 axes | 294+360+180 = **834** (≈2.8×) |
+
+`profiles.py:131-245`, `TimelineProfile.n_patches:207-209`, `connectors/README.md` table. Signals: `service_delay, station_delay, station_cancel_rate, service_at_station_delay, station_throughput, service_throughput, works_share` + cause shares `weather/technical/knock_on/attributed` (`profiles.py:36-54`). `service_at_station_delay` is **omitted at hourly** (~93% empty) (`profiles.py:126-130`).
+
+Scalars (span-less annotations): entity/service/station/train_type, anchor_iso, weekday, `habit_median_delay_8w`, `scheduled_recovery_min`, `route_position`, `run_delay_last/trend`, imputed_{fraction,station,line,pair}, attributed_share, works_window_coverage, split, split_cell, recency_weight, federal_state, station_category, station_weight, horizon holiday features, artifact_bundle_sha (`build.py:137-172`). Interval annotations: up to 8 `planned_disruption` notices with true validity windows (`connector.py:173-201`; `pipeline.py:75`).
+Captions: one per (layer, signal), `"{phrase}, {window}, it has mean X and std Y:"` — the **only** carrier of absolute scale since series are z-scored (`build.py:208-233`; `bridge.py:152-160`).
+
+## 4. Sizes, splits, epochs
+
+- ~**16k samples** per profile, identical across profiles (`RESULTS.md:30`) = records × 4 tasks ⇒ ~4k records; `DB_ROUTE_ENTITIES=3000`, 5 anchors/entity (`remote_build.py:46`; `anchors.py:76`).
+- Split cells (`split_mode="both"`, 2×2): `train`, `val`, `test_seen_entity` (seen trains, later dates), `test_seen_time` (unseen trains, seen dates), `test` (both held out = headline) — `anchors.py:346-374`. Date quantiles 0.70/0.15/0.15 of anchors (`anchors.py:94`), entity holdout 0.30 by `stable_digest` rank (`anchors.py:111,361-363`).
+- Scalar rows scored per cell (`--eval-limit 600`): val 470/427/469/471, test_seen_entity 600, test 501/462/501/506, test_seen_time 600 (`RESULTS.md:10-25`; `train_route.py:259`).
+- Epochs: 2000 steps × batch 8 = 16,000 sample-visits. Train split is ~70%×0.70 of ~16k ≈ 8k rows ⇒ roughly **2 epochs**; the loop reshuffles when the cursor overruns (`train_route.py:251-252,320-326`).
+
+## 5. Leakage safeguards &amp; caveats
+
+- Context/horizon separation enforced by naming (`ctx_` prefix) + `assert_no_horizon_leak` + a behavioural test that mutates the horizon (`labels.py:11-19,185-200`).
+- Purge of `HORIZON_DAYS` at split boundaries; **known gap**: context overlap is *not* purged — a test sample's 120-day lookback sees days that were training labels (`anchors.py:96-102`).
+- `artifact_bundle_sha` over entities/anchors/labels proves the four profiles are the same experiment (`build.py:247-258`; `pipeline.py:328-345`).
+- Label options for classification come from the **train split only** (`train_route.py:101-108`; `test_bridge.py:182`). `LEAKY = {attributed_share, artifact_bundle_sha, split, split_cell, recency_weight}` excluded from baseline features (`train_route.py:41`).
+- Anchors stride = horizon (7 d) so no two records share a label observation (`profiles.py:253-254`); recency reweighting, 90-d half-life, 4:1 cap (`profiles.py:255-257`; `anchors.py:89`).
+- Resampling/imputation: rates linearly interpolated, counts zero-filled; gates `station/line ≤ 0.10`, `pair ≤ 0.45`, overall ≤ 0.50, judged against a service-bucket denominator (`resample.py:72-80,683-763`). Series lengths pinned, divisible by 4 — OpenTSLM pads with zeros and carries **no padding mask** (`profiles.py:23-26`; `bridge.py:28-33`).
+- Cancellations: `arrival_is_canceled OR departure_is_canceled` become a `cancelled` flag feeding `station_cancel_rate` and `ctx_cancel_rate`; they are **not** removed from the delay average (`labels.py:363-364,610`; `facts.py:480-481`).
+- Attribution: only 30.1% of stops carry a cause code; rationale may name a cause only above `ATTRIBUTION_FLOOR=0.35` and `DOMINANCE_FLOOR=0.40`, else `unattributed` (`causes.py:6-12,150-153`).
+- Service day offset by 3 h (100% clean stop sequences vs 99.5% on calendar date) (`sources.py:31-37`).
+
+## 6. Concrete sample + classification tasks
+
+Assembled sample = exactly five keys (`bridge.py:19-20`; `test_bridge.py:43-50`). Shape, from `pre_prompt_for`/`post_prompt_for` (`bridge.py:412-465`) and the fixture (`tests/bridge_fixtures.py:124`):
+
+```
+pre_prompt:
+  "This is the S8 calling at Muenchen Ost on 2026-06-01.
+
+   How many minutes late will S8 -&gt; München Ost depart München Ost over the coming week?
+
+   Instructions:
+   - Begin by analysing the series without assuming an answer.
+   - Reason step by step about level, trend, and the alignment between series.
+   - Write your rationale as a single natural paragraph, ...
+   - Cite magnitudes in their original units, reconstructed from the captions.
+   - Do not state the answer until the final sentence."
+time_series_text[i]:
+  "Mean delay of S8 -&gt; München Ost at München Ost, hourly over the past week,
+   it has mean 4.1200 and std 2.3100:"
+post_prompt:
+  "Possible answers are: late, on_time.
+
+   Please now write your rationale. Make sure that your last word is the answer.
+   You MUST end your response with \"Answer: \""
+answer: "... Answer: on_time"     # test_bridge.py:120, :179
+```
+
+**Classification tasks** (two): (a) punctuality — `late` / `on_time`, defined as `mean horizon delay ≥ 5 min`, i.e. the scalar thresholded, never independent (`labels.py:22-32`; `labels.py:703`); (b) dominant cause family from the vocabulary `{works, weather, technical, knock_on, staff, external, unattributed}` (`causes.py:120-134`; `build.py:286-296`). Scored as generated-answer accuracy on 64 rows vs majority class (`train_route.py:260,378-398`; `RESULTS.md:6`).
+
+## 7. Baseline features (GBM)
+
+`baselines()` — `train_route.py:211-240`. Model: **XGBoost** (`reg:absoluteerror`, 400 trees, depth 6, lr 0.05, subsample/colsample 0.8) plus three `reg:quantileerror` models at 0.1/0.5/0.9 for coverage. (RESULTS.md:5 calls it sklearn hist-GBM; the shipped code is XGBoost.) Features = **every numeric annotation on the record** minus `LEAKY`, NaN-filled into a fixed layout, **plus** the per-series pre-normalisation `mean` and `std` regex-parsed from each caption (`cap0…cap2N-1`) — i.e. the level of each series (`train_route.py:90-96,110-136`). Second baseline: persistence = `habit_median_delay_8w` (`train_route.py:215-222`); third = train-median.</result>
+<usage><subagent_tokens>117739</subagent_tokens><tool_uses>37</tool_uses><duration_ms>160962</duration_ms></usage>
+</task-notification>
+
+---
+
+so which one is accurate to use
+
+---
+
+/Users/akshatkhair/Downloads/brief.pdf this is our challenge
+
+---
+
+Do you predict the same thing? Now the two branches. The two branches.
