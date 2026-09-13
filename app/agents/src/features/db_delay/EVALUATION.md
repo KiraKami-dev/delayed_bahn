@@ -162,6 +162,40 @@ never saw September, it beats XGBoost.
 On the combined-feature set the same holds for the model without the statistical forecast;
 only the stacked model beats XGBoost alone out of time, so stacking is what carries it.
 
+### 5.5 The same results in minutes
+
+CRPS scores the whole distribution; these figures read the predicted median only
+(`trip/plain_metrics.py`, cancelled trains left out). "Within 1 minute" means the forecast was
+off by at most one minute. The range column should be near 80%.
+
+Full test, 88,479 trains:
+
+| Model | Average miss | Within 1 min | Within 2 min | Within 5 min | Bias | Truth inside 10 to 90% range |
+|---|---|---|---|---|---|---|
+| Persistence (delay carried forward) | 3.75 min | 62% | 72% | 86% | -2.17 | 84% |
+| XGBoost, combined features | 3.41 min | 57% | 71% | 85% | -1.76 | 82% |
+| XGBoost, plus same-train and corridor series | 3.28 min | 59% | 72% | 86% | -1.70 | 82% |
+| TSLM, text final, 12k | 3.32 min | 65% | 75% | 87% | -1.80 | 90% |
+| TSLM, stacked text final, 12k | 3.33 min | 65% | 74% | 86% | -1.57 | 89% |
+
+Within 15 minutes of the planned arrival (36,556 trains): persistence 84% within one minute,
+XGBoost 78% and 81%, both TSLM finals 86%.
+
+The 5,000 shared test trains, by class (share within one minute / average miss):
+
+| Model | S-Bahn | Regional | Long-distance |
+|---|---|---|---|
+| XGBoost, plus new series | 77% / 0.93 min | 72% / 1.58 min | 29% / 7.73 min |
+| TSLM, text on the new series, 2k | 85% / 0.90 min | 79% / 1.56 min | 34% / 7.61 min |
+
+- **The language model is right to the minute more often:** 65% against 57 to 59% over the full
+  test, in every class and every lead-time bucket.
+- **The average miss hides a heavy tail.** All models predict slightly too early on average and the
+  spread of the error is 10 to 13 minutes for every one of them, driven by a few very long delays
+  none of them foresees; the share within 1, 2 and 5 minutes is the honest summary.
+- **The TSLM's range is a little too wide** (88 to 90% of true delays inside the 10 to 90% range,
+  against 82% for XGBoost): cautious rather than overconfident.
+
 ## 6. What the ablations established
 
 Each experiment changes one ingredient against a named partner on the shared 5,000 examples;
