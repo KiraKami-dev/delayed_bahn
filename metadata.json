@@ -3,8 +3,9 @@
   "checkpoint_id": "01M2CJJPA6QGZWBZW6YCQYJ3Z2",
   "strategy": "manual-commit",
   "branch": "feat/db-route-multiscale",
-  "checkpoints_count": 12,
+  "checkpoints_count": 13,
   "files_touched": [
+    ".gitignore",
     "app/frontend/src/lib/api.ts",
     "app/frontend/src/lib/store.tsx"
   ],
@@ -22,14 +23,21 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1022,
-    "cache_creation_tokens": 118724,
-    "cache_read_tokens": 3516605,
-    "output_tokens": 24386,
-    "api_call_count": 43,
+    "input_tokens": 1088,
+    "cache_creation_tokens": 170400,
+    "cache_read_tokens": 3723754,
+    "output_tokens": 26042,
+    "api_call_count": 46,
     "subagent_tokens": {
       "input_tokens": 68,
       "cache_creation_tokens": 219312,
