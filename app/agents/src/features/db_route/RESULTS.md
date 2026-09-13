@@ -3,28 +3,31 @@
 2,000 steps, batch 8, `plain_crps`, seed 0, one H100 per profile (`train_route.py`, jobs `route-2k-*-v3`, 13 Sep 2026 02:50–03:58 UTC).
 Median error / CRPS in minutes on the departure-delay task, 600 scored rows per cell (all rows where a cell is smaller).
 GBM = scikit-learn histogram gradient boosting on the same information (per-series mean/std/last/max + scalar annotations), quantile heads for CRPS.
+Persistence = the context mean of the entity's own delay series (this service at this station where the profile carries it, else this service group), a point forecast. Route history = the empirical quantiles of that same series.
 Blend = one weight on the TSLM quantiles fitted on `val` by CRPS. Classification = generated-answer accuracy on 64 rows (late/on-time and cause family together) vs the majority class.
 
-| profile | cell | n | TSLM | GBM | blend (w) | train-median | classif. / majority |
-|---|---|---:|---|---|---|---:|---|
-| week | val | 470 | 2.24 / 1.76 | 2.09 / 1.62 | 2.06 / 1.62 (0.15) | 2.85 | 0.67 / 0.33 |
-| week | test_seen_entity | 600 | 1.90 / 1.46 | 1.77 / 1.36 | 1.76 / 1.36 (0.15) | 2.64 | 0.66 / 0.38 |
-| week | test | 501 | 2.51 / 1.91 | 2.36 / 1.87 | 2.37 / 1.86 (0.15) | 3.08 | 0.73 / 0.34 |
-| week | test_seen_time | 600 | 2.02 / 1.56 | 1.94 / 1.49 | 1.93 / 1.48 (0.15) | 2.77 | 0.69 / 0.44 |
-| quarter | val | 427 | 1.83 / 1.43 | 1.79 / 1.39 | 1.78 / 1.38 (0.30) | 2.69 | 0.75 / 0.39 |
-| quarter | test_seen_entity | 600 | 1.69 / 1.32 | 1.61 / 1.25 | 1.61 / 1.25 (0.30) | 2.56 | 0.72 / 0.30 |
-| quarter | test | 462 | 1.82 / 1.37 | 1.82 / 1.37 | 1.79 / 1.35 (0.30) | 2.60 | 0.73 / 0.38 |
-| quarter | test_seen_time | 600 | 1.54 / 1.19 | 1.46 / 1.11 | 1.45 / 1.11 (0.30) | 2.59 | 0.73 / 0.28 |
-| season | val | 469 | 1.91 / 1.49 | 1.84 / 1.42 | 1.83 / 1.41 (0.20) | 2.82 | 0.75 / 0.38 |
-| season | test_seen_entity | 600 | 1.91 / 1.46 | 1.85 / 1.42 | 1.84 / 1.41 (0.20) | 3.00 | 0.78 / 0.38 |
-| season | test | 501 | 1.98 / 1.50 | 1.90 / 1.48 | 1.89 / 1.46 (0.20) | 2.78 | 0.70 / 0.45 |
-| season | test_seen_time | 600 | 1.72 / 1.30 | 1.61 / 1.23 | 1.62 / 1.22 (0.20) | 2.80 | 0.64 / 0.38 |
-| multiscale | val | 471 | 2.27 / 1.74 | 2.02 / 1.57 | 2.03 / 1.57 (0.00) | 2.85 | 0.77 / 0.30 |
-| multiscale | test_seen_entity | 600 | 2.19 / 1.64 | 2.00 / 1.55 | 2.00 / 1.55 (0.00) | 2.92 | 0.70 / 0.30 |
-| multiscale | test | 506 | 2.43 / 1.87 | 2.36 / 1.83 | 2.33 / 1.83 (0.00) | 3.07 | 0.62 / 0.41 |
-| multiscale | test_seen_time | 600 | 1.90 / 1.46 | 1.73 / 1.36 | 1.73 / 1.36 (0.00) | 2.70 | 0.64 / 0.38 |
+| profile | cell | n | TSLM | GBM | persistence | route history | blend (w) | train-median | classif. / majority |
+|---|---|---:|---|---|---:|---|---|---:|---|
+| week | val | 470 | 2.24 / 1.76 | 2.09 / 1.62 | 2.38 | 2.78 / 2.06 | 2.06 / 1.62 (0.15) | 2.85 | 0.67 / 0.33 |
+| week | test_seen_entity | 600 | 1.90 / 1.46 | 1.77 / 1.36 | 2.02 | 2.53 / 1.80 | 1.76 / 1.36 (0.15) | 2.64 | 0.66 / 0.38 |
+| week | test | 501 | 2.51 / 1.91 | 2.36 / 1.87 | 2.52 | 3.07 / 2.22 | 2.37 / 1.86 (0.15) | 3.08 | 0.73 / 0.34 |
+| week | test_seen_time | 600 | 2.02 / 1.56 | 1.94 / 1.49 | 2.15 | 2.74 / 1.97 | 1.93 / 1.48 (0.15) | 2.77 | 0.69 / 0.44 |
+| quarter | val | 427 | 1.83 / 1.43 | 1.79 / 1.39 | 1.80 | 2.17 / 1.63 | 1.78 / 1.38 (0.30) | 2.69 | 0.75 / 0.39 |
+| quarter | test_seen_entity | 600 | 1.69 / 1.32 | 1.61 / 1.25 | 1.71 | 2.02 / 1.53 | 1.61 / 1.25 (0.30) | 2.56 | 0.72 / 0.30 |
+| quarter | test | 462 | 1.82 / 1.37 | 1.82 / 1.37 | 1.84 | 2.10 / 1.56 | 1.79 / 1.35 (0.30) | 2.60 | 0.73 / 0.38 |
+| quarter | test_seen_time | 600 | 1.54 / 1.19 | 1.46 / 1.11 | 1.58 | 2.14 / 1.53 | 1.45 / 1.11 (0.30) | 2.59 | 0.73 / 0.28 |
+| season | val | 469 | 1.91 / 1.49 | 1.84 / 1.42 | 1.90 | 2.12 / 1.58 | 1.83 / 1.41 (0.20) | 2.82 | 0.75 / 0.38 |
+| season | test_seen_entity | 600 | 1.91 / 1.46 | 1.85 / 1.42 | 1.90 | 2.00 / 1.49 | 1.84 / 1.41 (0.20) | 3.00 | 0.78 / 0.38 |
+| season | test | 501 | 1.98 / 1.50 | 1.90 / 1.48 | 2.02 | 2.05 / 1.55 | 1.89 / 1.46 (0.20) | 2.78 | 0.70 / 0.45 |
+| season | test_seen_time | 600 | 1.72 / 1.30 | 1.61 / 1.23 | 1.73 | 1.90 / 1.43 | 1.62 / 1.22 (0.20) | 2.80 | 0.64 / 0.38 |
+| multiscale | val | 471 | 2.27 / 1.74 | 2.02 / 1.57 | 2.37 | 2.79 / 2.06 | 2.03 / 1.57 (0.00) | 2.85 | 0.77 / 0.30 |
+| multiscale | test_seen_entity | 600 | 2.19 / 1.64 | 2.00 / 1.55 | 2.22 | 2.81 / 1.98 | 2.00 / 1.55 (0.00) | 2.92 | 0.70 / 0.30 |
+| multiscale | test | 506 | 2.43 / 1.87 | 2.36 / 1.83 | 2.51 | 3.06 / 2.21 | 2.33 / 1.83 (0.00) | 3.07 | 0.62 / 0.41 |
+| multiscale | test_seen_time | 600 | 1.90 / 1.46 | 1.73 / 1.36 | 2.27 | 2.75 / 2.00 | 1.73 / 1.36 (0.00) | 2.70 | 0.64 / 0.38 |
 
 ## Reading
+
+- **At 2k steps nobody is far from persistence.** On unseen trains the TSLM beats the entity's own context mean by 0.00–0.08 min and the GBM by 0.04–0.16; the distributional route-history baseline is clearly worse (its quantiles are too wide). The 12k grid is the test of whether training longer opens a real gap; the seed runs give its noise floor.
 
 - **Quarter (6 h × 60 d) wins every cell.** Lowest error on both held-out cells and the smallest seen→unseen gap (0.13 min); week (7 d hourly) memorises — 0.6 min worse on unseen trains than on seen ones.
 - **Multiscale does not add.** The plan's additivity question (does long history help *on top of* the week?) gets a no at this budget: second-worst on every cell. Caveat: it carries 2.8× the encoder tokens of the others and saw the identical 16k samples, so a fixed step budget under-trains the largest input.

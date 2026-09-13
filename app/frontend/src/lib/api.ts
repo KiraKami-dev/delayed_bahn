@@ -1,4 +1,4 @@
-import type { Causes, Journey, Leg, Prediction, Recommendation, Reroute } from "./contract"
+import type { Causes, Generations, Journey, Leg, Prediction, Recommendation, Reroute } from "./contract"
 
 /** The model's own rationale for one leg, generated freely after the forecast. */
 export type Explanation = { trainId: string; text: string; summary: string; answer: string | null; generatedBy: string; seconds: number }
@@ -79,6 +79,7 @@ export const api = {
     request<Recommendation>("/api/recommend", post({ journey, prediction, doorToStationMin, acceptableRisk }), FORECAST_TIMEOUT_MS),
   reroute: (journey: Journey, missedLegIndex: number) =>
     request<Reroute>("/api/reroute", post({ journey, missedLegIndex }), FORECAST_TIMEOUT_MS),
+  generations: () => request<Generations>("/api/predict/generations"),
   causes: (evaNumber: string, name?: string) =>
     request<Causes>(`/api/causes?eva=${encodeURIComponent(evaNumber)}${name ? `&station=${encodeURIComponent(name)}` : ""}`),
 }

@@ -87,6 +87,7 @@ export function createPredictionService({ env = process.env, backend, fetchImpl 
           distribution: binned(f.arrival),
           quantiles: { p10, p50, p90 },
           pCancel: f.arrival.pCancel ?? 0,
+          ...(f.generation?.model ? { modelText: f.generation.model, generation: f.generation } : {}),
         };
       });
 
@@ -137,5 +138,17 @@ export function registerRoutes(router, ctx = {}) {
   const svc = ctx.service || createPredictionService(ctx);
   router.post('/api/predict', ({ body }) => svc.predict(body));
   router.post('/api/explain', ({ body }) => explainLeg(body, { env: ctx.env }));
+  // What the model actually generated for held-out rows (question, its answer, the truth),
+  // served by the route server next to its forecasts. Empty when the mock is in use.
+  const env = ctx.env || process.env;
+  const fetchImpl = ctx.fetchImpl || fetch;
+  router.get('/api/predict/generations', async () => {
+    if (!env.PREDICT_URL) return { modelId: svc.modelId || 'mock-prior-v1', count: 0, samples: [], note: 'No model server configured; the mock prior generates no text.' };
+    const url = new URL(env.PREDICT_URL);
+    url.pathname = url.pathname.replace(/\/predict\/?$/, '') + '/generations';
+    const res = await fetchImpl(url, { signal: AbortSignal.timeout(Number(env.PREDICT_TIMEOUT_MS || 8000)) });
+    if (!res.ok) throw fail(502, `model server replied ${res.status} for generations`);
+    return res.json();
+  });
   return svc;
 }

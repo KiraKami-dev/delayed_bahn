@@ -49,3 +49,5 @@ Read the current roster, harnesses, and backgrounds from `team.json`.
 Do not duplicate roster entries or infer event ownership from background.
 
 Akshat owns homepage wiring, frontend assets, frontend manifest/lockfile and frontend smoke checks for this redesign. Backend and generated shared types remain outside this delegation.
+
+Akshat explicitly extends this session’s delegation to the route-search backend endpoint, its tests, required timetable-client dependency manifests/lockfiles, and shared server/deployment wiring. Other backend features remain outside the delegation.

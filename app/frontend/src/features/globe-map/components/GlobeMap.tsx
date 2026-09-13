@@ -1,18 +1,18 @@
-import { LocateFixed, Minus, Plus, TrainFront } from "lucide-react"
+import { LocateFixed, Minus, Navigation, Plus, TrainFront } from "lucide-react"
 import * as maplibregl from "maplibre-gl"
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "@/lib/store"
 import { riskColour, riskMapColour } from "@/lib/geo"
-import { motionOff, useReducedMotion } from "@/lib/motion"
-import { createTrainLayer } from "../train-layer"
+import { DUR, motionOff, useReducedMotion } from "@/lib/motion"
+import { createTrainLayer, type TrainLayer } from "../train-layer"
 import { applyBasemapMode, createEarthBasemap, type BasemapMode } from "../basemap"
 import { resolveJourneyGeometry } from "@/lib/journey-search"
 import { validTrack } from "@/lib/track-path"
 import { reuseMappedServiceGeometry } from "@/lib/osm-route"
 import type { Journey } from "@/lib/contract"
 import { clearRoute, drawRoute, recolourRoute } from "../hooks/useRouteLayers"
-import { fitJourney, flyToLeg, flyToStation, goHome, HOME } from "../camera"
+import { fitJourney, flyToLeg, flyToStation, goHome, HOME, panelPadding } from "../camera"
 
 // Two keyless basemaps. Default: Esri dark grey raster (renders everywhere, cheap).
 // ?tiles=vector switches to OpenFreeMap's dark vector style (streets + labels).
@@ -56,8 +56,11 @@ export function GlobeMap() {
   const s = useStore()
   const still = useReducedMotion()
   const [resolved, setResolved] = useState<Journey | null>(null)
-  const [geometryLoading, setGeometryLoading] = useState(false)
-  const [geometryAttempt, setGeometryAttempt] = useState(0)
+  // Chase camera: on for a fresh journey, off as soon as the traveller moves the map themselves.
+  const [follow, setFollow] = useState(true)
+  const trainLayer = useRef<TrainLayer | null>(null)
+  const holdUntil = useRef(0)
+  const hold = (ms: number) => { holdUntil.current = Math.max(holdUntil.current, performance.now() + ms) }
 
   const [failed, setFailed] = useState<string | null>(null)
   const [tileError, setTileError] = useState(false)
@@ -127,20 +130,60 @@ export function GlobeMap() {
   useEffect(() => {
     const original = s.journey
     setResolved(null)
-    setGeometryLoading(false)
     if (!original || original.legs.every(l => validTrack(l.routeGeometry))) return
     const controller = new AbortController()
     let active = true
-    setGeometryLoading(true)
     const timeout = window.setTimeout(() => controller.abort(), 30000)
     void resolveJourneyGeometry(original, controller.signal).then(next => {
       if (active && !controller.signal.aborted) setResolved(next)
     }).catch(() => { /* Preserve the parsed journey and explicitly dashed fallback. */ }).finally(() => {
       window.clearTimeout(timeout)
-      if (active) setGeometryLoading(false)
     })
     return () => { active = false; controller.abort(); window.clearTimeout(timeout) }
-  }, [s.journey, geometryAttempt])
+  }, [s.journey])
+  const followActive = follow && !still && Boolean(journey) && s.overlay === "none" && (s.tab === "plan" || s.tab === "forecast" || s.tab === "advice")
+
+  // Any hands-on gesture ends the chase camera; the button brings it back.
+  useEffect(() => {
+    if (!map) return
+    const stop = (e: { originalEvent?: unknown }) => { if (e.originalEvent) setFollow(false) }
+    map.on("dragstart", stop); map.on("zoomstart", stop); map.on("rotatestart", stop); map.on("pitchstart", stop); map.on("wheel", stop)
+    return () => { map.off("dragstart", stop); map.off("zoomstart", stop); map.off("rotatestart", stop); map.off("pitchstart", stop); map.off("wheel", stop) }
+  }, [map])
+  useEffect(() => { setFollow(true); hold(DUR.fly + 900) }, [s.journey?.id])
+
+  // Chase camera: glide behind the active train, looking along the track.
+  useEffect(() => {
+    if (!map || !followActive) return
+    let frame = 0, last = performance.now(), bearing: number | undefined
+    const tick = (now: number) => {
+      frame = requestAnimationFrame(tick)
+      const dt = Math.min(100, now - last); last = now
+      if (now < holdUntil.current || map.isMoving() && now < holdUntil.current) return
+      const head = trainLayer.current?.head()
+      if (!head) return
+      const km = Math.max(1, head.trackLength / 1000)
+      const zoom = Math.min(13.4, Math.max(11.2, 14.2 - .55 * Math.log2(km)))
+      const targetBearing = head.heading * 180 / Math.PI
+      const centre = map.getCenter()
+      const far = Math.hypot(centre.lng - head.lon, centre.lat - head.lat) > .25 || Math.abs(map.getZoom() - zoom) > 2.5
+      if (far) {
+        bearing = targetBearing
+        map.easeTo({ center: [head.lon, head.lat], zoom, pitch: 58, bearing: targetBearing, padding: panelPadding(), duration: 1400, essential: true })
+        hold(1500)
+        return
+      }
+      const k = 1 - Math.exp(-dt / 320)
+      if (bearing == null) bearing = map.getBearing()
+      let delta = ((targetBearing - bearing + 540) % 360) - 180
+      bearing += delta * k
+      const lng = centre.lng + (head.lon - centre.lng) * k
+      const lat = centre.lat + (head.lat - centre.lat) * k
+      map.jumpTo({ center: [lng, lat], zoom: map.getZoom() + (zoom - map.getZoom()) * k, pitch: map.getPitch() + (58 - map.getPitch()) * k, bearing, padding: panelPadding() })
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [map, followActive])
   const prediction = s.prediction
   const legColours = prediction
     ? prediction.legs.map((l, i) => {
@@ -164,24 +207,25 @@ export function GlobeMap() {
     if (!map || !journey) return
     try {
       drawRoute(map, "main", journey, {
-        colours: undefined,
+        colours: legColours,
+        satellite: basemapMode === "earth",
         onStationClick: (i) => s.dispatch({ type: "selectLeg", index: i }),
       })
-      fitJourney(map, [journey])
+      if (!followActive) fitJourney(map, [journey])
       console.info("[route] drawn", journey.legs.length, "legs")
     } catch (e) {
       console.error("[route] draw failed", e)
     }
     return () => clearRoute(map, "main")
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, journey])
+  }, [map, journey, basemapMode])
 
   useEffect(() => {
     if (!map || !journey) return
     if (map.getLayer("journey-miniatures")) map.removeLayer("journey-miniatures")
-    try { map.addLayer(createTrainLayer(journey, prediction)) } catch (error) { console.warn("3D trains unavailable", error) }
+    try { const layer = createTrainLayer(journey, prediction); map.addLayer(layer); trainLayer.current = layer } catch (error) { console.warn("3D trains unavailable", error) }
     map.triggerRepaint()
-    return () => { if (map.getLayer("journey-miniatures")) map.removeLayer("journey-miniatures") }
+    return () => { trainLayer.current = null; if (map.getLayer("journey-miniatures")) map.removeLayer("journey-miniatures") }
   }, [map, journey, prediction, still])
 
   // Forecast arrived: recolour, then fly to the breaking transfer.
@@ -206,8 +250,8 @@ export function GlobeMap() {
       }
     })
     const t = window.setTimeout(() => {
-      if (worst >= 0 && worstP >= 0.3) flyToStation(map, journey.legs[worst].to, 10.5)
-      else fitJourney(map, [journey])
+      if (worst >= 0 && worstP >= 0.3) { flyToStation(map, journey.legs[worst].to, 10.5); hold(DUR.fly + 3500) }
+      else if (!followActive) fitJourney(map, [journey])
     }, motionOff() ? 0 : 400)
     return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -217,7 +261,7 @@ export function GlobeMap() {
   useEffect(() => {
     if (!map || !journey || s.selectedLeg == null) return
     const leg = journey.legs[s.selectedLeg]
-    if (leg) flyToLeg(map, leg)
+    if (leg) { setFollow(false); flyToLeg(map, leg) }
   }, [map, journey, s.selectedLeg])
 
   // Alternative / re-route overlays.
@@ -235,7 +279,7 @@ export function GlobeMap() {
         drawRoute(map, "alt", reroute, { dashed: true, labels: false, colours: reroute.legs.map(() => "#6ee7b7"), width: 5 })
         fitJourney(map, [reroute], { maxZoom: 11 })
       }
-    } else if (s.tab === "advice" || s.tab === "plan") {
+    } else if ((s.tab === "advice" || s.tab === "plan") && !followActive) {
       fitJourney(map, [journey])
     }
   }, [map, journey, s.overlay, s.recommendation?.alternative, s.reroute, s.rerouteChoice, s.tab])
@@ -257,27 +301,27 @@ export function GlobeMap() {
     if (!map) return
     const onResize = () => {
       map.resize()
-      if (journey && s.overlay === "none") fitJourney(map, [journey], { duration: 0 })
+      if (journey && s.overlay === "none" && !followActive) fitJourney(map, [journey], { duration: 0 })
       else if (!journey) goHome(map)
     }
     const observer = new ResizeObserver(onResize)
     observer.observe(map.getContainer())
     window.addEventListener("rail-layout", onResize)
     return () => { observer.disconnect(); window.removeEventListener("rail-layout", onResize) }
-  }, [map, journey, s.overlay])
+  }, [map, journey, s.overlay, followActive])
 
   if (failed) return <div className="map-placeholder"><p>The interactive map isn’t supported by this browser. Your train details and forecast are still available below and beside the map.</p></div>
   return <>
     <div ref={ref} className="map-root" data-basemap={basemapMode} aria-label="Interactive map of the journey" />
     {map && <div className="map-controls" aria-label="Map controls">
       {map.getLayer("earth-imagery") && <button type="button" aria-label={basemapMode === "earth" ? "Switch to map view" : "Switch to satellite Earth"} title={basemapMode === "earth" ? "Switch to map view" : "Switch to satellite Earth"} onClick={() => { setImageryUnavailable(false); setBasemapMode(basemapMode === "earth" ? "map" : "earth") }}>{basemapMode === "earth" ? "Map" : "Earth"}</button>}
-      <button type="button" aria-label="Zoom in" onClick={() => map.zoomIn({ duration: motionOff() ? 0 : 250 })}><Plus size={16} /></button>
-      <button type="button" aria-label="Zoom out" onClick={() => map.zoomOut({ duration: motionOff() ? 0 : 250 })}><Minus size={16} /></button>
-      <button type="button" aria-label="Fit whole journey" onClick={() => { if (!journey) goHome(map); else { s.dispatch({ type: "selectLeg", index: null }); fitJourney(map, [journey]) } }}><LocateFixed size={16} /></button>
-      <button type="button" aria-label="Show railway and station detail" title="Railway and station detail" onClick={() => { if (journey) flyToStation(map, journey.legs[s.selectedLeg ?? 0].to, 13); else map.easeTo({ zoom: Math.max(8, map.getZoom()), duration: motionOff() ? 0 : 1200 }) }}><TrainFront size={16} /></button>
-      <button type="button" aria-label={tilted ? "Switch to flat map" : "Switch to 3D map"} aria-pressed={tilted} onClick={() => map.easeTo({ pitch: tilted ? 0 : 50, bearing: tilted ? 0 : -15, duration: motionOff() ? 0 : 700 })}>{tilted ? "2D" : "3D"}</button>
+      {journey && !still && <button type="button" className="follow" aria-label={follow ? "Stop following the train" : "Follow the train"} title={follow ? "Stop following the train" : "Follow the train"} aria-pressed={follow} onClick={() => { setFollow(!follow); holdUntil.current = 0 }}><Navigation size={16} /></button>}
+      <button type="button" aria-label="Zoom in" onClick={() => { setFollow(false); map.zoomIn({ duration: motionOff() ? 0 : 250 }) }}><Plus size={16} /></button>
+      <button type="button" aria-label="Zoom out" onClick={() => { setFollow(false); map.zoomOut({ duration: motionOff() ? 0 : 250 }) }}><Minus size={16} /></button>
+      <button type="button" aria-label="Fit whole journey" onClick={() => { setFollow(false); if (!journey) goHome(map); else { s.dispatch({ type: "selectLeg", index: null }); fitJourney(map, [journey]) } }}><LocateFixed size={16} /></button>
+      <button type="button" aria-label="Show railway and station detail" title="Railway and station detail" onClick={() => { setFollow(false); if (journey) flyToStation(map, journey.legs[s.selectedLeg ?? 0].to, 13); else map.easeTo({ zoom: Math.max(8, map.getZoom()), duration: motionOff() ? 0 : 1200 }) }}><TrainFront size={16} /></button>
+      <button type="button" aria-label={tilted ? "Switch to flat map" : "Switch to 3D map"} aria-pressed={tilted} onClick={() => { setFollow(false); map.easeTo({ pitch: tilted ? 0 : 50, bearing: tilted ? 0 : -15, duration: motionOff() ? 0 : 700 }) }}>{tilted ? "2D" : "3D"}</button>
     </div>}
-    <div className="geometry-note" aria-live="polite">{journey ? geometryLoading ? "Loading service track routes…" : journey.legs.every(l => validTrack(l.routeGeometry)) ? journey.legs.some(l => l.routeGeometrySource === "osm") ? "Mapped service tracks · not live diversions" : "Timetable route · illustrative trains, not live" : "Some track geometry is unavailable; dashed links are schematic" : basemapMode === "earth" ? "Satellite imagery · not live weather" : "OpenStreetMap borders · zoom in for railway tracks"}{journey && !geometryLoading && journey.legs.some(l => !validTrack(l.routeGeometry)) && <button type="button" onClick={() => setGeometryAttempt(attempt => attempt + 1)} style={{ pointerEvents: "auto" }} className="ml-2 min-h-8 underline">Retry tracks</button>}<span>{journey?.legs.some(l => l.routeGeometrySource === "osm") ? "Track paths: © OpenStreetMap contributors (ODbL). They describe the mapped service, not today's diversions. " : "Blue-gray lines: mapped rail network. "}{journey ? "Slow illustrative replay · not live positions. Delay labels are model estimates; obstacle locations are illustrative and require a service notice." : "Photographic land and oceans, with mapped borders and railway detail."}</span></div>
     {(tileError || imageryUnavailable) && <div className="map-warning" role="status">{imageryUnavailable ? "Satellite imagery is unavailable. Showing the geographic map instead." : "Some map details are unavailable. Your trip summary is still available."}</div>}
   </>
 }

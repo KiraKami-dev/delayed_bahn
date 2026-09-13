@@ -1,0 +1,1075 @@
+[
+  {
+    "purpose": "propose_queries",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "5bab9a658d6f",
+    "usage": {
+      "prompt_tokens": 242,
+      "completion_tokens": 201,
+      "total_tokens": 443,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "huggingface": [
+        "German rail delays events 2025",
+        "Deutsche Bahn disruptions cause codes",
+        "German public holidays 2025 2026",
+        "German weather hourly data",
+        "German rail infrastructure updates",
+        "German station reference data"
+      ],
+      "govdata": [
+        "Ereignisse Deutsche Bahn 2025 2026",
+        "Störungen Bahn Ursache Codes",
+        "Wetterdaten stündlich Deutschland",
+        "Öffentliche Feiertage Bundesländer 2025 2026",
+        "Eisenbahninfrastruktur Bauarbeiten 2025",
+        "Bahnhof Referenzdaten Deutschland"
+      ],
+      "zenodo": [
+        "rail delays Germany 2025",
+        "disruption notices Deutsche Bahn",
+        "weather data Germany hourly",
+        "public holidays Germany 2025 2026",
+        "infrastructure projects rail Germany",
+        "station data Deutsche Bahn"
+      ]
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "b4a9a9907de6",
+    "usage": {
+      "prompt_tokens": 721,
+      "completion_tokens": 98,
+      "total_tokens": 819,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "primary series",
+      "covers_window": true,
+      "has_actual_times": true,
+      "has_cancellation": true,
+      "has_cause_codes": null,
+      "resolution": "parquet",
+      "confidence": 0.9,
+      "reasoning": "The dataset contains detailed per-stop events with delays and cancellations, covering the required time window and providing essential data for predicting rail delays."
+    }
+  },
+  {
+    "purpose": "map_schema",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "524559f03841",
+    "usage": {
+      "prompt_tokens": 264,
+      "completion_tokens": 113,
+      "total_tokens": 377,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "timestamp": "time",
+      "entity_id": "id",
+      "station": "station_name",
+      "value": "delay_in_min",
+      "cancellation_flag": "arrival_is_canceled",
+      "line_id": "line_number",
+      "sequence_index": "train_line_station_num",
+      "cause_code": null,
+      "planned_time": "departure_planned_time",
+      "changed_time": "departure_change_time",
+      "reasoning": "Mapped columns based on their relevance to the rail-delay pipeline schema."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "dbfc865720b6",
+    "usage": {
+      "prompt_tokens": 386,
+      "completion_tokens": 110,
+      "total_tokens": 496,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "primary series",
+      "covers_window": true,
+      "has_actual_times": true,
+      "has_cancellation": true,
+      "has_cause_codes": false,
+      "resolution": "high",
+      "confidence": 0.85,
+      "reasoning": "The Bahn-Vorhersage archive provides extensive event data from DB since 2021, covering the required time window and offering actual stop times and cancellation information, which are crucial for delay prediction."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "86b24b7bc4c5",
+    "usage": {
+      "prompt_tokens": 413,
+      "completion_tokens": 100,
+      "total_tokens": 513,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "annotations",
+      "covers_window": true,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "daily",
+      "confidence": 0.9,
+      "reasoning": "The OpenHolidays API provides public and school holiday data relevant to the temporal window, which can influence rail delays due to increased travel or service changes."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "703b27bd5d83",
+    "usage": {
+      "prompt_tokens": 478,
+      "completion_tokens": 107,
+      "total_tokens": 585,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "join hub",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "data source provides station reference information which can be useful for contextualizing delays.",
+      "confidence": 0.8,
+      "reasoning": "The station data can enhance understanding of delays by providing context about station facilities and locations, which may correlate with disruptions."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "5f0c462b899a",
+    "usage": {
+      "prompt_tokens": 478,
+      "completion_tokens": 101,
+      "total_tokens": 579,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": true,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "hourly",
+      "confidence": 0.9,
+      "reasoning": "Weather data is crucial for predicting rail delays, and the provided API covers the entire required window with hourly observations, making it a valuable context channel."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "d187e5e7cf2d",
+    "usage": {
+      "prompt_tokens": 403,
+      "completion_tokens": 106,
+      "total_tokens": 509,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": true,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "infrastructure data can help understand delays related to track conditions and operational capabilities.",
+      "confidence": 0.8,
+      "reasoning": "The infrastructure data provides essential context for analyzing delays, especially regarding track conditions and operational constraints during the specified period."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "640e7be31da0",
+    "usage": {
+      "prompt_tokens": 391,
+      "completion_tokens": 106,
+      "total_tokens": 497,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": true,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "100m",
+      "confidence": 0.8,
+      "reasoning": "The Zensus 2022 population grid provides demographic data that can help contextualize rail delays by understanding population density and catchment areas around stations, relevant for predicting delays."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "b7dbcdb0552d",
+    "usage": {
+      "prompt_tokens": 710,
+      "completion_tokens": 102,
+      "total_tokens": 812,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "primary series",
+      "covers_window": true,
+      "has_actual_times": true,
+      "has_cancellation": true,
+      "has_cause_codes": null,
+      "resolution": "high",
+      "confidence": 0.9,
+      "reasoning": "The dataset contains detailed per-stop events including delays and cancellations, which are crucial for predicting rail delays. It covers the entire specified window and provides actual times."
+    }
+  },
+  {
+    "purpose": "map_schema",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "665d8fe72f25",
+    "usage": {
+      "prompt_tokens": 264,
+      "completion_tokens": 121,
+      "total_tokens": 385,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "timestamp": "time",
+      "entity_id": "id",
+      "station": "station_name",
+      "value": "delay_in_min",
+      "cancellation_flag": "arrival_is_canceled",
+      "line_id": "line_number",
+      "sequence_index": "train_line_station_num",
+      "cause_code": null,
+      "planned_time": "arrival_planned_time",
+      "changed_time": "arrival_change_time",
+      "reasoning": "Mapped columns based on their relevance to the defined roles, ensuring each key aligns with the dataset's structure."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "67fe8eb2d88f",
+    "usage": {
+      "prompt_tokens": 367,
+      "completion_tokens": 102,
+      "total_tokens": 469,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "annotations",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "unknown",
+      "confidence": 0.7,
+      "reasoning": "The dataset appears to be related to Deutsche Bahn data, which may include relevant annotations for rail delays. However, specific details on temporal coverage and content are unclear."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "8fb68dab2898",
+    "usage": {
+      "prompt_tokens": 359,
+      "completion_tokens": 94,
+      "total_tokens": 453,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "annotations",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "unknown",
+      "confidence": 0.7,
+      "reasoning": "The dataset is related to Deutsche Bahn and may contain relevant annotations, but specific details about its coverage and content are unclear."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "fdbf9bfbd8cb",
+    "usage": {
+      "prompt_tokens": 477,
+      "completion_tokens": 102,
+      "total_tokens": 579,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "reference",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "unknown",
+      "confidence": 0.6,
+      "reasoning": "The dataset provides station reference data which can be useful for contextualizing rail delays, but it does not directly include temporal or event-specific data for the specified window."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "e9257ef5a5e4",
+    "usage": {
+      "prompt_tokens": 485,
+      "completion_tokens": 102,
+      "total_tokens": 587,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.7,
+      "reasoning": "The dataset provides reference information about the Deutsche Bahn network, which can help contextualize delays but does not directly include time-series data or specific delay causes."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "2a129676a73c",
+    "usage": {
+      "prompt_tokens": 416,
+      "completion_tokens": 95,
+      "total_tokens": 511,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "unknown",
+      "confidence": 0.7,
+      "reasoning": "The dataset provides infrastructure data which can be useful for understanding delays but lacks specific temporal coverage and details on disruptions or causes."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "87f0849beb4b",
+    "usage": {
+      "prompt_tokens": 364,
+      "completion_tokens": 102,
+      "total_tokens": 466,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "reference",
+      "confidence": 0.7,
+      "reasoning": "The VBB-Fahrplandaten provides timetable data which can be useful for understanding scheduled services and potential delays, but lacks specific disruption or cause code information."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "c50fe0761c1b",
+    "usage": {
+      "prompt_tokens": 385,
+      "completion_tokens": 106,
+      "total_tokens": 491,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": false,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset covers a time period from November 2017 to December 2018, which is outside the required window of November 2025 to August 2026."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "4cf03a87957f",
+    "usage": {
+      "prompt_tokens": 397,
+      "completion_tokens": 99,
+      "total_tokens": 496,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset pertains to regional bus schedules and does not provide relevant information for rail delays, cancellations, or causes related to Deutsche Bahn operations."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "13311658fab5",
+    "usage": {
+      "prompt_tokens": 484,
+      "completion_tokens": 97,
+      "total_tokens": 581,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.2,
+      "reasoning": "The dataset focuses on accessibility at stations and does not provide information on delays, disruptions, or causes relevant to rail delay prediction."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "e537ed1f835d",
+    "usage": {
+      "prompt_tokens": 447,
+      "completion_tokens": 101,
+      "total_tokens": 548,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset provides information on the length of the rail network but does not include time-series data, cause codes, or disruptions relevant to rail delays."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "b5665b99950e",
+    "usage": {
+      "prompt_tokens": 448,
+      "completion_tokens": 100,
+      "total_tokens": 548,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset provides information on the length of the rail network by federal state but does not include temporal data or operational disruptions relevant to rail delays."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "85f3f9f74b18",
+    "usage": {
+      "prompt_tokens": 406,
+      "completion_tokens": 96,
+      "total_tokens": 502,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "unknown",
+      "confidence": 0.6,
+      "reasoning": "The dataset provides information on planned rail projects which may affect delays, but lacks specific temporal coverage and details on disruptions or causes."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "983016bb196c",
+    "usage": {
+      "prompt_tokens": 448,
+      "completion_tokens": 105,
+      "total_tokens": 553,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset provides information on the length of the rail network but does not include temporal data or specific events related to delays, disruptions, or causes during the specified window."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "848fd4714ad5",
+    "usage": {
+      "prompt_tokens": 378,
+      "completion_tokens": 93,
+      "total_tokens": 471,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset focuses on parking information and does not provide relevant data for rail delays, causes, or disruptions."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "38953b4cecf6",
+    "usage": {
+      "prompt_tokens": 388,
+      "completion_tokens": 105,
+      "total_tokens": 493,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "unknown",
+      "confidence": 0.7,
+      "reasoning": "The OpenStation SIRI FM dataset provides real-time facility status, which may include disruptions and delays relevant to rail operations, potentially aiding in understanding delays during the specified window."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "98ce9ff5e29f",
+    "usage": {
+      "prompt_tokens": 382,
+      "completion_tokens": 102,
+      "total_tokens": 484,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "static reference data",
+      "confidence": 0.7,
+      "reasoning": "The dataset provides static station infrastructure information which can be useful for understanding delays related to station facilities, but does not directly address temporal events or disruptions."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "ed709f0e8bbe",
+    "usage": {
+      "prompt_tokens": 402,
+      "completion_tokens": 93,
+      "total_tokens": 495,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": true,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "daily",
+      "confidence": 0.8,
+      "reasoning": "Weather data can significantly impact rail delays, making it a valuable context channel for predicting disruptions during the specified window."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "851287397113",
+    "usage": {
+      "prompt_tokens": 402,
+      "completion_tokens": 97,
+      "total_tokens": 499,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "daily",
+      "confidence": 0.7,
+      "reasoning": "The dataset on extreme precipitation events can provide insights into weather-related disruptions affecting rail delays, which is relevant for the time-series model."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "d7720ea1459e",
+    "usage": {
+      "prompt_tokens": 425,
+      "completion_tokens": 93,
+      "total_tokens": 518,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": true,
+      "role": "context channels",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "daily",
+      "confidence": 0.7,
+      "reasoning": "Weather data can influence rail delays, making it relevant for predictions. However, the specific temporal coverage is unclear."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "2b874354f277",
+    "usage": {
+      "prompt_tokens": 459,
+      "completion_tokens": 92,
+      "total_tokens": 551,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset pertains to electric vehicle charging stations and does not provide relevant information for predicting German rail delays."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "c4254317e9ea",
+    "usage": {
+      "prompt_tokens": 454,
+      "completion_tokens": 111,
+      "total_tokens": 565,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0.1,
+      "reasoning": "The dataset pertains to train stations in Kiel starting from August 2024, which does not overlap with the required time window for rail delay prediction from November 2025 to August 2026."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "153062e13feb",
+    "usage": {
+      "prompt_tokens": 357,
+      "completion_tokens": 88,
+      "total_tokens": 445,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "not applicable",
+      "confidence": 0,
+      "reasoning": "The dataset pertains to a MATLAB code unrelated to German rail delays or any relevant transport data."
+    }
+  },
+  {
+    "purpose": "assess",
+    "model": "gpt-4o-mini",
+    "prompt_sha": "a54174af3066",
+    "usage": {
+      "prompt_tokens": 370,
+      "completion_tokens": 90,
+      "total_tokens": 460,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "answer": {
+      "relevant": false,
+      "role": "not useful",
+      "covers_window": null,
+      "has_actual_times": null,
+      "has_cancellation": null,
+      "has_cause_codes": null,
+      "resolution": "N/A",
+      "confidence": 0,
+      "reasoning": "The dataset is focused on earthquake nucleation and does not pertain to rail delays or related factors."
+    }
+  }
+]

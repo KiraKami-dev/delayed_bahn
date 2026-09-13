@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useReducer, useRef, type ReactNode } from "react"
-import { api, loadFixture } from "./api"
+import { api, loadFixture, type ApiError } from "./api"
 import type { Causes, Journey, Prediction, Recommendation, Reroute, Station } from "./contract"
 import { hydrateCoords } from "./stations"
 
@@ -107,6 +107,21 @@ type Actions = {
 const Ctx = createContext<(State & Actions) | null>(null)
 const validProbability = (p: number) => Number.isFinite(p) && p >= 0 && p <= 1
 
+/**
+ * Call the real service. The bundled sample answers only for the example trip
+ * and only when the service is unreachable (status 0: offline, timeout, HTML
+ * captive portal), never on a real error, so a live trip never shows sample data.
+ */
+async function withSeedFallback<T>(journey: Journey, call: () => Promise<T>, fixture: "prediction" | "recommendation" | "reroute" | "journey"): Promise<T> {
+  try {
+    return await call()
+  } catch (e) {
+    const status = (e as ApiError).status
+    if (journey.source !== "seed" || status !== 0) throw e
+    return loadFixture<T>(fixture)
+  }
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, rawDispatch] = useReducer(reducer, initial)
   const generation = useRef(0)
@@ -136,17 +151,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!journey?.legs?.length || !journey.legs.every(l => l.trainId && l.from?.name && l.to?.name && Number.isFinite(Date.parse(l.plannedDeparture)) && Date.parse(l.plannedArrival) > Date.parse(l.plannedDeparture))) throw new Error("The journey has incomplete train details. Please check its stations and times.")
     if (requestId !== generation.current) return
     const j = hydrateCoords(journey)
-    const demo = j.source === "seed"
     dispatch({ type: "journey", journey: j })
     dispatch({ type: "busy", busy: true })
     dispatch({ type: "stage", stage: "predicting" })
-    const prediction = demo ? await loadFixture<Prediction>("prediction") : await api.predict(j)
+    // Every journey, the example trip included, is forecast by the real service.
+    // Only when the service cannot be reached at all (offline PWA) does the
+    // example trip fall back to its bundled sample, which the UI labels as such.
+    const prediction = await withSeedFallback(j, () => api.predict(j), "prediction")
     if (requestId !== generation.current) return
     if (prediction.journeyId !== j.id || prediction.legs?.length !== j.legs.length || !validProbability(prediction.planFailProbability?.value) || !prediction.legs.every((l, i) => l.trainId === j.legs[i].trainId && Number.isFinite(l.expectedDelayMinutes?.value) && validProbability(l.missProbability?.value))) throw new Error("The forecast did not match your journey. Please try again.")
     dispatch({ type: "prediction", prediction })
     dispatch({ type: "stage", stage: "recommending" })
     try {
-      let recommendation = demo ? await loadFixture<Recommendation>("recommendation") : await api.recommend(j, prediction)
+      let recommendation = await withSeedFallback(j, () => api.recommend(j, prediction), "recommendation")
       if (requestId !== generation.current) return
       if (recommendation.alternative) recommendation = { ...recommendation, alternative: hydrateCoords(recommendation.alternative) }
       dispatch({ type: "recommendation", recommendation })
@@ -155,7 +172,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } finally {
       if (requestId === generation.current) dispatch({ type: "busy", busy: false })
     }
-    if (!demo && requestId === generation.current) void explainLegs(j, requestId)
+    if (requestId === generation.current) void explainLegs(j, requestId)
   }, [dispatch, explainLegs])
 
   const runJourney = useCallback(async (journey: Journey) => {
@@ -181,8 +198,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const id = ++generation.current
     dispatch({ type: "busy", busy: true })
     try {
-      // Backend unreachable: fall back to the seed so the app still works.
-      const journey = await loadFixture<Journey>("journey")
+      // The example trip comes from the service too; the bundled copy only answers offline.
+      const seed: Journey = { id: "seed", legs: [], source: "seed" }
+      const journey = await withSeedFallback(seed, () => api.seedDemo(), "journey")
       if (id === generation.current) await pipeline({ ...journey, source: "seed" }, id)
     } catch {
       if (id === generation.current) dispatch({ type: "error", error: "The example trip could not be loaded. Check your connection and try again." })
@@ -194,7 +212,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const id = generation.current
     if (door != null) dispatch({ type: "door", minutes: door })
     if (risk != null) dispatch({ type: "risk", risk })
-    if (state.journey.source === "seed") return
     try {
       let rec = await api.recommend(state.journey, state.prediction, door ?? state.doorToStationMin, risk ?? state.acceptableRisk)
       if (id !== generation.current) return
@@ -210,7 +227,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const id = generation.current
     const attempt = ++rerouteRequest.current
     try {
-      let reroute = state.journey.source === "seed" ? await loadFixture<Reroute>("reroute") : await api.reroute(state.journey, missedLeg)
+      const journey = state.journey
+      let reroute = await withSeedFallback(journey, () => api.reroute(journey, missedLeg), "reroute")
       if (id !== generation.current || attempt !== rerouteRequest.current) return
       reroute = { ...reroute, options: reroute.options.map(o => ({ ...o, journey: hydrateCoords(o.journey) })) }
       dispatch({ type: "reroute", reroute, missedLeg })

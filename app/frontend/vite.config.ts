@@ -15,8 +15,8 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "icons/*.png", "seed/*.json", "proof.json", "germany.geojson"],
       manifest: {
         id: "/",
-        name: "error404 — A clearer way to travel",
-        short_name: "error404",
+        name: "delayedBahn — A clearer way to travel",
+        short_name: "delayedBahn",
         description:
           "Share a Deutsche Bahn connection and see the probability your plan fails, plus what to do about it.",
         start_url: "/",

@@ -3,9 +3,10 @@ import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-let server, service, track, geometry, osm, search, cached, seed, story
+let server, service, track, geometry, osm, search, cached, seed, story, travelDate
 before(async () => {
   server = await createServer({ root: fileURLToPath(new URL('.', import.meta.url)), server: { middlewareMode: true }, appType: 'custom' })
+  travelDate = await server.ssrLoadModule('/src/lib/travel-date.ts')
   story = await server.ssrLoadModule('/src/lib/train-story.ts')
   service = await server.ssrLoadModule('/src/lib/train-service.ts')
   track = await server.ssrLoadModule('/src/lib/track-path.ts')
@@ -147,12 +148,23 @@ test('alternative timing scenarios reuse only the same mapped service, not anoth
   assert.equal(osm.reuseMappedServiceGeometry(alternative, timetable).legs[0].routeGeometry, undefined)
 })
 
-test('slow replay pauses only for the returned delay and uses a bounded visible train size', () => {
-  assert.equal(story.storyProgress(45000, 0), .5)
-  assert.equal(story.storyProgress(68000, 10), .7)
-  assert.equal(story.storyProgress(70000, 10), .7)
-  assert.ok(story.storyProgress(80000, 10) > .7)
-  assert.ok(story.trainScale(9, 200000) >= 2500)
+test('the replay runs legs one after another, holds for the returned delay and keeps a bounded train size', () => {
+  const st = story.buildStory(seed, {journeyId:seed.id, legs:[{trainId:seed.legs[0].trainId,expectedDelayMinutes:{value:12}},{trainId:seed.legs[1].trainId,expectedDelayMinutes:{value:0}}]}, [170000, 40000])
+  assert.equal(st.legs.length, 2)
+  assert.equal(st.legs[0].pauseMs, 12000)
+  assert.equal(story.storyState(st, 0).legs[0].phase, 'waiting')
+  const mid = story.storyState(st, st.legs[0].travelStart + 20000)
+  assert.ok(mid.legs[0].progress > 0 && mid.legs[0].progress < 1 && mid.legs[0].phase === 'moving')
+  assert.equal(mid.legs[1].phase, 'waiting')
+  assert.equal(mid.active, 0)
+  const held = story.storyState(st, st.legs[0].travelStart + st.legs[0].pauseAt * st.legs[0].travelMs + 3000)
+  assert.equal(held.legs[0].phase, 'held')
+  const late = story.storyState(st, st.legs[1].travelStart + 1000)
+  assert.equal(late.legs[0].phase, 'arrived')
+  assert.equal(late.active, 1)
+  assert.equal(story.storyState(st, st.cycle - 1000).legs[1].phase, 'arrived')
+  assert.equal(story.easeTravel(1), 1)
+  assert.ok(story.trainScale(9, 200000) >= 1500)
   assert.ok(story.trainScale(0, 1000) * 10.5 < 1000)
 })
 test('delays from another journey or another train cannot label this train', () => {
@@ -168,12 +180,12 @@ test('lookup preserves service notices and rejects malformed arrival times', asy
   const origin = {id:'8000261',name:'Nürnberg Hbf'}, destination = {id:'8000105',name:'Frankfurt Hbf'}
   const leg = {origin,destination,line:{name:'ICE 75',mode:'train'},plannedDeparture:'2026-09-13T08:00:00Z',plannedArrival:'2026-09-13T10:00:00Z',remarks:[{type:'warning',text:'Track works ahead'},{type:'hint',text:'Bicycle spaces'}]}
   globalThis.fetch = async () => ({ok:true,json:async () => ({journeys:[{legs:[leg]},{legs:[{...leg,plannedArrival:'invalid'}]}]})})
-  const options = await search.searchJourneys({evaNumber:origin.id,name:origin.name},{evaNumber:destination.id,name:destination.name},new AbortController().signal)
+  const options = await search.searchTransportRest({evaNumber:origin.id,name:origin.name},{evaNumber:destination.id,name:destination.name},new AbortController().signal)
   assert.equal(options.length,1)
   assert.equal(options[0].legs[0].disruptions.length,1)
   assert.equal(story.disruptionKind(options[0].legs[0].disruptions[0].text),'works')
   globalThis.fetch = async () => ({ok:false,status:503})
-  await assert.rejects(search.searchJourneys({evaNumber:origin.id},{evaNumber:destination.id},new AbortController().signal), /HTTP 503/)
+  await assert.rejects(search.searchTransportRest({evaNumber:origin.id},{evaNumber:destination.id},new AbortController().signal), /HTTP 503/)
 })
 
 test('browser fetch failures have a traveler-facing message and cancellation is preserved', async t => {
@@ -182,7 +194,17 @@ test('browser fetch failures have a traveler-facing message and cancellation is 
   const error = new TypeError('Failed to fetch')
   globalThis.fetch = async () => { throw error }
   const from = seed.legs[0].from, to = seed.legs[0].to
-  await assert.rejects(search.searchJourneys(from,to,new AbortController().signal), e => e.message.includes('couldn’t reach the timetable service') && e.cause === error)
+  await assert.rejects(search.searchTransportRest(from,to,new AbortController().signal), e => e.message.includes('couldn’t reach the timetable service') && e.cause === error)
   const aborted = new AbortController(); aborted.abort()
-  await assert.rejects(search.searchJourneys(from,to,aborted.signal), e => e === error)
+  await assert.rejects(search.searchTransportRest(from,to,aborted.signal), e => e === error)
+})
+
+test('travel date sends today as now and future dates at 08:00 Germany time', () => {
+  const now = new Date('2026-09-13T03:00:00Z')
+  assert.equal(travelDate.dateDeparture('2026-09-13',now),now.toISOString())
+  assert.equal(travelDate.dateDeparture('2026-09-14',now),'2026-09-14T06:00:00.000Z')
+  assert.equal(travelDate.dateDeparture('2026-12-14',now),'2026-12-14T07:00:00.000Z')
+  assert.equal(travelDate.germanyDate(new Date('2026-09-13T23:30:00Z')),'2026-09-14')
+  assert.throws(() => travelDate.dateDeparture('2026-09-12',now), /future/)
+  assert.throws(() => travelDate.dateDeparture('2026-09-31',now), /valid|exist/)
 })

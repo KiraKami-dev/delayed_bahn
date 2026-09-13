@@ -11,8 +11,8 @@ import path from 'node:path';
 export const PLATFORMS = {
   'gpu-l40s-a':  { gpu: 'NVIDIA L40S 48GB (AMD host)',   pricePerGpuHour: 1.55, presets: ['1gpu-8vcpu-32gb', '1gpu-16vcpu-64gb', '1gpu-24vcpu-96gb', '1gpu-32vcpu-128gb', '1gpu-40vcpu-160gb'] },
   'gpu-l40s-d':  { gpu: 'NVIDIA L40S 48GB (Intel host)', pricePerGpuHour: 1.82, presets: ['1gpu-16vcpu-96gb', '1gpu-32vcpu-192gb', '1gpu-48vcpu-288gb', '2gpu-64vcpu-384gb', '2gpu-96vcpu-576gb', '4gpu-128vcpu-768gb', '4gpu-192vcpu-1152gb'] },
-  'gpu-h100-sxm': { gpu: 'NVIDIA H100 SXM 80GB',         pricePerGpuHour: 3.85, presets: ['1gpu-16vcpu-200gb', '8gpu-128vcpu-1600gb'] },
-  'gpu-h200-sxm': { gpu: 'NVIDIA H200 SXM 141GB',        pricePerGpuHour: 4.50, presets: ['1gpu-16vcpu-200gb', '8gpu-128vcpu-1600gb'] },
+  'gpu-h100-sxm': { gpu: 'NVIDIA H100 SXM 80GB',         pricePerGpuHour: 3.85, preemptiblePricePerGpuHour: 2.15, presets: ['1gpu-16vcpu-200gb', '8gpu-128vcpu-1600gb'] },
+  'gpu-h200-sxm': { gpu: 'NVIDIA H200 SXM 141GB',        pricePerGpuHour: 4.50, preemptiblePricePerGpuHour: 2.45, presets: ['1gpu-16vcpu-200gb', '8gpu-128vcpu-1600gb'] },
   'gpu-b200-sxm': { gpu: 'NVIDIA B200 SXM 180GB',        pricePerGpuHour: 7.15, presets: ['1gpu-20vcpu-224gb', '8gpu-160vcpu-1792gb'] },
 };
 
@@ -50,9 +50,13 @@ export function estimateCost({ platform, preset, timeoutSeconds, preemptible = f
   const p = PLATFORMS[platform];
   const gpus = gpusInPreset(preset);
   if (!p || !gpus) return { known: false, gpus, hours: timeoutSeconds / 3600 };
-  const pricePerHour = p.pricePerGpuHour * gpus * (preemptible ? 0.5 : 1); // preemptible discount varies; assume ~50%
+  // Preemptible: nebius.com/prices lists H100 $2.15 and H200 $2.45 per GPU-hour
+  // (about 45% off). Platforms without a published preemptible price assume 50% off.
+  const assumed = preemptible && !p.preemptiblePricePerGpuHour;
+  const perGpu = preemptible ? (p.preemptiblePricePerGpuHour ?? p.pricePerGpuHour * 0.5) : p.pricePerGpuHour;
+  const pricePerHour = perGpu * gpus;
   const hours = timeoutSeconds / 3600;
-  return { known: true, gpus, gpu: p.gpu, pricePerHour: round2(pricePerHour), hours, maxCostUsd: round2(pricePerHour * hours), preemptibleAssumed50pct: preemptible };
+  return { known: true, gpus, gpu: p.gpu, pricePerHour: round2(pricePerHour), hours, maxCostUsd: round2(pricePerHour * hours), preemptible, preemptibleAssumed50pct: assumed };
 }
 const round2 = (n) => Math.round(n * 100) / 100;
 

@@ -3,20 +3,31 @@
 .travel-app button { cursor: pointer; }
 .travel-app button:disabled { cursor: default; opacity: .45; }
 .travel-header { height: 58px; position: absolute; inset: 0 0 auto; z-index: 5; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; background: #f8f9f2ec; backdrop-filter: blur(15px); border-bottom: 1px solid #dce3d3; }
-.travel-brand { display: inline-flex; align-items: center; gap: 7px; font-size: 23px; font-weight: 750; letter-spacing: -1px; }
-.travel-brand span { margin-left: -7px; font-weight: 400; }
+.travel-brand { display: inline-flex; align-items: center; gap: 7px; font-size: 23px; font-weight: 750; letter-spacing: -1px; line-height: 1; }
+.travel-brand > span { display: flex; flex-direction: column; align-items: flex-start; }
+.travel-brand b { font-weight: 750; }
+.travel-brand b span { font-weight: 400; }
+.travel-brand small { font-size: 9px; font-weight: 600; letter-spacing: .2px; margin-top: 3px; color: #687f5d; }
 .travel-header > div { display: flex; align-items: center; gap: 2px; }
 .travel-header button { width: 42px; height: 44px; display: grid; place-items: center; }
+.travel-header .install-icon { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #d8e0d0; background: #fffef8; color: #304737; box-shadow: 0 2px 8px #31412712; }
+.travel-sheet-tools { display: flex; gap: 14px; padding: 0 17px 6px; margin-top: -4px; flex-shrink: 0; }
+.travel-sheet-tools button { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #687f5d; min-height: 24px; }
 .travel-map { position: absolute; inset: 58px 0 0; z-index: 0; }
 .travel-map .map-root { position: absolute; inset: 0; }
 .travel-map:has([data-basemap="earth"]) { background: #071b2e; }
 .travel-app:has([data-basemap="earth"]) .travel-map-title { color: #f5f8ef; text-shadow: 0 1px 4px #09232b, 0 3px 18px #071b2e; }
+.travel-app:has([data-basemap="earth"]) .travel-map-title > div { padding: 10px 14px 12px; border-radius: 16px; background: #071b2ec4; border: 1px solid #ffffff2b; box-shadow: 0 6px 26px #03101c66; backdrop-filter: blur(12px); }
 .travel-app:has([data-basemap="earth"]) .travel-map-title h1 span { color: #d2e8c4; }
 .travel-app:has([data-basemap="earth"]) .travel-map-title .travel-kicker { color: #d2e0d8; }
-.travel-app:has([data-basemap="earth"]) .geometry-note { background: #f9fcf1ed; }
+.travel-app:has([data-basemap="earth"]) .station-marker { color: #f2f7ee; }
+.travel-app:has([data-basemap="earth"]) .station-marker .label { background: #0b1c27e8; border-color: #ffffff30; box-shadow: 0 3px 12px #03101c80; }
+.travel-app:has([data-basemap="earth"]) .station-factor { background: #2a1d0ce8; color: #ffd9a3; box-shadow: 0 3px 12px #03101c80; }
+.travel-app .map-controls button.follow[aria-pressed="true"] { background: #285b43; color: #fff; border-color: #285b43; }
 .travel-map .map-controls { top: 18px; right: 12px; bottom: auto; }
 .travel-map .map-controls button { width: 40px; height: 42px; }
-.travel-map-title { position: absolute; top: 80px; left: 22px; right: 75px; pointer-events: none; text-shadow: 0 2px 16px #fff; }
+.travel-map-title { position: absolute; z-index: 2; top: 80px; left: 22px; right: 75px; pointer-events: none; text-shadow: 0 2px 16px #fff; }
+.travel-map-title > div { width: fit-content; max-width: 100%; }
 .travel-kicker { display: block; font-size: 9px; letter-spacing: 1.2px; color: #687f5d; font-weight: 700; }
 .travel-map-title h1 { font-size: 29px; line-height: 1.08; font-weight: 600; letter-spacing: -1px; margin: 9px 0 0; }
 .travel-map-title h1 span { display: block; color: #637f51; font-size: .82em; margin-top: 5px; }
@@ -187,3 +198,6 @@
 .travel-app .route-recovery { grid-column: 1 / -1; font-size: 11px; }
 .travel-app .route-recovery > div { display: flex; flex-wrap: wrap; gap: 6px; }
 .travel-app .route-recovery button, .travel-app .route-recovery a { display: inline-flex; align-items: center; min-height: 36px; padding: 5px 9px; border-radius: 8px; background: #e8eee2; color: #304737; font-weight: 600; }
+
+.travel-app .travel-date { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; }
+.travel-app .travel-date input { width: 175px; min-width: 0; height: 40px; min-height: 40px; }

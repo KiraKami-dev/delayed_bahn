@@ -25,6 +25,7 @@ export function createHttpBackend({ url, fetchImpl = fetch, timeoutMs = 8000 } =
           departure: l.departure?.probs ? { probs: l.departure.probs, pCancel: l.departure.pCancel ?? 0 } : undefined,
           reasoning: l.reasoning || 'Fine-tuned model forecast.',
           sources: l.sources || [data.modelId || 'model server'],
+          ...(l.generation ? { generation: l.generation } : {}), // the model's own generated sentence for this record, when one was saved
         })),
       };
     },

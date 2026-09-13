@@ -32,3 +32,7 @@ Format:
 - [d-0a67224c-2771-4853-b9c6-83ed6ebbd577] [T+14:05] Start the homepage zoomed into Germany, remove idle globe rotation and prevent full-world zoom-out; retain journey and leg framing on supplied or service-matched rail paths — Akshat — explicit Germany-focused map request; refines the earlier rotating-globe direction.
 
 - [d-afd66d35-7685-495b-b487-b94f3085f447] [T+14:20] Keep Germany as the initial camera but allow full-globe zoom-out; enlarge and slow train replay, show matched model delay labels and service-notice-based illustrative obstacles, and repair station selection plus timetable-failure recovery — Akshat — explicit follow-up; station-history cause probabilities must not be presented as confirmed train blockages — supersedes [d-0a67224c-2771-4853-b9c6-83ed6ebbd577].
+
+- [d-079f7837-7c15-41ed-a759-61ea5d9b34c2] [T+17:37] Include a travel date with From/To and submit that date to route lookup; show dates on connection results — Akshat — explicit request; today uses current time and future dates use 08:00 German time, disclosed in the form.
+
+- [d-9f1f61f9-7dcf-4d5f-adb6-619e47b27e13] [T+17:43] Extend Akshat’s route-search task to the backend endpoint and shared wiring so From/To/date lookup can use an accessible timetable source through the app server — Akshat — explicit approval after transport.rest 503 and direct DB web 403 blocked the frontend request.

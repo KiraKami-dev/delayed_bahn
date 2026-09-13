@@ -70,6 +70,11 @@ test('estimateCost scales with GPUs and hours', () => {
   const e = estimateCost({ platform: 'gpu-h100-sxm', preset: '8gpu-128vcpu-1600gb', timeoutSeconds: 7200 });
   assert.equal(e.gpus, 8); assert.equal(e.pricePerHour, 30.8); assert.equal(e.maxCostUsd, 61.6);
   assert.equal(estimateCost({ platform: 'unknown', preset: '1gpu-x', timeoutSeconds: 3600 }).known, false);
+  // Published preemptible price for H100; platforms without one fall back to 50% off.
+  const pre = estimateCost({ platform: 'gpu-h100-sxm', preset: '1gpu-16vcpu-200gb', timeoutSeconds: 7200, preemptible: true });
+  assert.equal(pre.pricePerHour, 2.15); assert.equal(pre.maxCostUsd, 4.3); assert.equal(pre.preemptibleAssumed50pct, false);
+  const assumed = estimateCost({ platform: 'gpu-l40s-a', preset: '1gpu-8vcpu-32gb', timeoutSeconds: 3600, preemptible: true });
+  assert.equal(assumed.pricePerHour, 0.78); assert.equal(assumed.preemptibleAssumed50pct, true);
 });
 
 test('service-account JWT is RS256 with kid/iss/sub/exp and verifies', () => {

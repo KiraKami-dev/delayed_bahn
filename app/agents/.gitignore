@@ -1,2 +1,4 @@
 # timenet-build scratch
 .tmp/
+# local mirror of the training bucket for serve_route.py (fetch_serving_data.sh)
+data/

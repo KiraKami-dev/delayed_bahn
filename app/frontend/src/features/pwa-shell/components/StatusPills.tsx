@@ -24,11 +24,11 @@ function platformHint(): string {
   const ios = /iPhone|iPad|iPod/.test(ua)
   const android = /Android/.test(ua)
   if (ios) return "On iPhone: tap the Share button in Safari, then “Add to Home Screen”. iOS has no share-sheet target, so paste the DB text into the app instead."
-  if (android) return "On Android Chrome: open the ⋮ menu and choose “Install app” (or “Add to Home screen”). After that, error404 appears in the DB app’s Share list."
+  if (android) return "On Android Chrome: open the ⋮ menu and choose “Install app” (or “Add to Home screen”). After that, delayedBahn appears in the DB app’s Share list."
   return "On desktop Chrome or Edge: click the install icon at the right end of the address bar, or open the ⋮ menu → “Cast, save and share” → “Install page as app”."
 }
 
-export function InstallButton({ big = false }: { big?: boolean }) {
+export function InstallButton({ big = false, icon = false }: { big?: boolean; icon?: boolean }) {
   const [, force] = useState(0)
   const [hint, setHint] = useState(false)
   const [installed, setInstalled] = useState(() => window.matchMedia("(display-mode: standalone)").matches)
@@ -42,7 +42,7 @@ export function InstallButton({ big = false }: { big?: boolean }) {
       window.removeEventListener("appinstalled", onInstalled)
     }
   }, [])
-  if (installed) return big ? <span className="text-sm text-muted-foreground">Installed — error404 is in your share sheet.</span> : null
+  if (installed) return big ? <span className="text-sm text-muted-foreground">Installed — delayedBahn is in your share sheet.</span> : null
 
   const onClick = async () => {
     if (captured) {
@@ -65,13 +65,17 @@ export function InstallButton({ big = false }: { big?: boolean }) {
       <button
         type="button"
         onClick={() => void onClick()}
+        aria-label={icon ? "Install app" : undefined}
+        title={icon ? "Install app" : undefined}
         className={
-          big
-            ? "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
-            : "install-btn inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs text-foreground"
+          icon
+            ? "install-icon"
+            : big
+              ? "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
+              : "install-btn inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs text-foreground"
         }
       >
-        <Download className="size-4" /> Install app
+        <Download className="size-4" />{!icon && " Install app"}
       </button>
       {hint && (
         <span
