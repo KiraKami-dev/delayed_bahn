@@ -193,6 +193,9 @@ The 5,000 shared test trains, by class (share within one minute / average miss):
 - **The average miss hides a heavy tail.** All models predict slightly too early on average and the
   spread of the error is 10 to 13 minutes for every one of them, driven by a few very long delays
   none of them foresees; the share within 1, 2 and 5 minutes is the honest summary.
+- **Without fine-tuning** the same checkpoint on the same prompts misses by 3.55 minutes on average
+  (it mostly repeats the XGBoost forecast in the prompt) but its distribution is far off: CRPS
+  +0.347 against the trained model, and none of its generated answers is in the answer format.
 - **Every run in the same figures:** `trip/MINUTES.md` (34 runs and baselines on the same 4,729
   test trains).
 - **The TSLM's range is a little too wide** (88 to 90% of true delays inside the 10 to 90% range,

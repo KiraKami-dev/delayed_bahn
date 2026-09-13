@@ -840,6 +840,11 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
   but small; the encoder route costs a hundredth of a CRPS point for a shorter prompt.
+- **Fine-tuning is what makes it work (06:25).** The same OpenTSLM checkpoint on the same v7 prompts
+  without any training scores CRPS +0.347 (+0.291 to +0.402) against the trained 2,000-step model
+  and +0.284 against XGBoost-v7; its median is close to XGBoost's (3.55 against 3.51 minutes)
+  because it largely repeats the forecast written into the prompt, and none of its 16 generated
+  answers follows the answer format. Training adds the calibrated distribution and the answers.
 
 ### Pending at the time of writing
 

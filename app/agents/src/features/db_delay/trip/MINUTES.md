@@ -11,6 +11,7 @@ All runs on the same 4,729 test trains (the seeded 5,000 that every run scored, 
 | v7-text | 3.45 | 65% | 75% | 86% | -1.86 | 89% |
 | v7-split | 3.45 | 65% | 75% | 86% | -1.89 | 88% |
 | XGBoost, plus new series | 3.51 | 58% | 72% | 85% | -2.00 | 82% |
+| v7-zeroshot (no fine-tuning) | 3.55 | 64% | 73% | 86% | -1.58 | 91% |
 | final-v4-text | 3.54 | 64% | 73% | 86% | -1.88 | 89% |
 | final-v2-text | 3.56 | 64% | 74% | 86% | -2.12 | 89% |
 | text-24k | 3.56 | 63% | 73% | 86% | -1.75 | 90% |
