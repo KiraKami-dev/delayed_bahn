@@ -37,3 +37,34 @@ Blend = one weight on the TSLM quantiles fitted on `val` by CRPS. Classification
 - Everything is ~30% under the naive train-median baseline; 10–90% coverage sits at 0.70–0.80 against a 0.80 target, so the distributions are slightly narrow.
 
 Artifacts: `s3://error404-db-route/runs/route-2k/<profile>/{metrics.json, checkpoint.pt, scalar_<cell>.npz}`; local baselines/blend in `baselines_local.json` beside them.
+
+## Training budget: steps are passes over the data, and 12k is nineteen of them
+
+Same registry (`/outputs/registry`, all Germany), same recipe (batch 8, lr 1e-4 / encoder 2e-4, `plain_crps`), seed 0 unless stated; one H100 per run, 13 Sep 2026 07:26–10:50 CEST. Quarter profile, unseen trains and weeks (`test`, 462 rows), median error / CRPS in minutes, coverage of the 10–90% range (target 0.80). GBM on the same rows: 1.82 / 1.37; persistence (entity's own context mean): 1.84.
+
+| steps | passes over train | seed | TSLM | coverage | blend w/ GBM |
+|---:|---:|---|---|---:|---|
+| 2,000 | 3 | 0 | 1.82 / 1.37 | 0.75 | 1.79 / 1.35 |
+| 2,000 | 3 | 1 | 1.83 / 1.38 | 0.74 | 1.79 / 1.36 |
+| 2,000 | 3 | 2 | 1.81 / 1.36 | 0.76 | 1.79 / 1.35 |
+| 3,000 | 5 | 0 | 1.81 / 1.37 | 0.74 | 1.79 / 1.35 |
+| 4,000 | 6 | 0 | 1.85 / 1.42 | 0.69 | 1.80 / 1.37 |
+| 6,000 | 9 | 0 | 1.83 / 1.46 | 0.58 | 1.77 / 1.36 |
+| 12,000 | 19 | 0 | 2.10 / 1.90 | 0.26 | GBM alone |
+| 12,000 | 19 | 1 | 2.07 / 1.86 | 0.25 | GBM alone |
+| 12,000 | 19 | 2 | 2.13 / 1.89 | 0.26 | GBM alone |
+| 12,000, `plain` loss | 19 | 0 | 2.17 / 1.90 | 0.23 | GBM alone |
+| 12,000, caption-only (series zeroed) | 19 | 0 | 2.25 / 1.98 | 0.24 | GBM alone |
+| 12,000, lr ×2 | 19 | 0 | 2.25 / 2.03 | 0.21 | GBM alone |
+| 12,000, all rows scored | 19 | 0 | 2.19 / 1.87 | 0.30 | GBM alone |
+
+Week and season at 12k collapse the same way: week 2.82 / 2.49 (2k: 2.51 / 1.91), season 2.12 / 1.94 (2k: 1.98 / 1.50), coverage 0.18–0.26. The six-region registry at 12k (different rows) scores 2.53 / 2.36.
+
+### Reading
+
+- **The knee is between three and six passes.** 2k and 3k steps are indistinguishable (seed spread 0.02 CRPS); 4k is slightly worse; 6k loses calibration; 12k loses everything: median error +0.3 min, CRPS +0.5, and the 80% range covers a quarter of outcomes. Training loss fell from 0.24 to 0.09 over the same range. That is memorisation of ~5,200 training records, not learning.
+- **The step count was copied from a corpus sixty times larger.** Jonas's 12k steps on 300k examples is a third of one pass. The right budget is a function of the record count: two to four passes, or better, a checkpoint chosen by validation CRPS (v3 trainer, `--save-every 250 --val-rows 300`).
+- **At the right budget the TSLM matches gradient boosting and persistence on unseen trains** (1.81–1.83 vs 1.82 vs 1.84) and the blend is the best forecast on every cell (1.79 / 1.35). The 12k ablations (plain loss, caption-only, lr ×2) are all measured in the overfit regime and rank only each other: series still carry ~0.1 CRPS over caption-only there, plain ≈ plain+CRPS, higher lr worse.
+- **Serving:** the app runs on `r2k-q-s2-blend` (seed 2 at 2k, blended with GBM, weight 0.20), every held-out row scored.
+
+Artifacts: `s3://error404-db-route/runs/<tag>/quarter/`, tags `r2k-q-s{1,2}`, `r3k-q`, `r4k-q`, `r6k-q`, `r6k-q-full`, `r12k-q-{s0,s1,s2,plain,caponly,six,lr2x,full}`, `r12k-w`, `r12k-l` and their `-full` twins; local baselines in `baselines_local.json` beside each.
