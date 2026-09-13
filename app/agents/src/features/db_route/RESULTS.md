@@ -68,3 +68,16 @@ Week and season at 12k collapse the same way: week 2.82 / 2.49 (2k: 2.51 / 1.91)
 - **Serving:** the app runs on `r2k-q-s2-blend` (seed 2 at 2k, blended with GBM, weight 0.20), every held-out row scored.
 
 Artifacts: `s3://error404-db-route/runs/<tag>/quarter/`, tags `r2k-q-s{1,2}`, `r3k-q`, `r4k-q`, `r6k-q`, `r6k-q-full`, `r12k-q-{s0,s1,s2,plain,caponly,six,lr2x,full}`, `r12k-w`, `r12k-l` and their `-full` twins; local baselines in `baselines_local.json` beside each.
+
+### Validation-selected checkpoint (v3 trainer, run `v3-q-valsel`)
+
+Quarter, 3,000 steps, a save every 250 steps scored on 300 validation rows, the best checkpoint by validation CRPS evaluated on every held-out row. Validation curve (CRPS): 1.52 · 1.42 · **1.37** (step 750) · 1.48 · 1.42 · 1.39 · 1.43 · 1.42 · 1.43 · 1.42 · 1.37 · 1.44 (step 3,000). Selected step 750.
+
+| cell | n | TSLM | coverage |
+|---|---:|---|---:|
+| val | 427 | 1.85 / 1.42 | 0.75 |
+| test_seen_entity | 1,134 | 1.74 / 1.33 | 0.75 |
+| test | 462 | 1.85 / 1.38 | 0.73 |
+| test_seen_time | 3,015 | 1.69 / 1.31 | 0.77 |
+
+Level with the 2k seeds on every cell, reached at step 750 (about one pass over the data) with a quarter of their compute; not better. Selection by validation is the guard against the 12k collapse, not a source of accuracy on this corpus.
