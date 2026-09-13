@@ -3,8 +3,10 @@
   "checkpoint_id": "01M2CT6SQM8AVZT2T7JDCVAMTA",
   "strategy": "manual-commit",
   "branch": "local-model",
-  "checkpoints_count": 2,
-  "files_touched": null,
+  "checkpoints_count": 4,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/serve.py"
+  ],
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -12,13 +14,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": "/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 196,
-    "cache_creation_tokens": 40547,
-    "cache_read_tokens": 4280708,
-    "output_tokens": 36846,
-    "api_call_count": 8
+    "input_tokens": 300,
+    "cache_creation_tokens": 52797,
+    "cache_read_tokens": 8287839,
+    "output_tokens": 47210,
+    "api_call_count": 15
   }
 }
