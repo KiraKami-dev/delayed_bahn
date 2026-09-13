@@ -6,6 +6,10 @@ DelayedBahn is an installable web app for Deutsche Bahn travellers. Share a jour
 
 Built by team **error404.ai** at the European Hackathon League Zurich, September 2026.
 
+<p align="center">
+  <img src="docs/images/Intro.jpeg" width="300" alt="DelayedBahn start screen">
+</p>
+
 ---
 
 ## Contents
