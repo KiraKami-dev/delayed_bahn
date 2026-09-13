@@ -156,6 +156,14 @@ examples).
 | Final A: text, combined data, plain + CRPS, 12k (not stacked) | 2.669 | 2.106 | -0.070 (-0.111 to -0.041) real; median error -0.076 real; within 15 min -0.096 real |
 | Stacked finals (12k) | *pending* | | |
 
+Third September set, with the same-train and corridor series (`forward_v7`, same 10,000 examples);
+XGBoost retrained on those features on May:
+
+| Model | Median error | CRPS | vs XGBoost with the new series (CRPS) |
+|---|---|---|---|
+| TSLM, split (new series through the encoder only), 2k | 2.543 | 2.023 | -0.040 (-0.080 to -0.015) real; median error -0.056 real; within 15 min -0.074 real |
+| TSLM, stacked text, v7 | *running* | | |
+
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the
 tabular model overall and ahead in the last quarter hour; blended by lead time with weights that
 never saw September, it beats XGBoost.

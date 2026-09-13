@@ -824,7 +824,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
 | TSLM, stacked text, v7, 2k | 3.449 / 2.761 | | |
-| TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | |
+| TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
@@ -840,6 +840,9 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real
   but small; the encoder route costs a hundredth of a CRPS point for a shorter prompt.
+- **The split model holds out of time (06:30).** On 10,000 September examples it beats XGBoost-v7
+  alone: CRPS -0.040 (-0.080 to -0.015), median error -0.056 (-0.103 to -0.027), within 15
+  minutes -0.074, all real; the May lead-time weights put 1.0 on the TSLM almost everywhere.
 - **Fine-tuning is what makes it work (06:25).** The same OpenTSLM checkpoint on the same v7 prompts
   without any training scores CRPS +0.347 (+0.291 to +0.402) against the trained 2,000-step model
   and +0.284 against XGBoost-v7; its median is close to XGBoost's (3.55 against 3.51 minutes)
