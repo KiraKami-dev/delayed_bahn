@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react"
 
+// Motion is off unless the traveller switches it on (the play button, or ?motion=1): the moving
+// map pulls the eye away from reading the forecast. The button's choice wins over the URL.
 function readMotionOff(): boolean {
   try {
-    const q = new URLSearchParams(location.search)
-    if (q.get("motion") === "0") return true
-    if (document.documentElement.dataset.motion === "0") return true
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const setting = document.documentElement.dataset.motion
+    if (setting === "1") return false
+    if (setting === "0") return true
+    return new URLSearchParams(location.search).get("motion") !== "1"
   } catch {
-    return false
+    return true
   }
 }
 
 let listeners = new Set<() => void>()
 export function toggleMotion() {
-  const off = document.documentElement.dataset.motion === "0"
-  if (off) delete document.documentElement.dataset.motion
-  else document.documentElement.dataset.motion = "0"
+  document.documentElement.dataset.motion = readMotionOff() ? "1" : "0"
   listeners.forEach((l) => l())
 }
 
@@ -24,11 +24,8 @@ export function useReducedMotion(): boolean {
   useEffect(() => {
     const update = () => setOff(readMotionOff())
     listeners.add(update)
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    mq.addEventListener("change", update)
     return () => {
       listeners.delete(update)
-      mq.removeEventListener("change", update)
     }
   }, [])
   return off
