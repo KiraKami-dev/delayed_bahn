@@ -818,13 +818,18 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
 | XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
 | TSLM, stacked text, v7, 2k | *running* | | |
-| TSLM, stacked split, v7, 2k | *running* | | |
+| TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
   XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
   the best finished TSLM final (2.616 vs 2.644 on the full test), so the submission comparison is
   against XGBoost-v7.
+- **The first time the embeddings carry what the text does not, and it pays (06:05).** In `split`
+  mode the two new series reach the model only through the encoder. After 2,000 steps it beats
+  XGBoost-v7 on the shared test: CRPS -0.052 (-0.095 to -0.020) and median error -0.058, real;
+  within 15 minutes -0.086 and beyond 30 minutes -0.038, both real; against the stacked text
+  model on v4 -0.089 (-0.130 to -0.050). Validation 2.605 / 2.102, the best of all runs.
 
 ### Pending at the time of writing
 
