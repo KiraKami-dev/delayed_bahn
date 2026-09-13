@@ -3,8 +3,13 @@
   "checkpoint_id": "01M2CZ5KBPSG1ZH2N804MN97XV",
   "strategy": "manual-commit",
   "branch": "pitch-slides",
-  "checkpoints_count": 5,
-  "files_touched": null,
+  "checkpoints_count": 6,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/slides/SLIDE_NUMBERS.md",
+    "app/agents/src/features/db_delay/trip/slides/figures/encoder_ablation.png",
+    "app/agents/src/features/db_delay/trip/slides/figures/encoder_ablation.svg",
+    "app/agents/src/features/db_delay/trip/slides/make_figures.py"
+  ],
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -12,13 +17,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 276,
-    "cache_creation_tokens": 31052,
-    "cache_read_tokens": 2441574,
-    "output_tokens": 10999,
-    "api_call_count": 13
+    "input_tokens": 278,
+    "cache_creation_tokens": 31098,
+    "cache_read_tokens": 2576607,
+    "output_tokens": 11461,
+    "api_call_count": 14
   }
 }
