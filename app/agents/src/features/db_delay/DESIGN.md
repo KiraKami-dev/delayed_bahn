@@ -698,6 +698,11 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
   baseline alone on data none of it had seen. (This September set is the combined-feature build
   with 32,553 test examples; its numbers are not comparable with the earlier 10,000 from
   `forward.parquet`, where XGBoost scored 3.244 / 2.586.)
+- **Without the forecast in the prompt it does not hold alone (04:30):** text plus encoder on the
+  same combined data, 2,000 steps, on the same September examples: 2.711 / 2.148, CRPS -0.028
+  (-0.072 to +0.005), no clear difference; within 15 minutes -0.071 (-0.160 to -0.023) and the
+  blind lead-time blend -0.044 (-0.086 to -0.018) are real. The stacked sentence is what turns
+  the model into one that beats XGBoost on its own out of time.
 - **Planned trajectory channels** (running time, dwell and minutes left per stop through the
   encoder, `examples_v5`): 3.604 / 2.879 against 3.606 / 2.878 without them. Nothing.
 
@@ -745,6 +750,18 @@ corroborated rather than surprising.
   International Journal of Forecasting 2023; Cerqueira and Torgo, arXiv:2306.14563), with the
   warning that per-horizon weights overfit small calibration sets. Our five bucket weights are
   fitted on 3,000 validation examples and confirmed on 88,479 test examples.
+- **Stacking is the oldest combination recipe; an LLM as the second stage is new.** Wolpert
+  (Neural Networks 1992) and Breiman ("Stacked regressions", Machine Learning 1996) fit the
+  second stage on out-of-fold predictions of the first, which is why XGBoost's forecast in the
+  training prompts is out-of-fold. Bates and Granger (1969) and the M4 competition (Makridakis
+  et al., IJF 2018: 12 of the 17 most accurate methods were combinations) say combining beats
+  either forecaster alone. The nearest LLM work is CorDP (Ashok et al., TMLR 2026,
+  arXiv:2508.09904): an LLM is handed a probabilistic forecast from Chronos, Lag-Llama or ARIMA
+  and corrects it, beating the base forecaster in 11 of 13 models on the Context is Key benchmark
+  (Williams et al., ICML 2025, arXiv:2410.18959); the two failures are the smallest models (1B and
+  1.5B), and none is fine-tuned. We found no published case of a fine-tuned 3B model trained on
+  out-of-fold base forecasts, which is what the stacked TSLM is, and its blend weight of 1.0 is
+  the expected outcome once the second stage already contains the first.
 - **Train delay prediction.** Published real-time MAEs of 0.5 to 2.5 minutes (Kecman and Goverde
   2015 on NS; Oneto et al. 2018 on RFI; Spanninger et al. 2022 review) come from short horizons on
   more punctual networks; the RIDE benchmark (Elliker et al., arXiv:2606.05070, Belgian network,

@@ -129,7 +129,7 @@ def as_text(values: np.ndarray) -> str:
     return ", ".join(f"{value:.0f}" for value in values)
 
 
-MODES = ("series", "text", "both")
+MODES = ("series", "text", "both", "none")
 TEXT_HOURS = 72  # the prompt never carries more than this many hourly values; the encoder gets them all
 TEXT_DAYS = 30  # likewise for the daily route history
 
@@ -139,7 +139,8 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
 
     ``mode`` decides how the four series reach the model: through the time-series encoder
     (``series``), written into the prompt as numbers with no encoder (``text``, the baseline;
-    ``text_only`` is the same), or both at once (``both``).
+    ``text_only`` is the same), both at once (``both``), or not at all (``none``, the ablation:
+    only the timetable facts and the rationale's summary numbers remain).
     """
     if text_only:
         mode = "text"
@@ -190,7 +191,7 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
             lines.append(f"{label}, in {'percent' if unit == 'share' else unit}: "
                          f"{as_text(values * (100 if unit == 'share' else 1))}")
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)
-    series = [] if mode == "text" else [normalised(values, label, unit, scaling) for label, values, unit in raw]
+    series = [] if mode in ("text", "none") else [normalised(values, label, unit, scaling) for label, values, unit in raw]
     post_prompt = (f"How many minutes late will the train arrive at {stop}? Reason from the data, "
                    f"then answer with whole minutes or {CANCELLED}.\nRationale:")
     reasoning = rationale(row)

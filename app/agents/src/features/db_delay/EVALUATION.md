@@ -146,11 +146,15 @@ examples).
 | XGBoost (combined features) | 2.745 | 2.175 | |
 | TSLM, stacked, 2k | 2.689 | 2.136 | -0.039 (-0.076 to -0.015) real; median error -0.056 (-0.107 to -0.023) real; within 15 min -0.068 (-0.148 to -0.025) real |
 | Lead-time blend of that (weights from May) | | | -0.040 (-0.075 to -0.019) real |
+| TSLM, text + encoder, combined data without the forecast, 2k | 2.711 | 2.148 | -0.028 (-0.072 to +0.005); within 15 min -0.071 (-0.160 to -0.023) real |
+| Lead-time blend of that (weights from May) | | | -0.044 (-0.086 to -0.018) real |
 | Stacked finals (12k) | *pending* | | |
 
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the
 tabular model overall and ahead in the last quarter hour; blended by lead time with weights that
 never saw September, it beats XGBoost.
+On the combined-feature set the same holds for the model without the statistical forecast;
+only the stacked model beats XGBoost alone out of time, so stacking is what carries it.
 
 ## 6. What the ablations established
 
