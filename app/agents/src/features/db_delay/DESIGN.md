@@ -612,8 +612,8 @@ against 3.635 / 2.907, so two identical trainings differ by about 0.006 CRPS.
 - **The exact-minute loss plus a CRPS term** is the best single 2,000-step model on both splits,
   with the test gain over plain inside the noise; it rewards near misses through a proper score
   instead of blurred targets, so it is the loss of the long runs.
-- **The September forward test** (10,000 examples the training never saw, XGBoost retrained
-  through August): XGBoost 3.244 / 2.586; the original recipe at 12,000 steps 3.257 / 2.611; text
+- **The September forward test** (10,000 examples the training never saw; XGBoost trained on
+  the same May training split and scored on September, like the TSLM): XGBoost 3.244 / 2.586; the original recipe at 12,000 steps 3.257 / 2.611; text
   plus plain at 2,000 steps 3.281 / 2.626; text plus plain plus CRPS 3.266 / 2.610. Alone, every
   TSLM is behind the tabular model overall in September (plain: +0.040 CRPS, +0.013 to +0.068),
   ahead within 15 minutes of arrival (plain: -0.011, -0.021 to -0.002; plain plus CRPS: -0.016,
