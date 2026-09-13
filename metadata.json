@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CAGJH4E0CHWG5E7YH80BTB",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 10,
+  "files_touched": [
+    "app/agents/src/features/db_delay/DESIGN.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 11248,
+    "cache_creation_tokens": 1873256,
+    "cache_read_tokens": 234091406,
+    "output_tokens": 954594,
+    "api_call_count": 613,
+    "subagent_tokens": {
+      "input_tokens": 1148,
+      "cache_creation_tokens": 413107,
+      "cache_read_tokens": 3168676,
+      "output_tokens": 61257,
+      "api_call_count": 64
+    }
+  }
+}
