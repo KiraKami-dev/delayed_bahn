@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CV8DBXVK1DYFMFFMS03040",
+  "strategy": "manual-commit",
+  "branch": "db-train-model",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/agents/src/features/db_delay/trip/README.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 32,
+    "cache_creation_tokens": 2454,
+    "cache_read_tokens": 612034,
+    "output_tokens": 6774,
+    "api_call_count": 1
+  }
+}
