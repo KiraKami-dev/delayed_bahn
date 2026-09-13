@@ -761,6 +761,32 @@ summary numbers.
 - **The encoder is the compact route:** the four series cost about 480 prompt tokens as numbers
   and 45 soft tokens through the encoder.
 
+### Fifth wave: series the text did not have (05:20)
+
+A probe of what XGBoost still gets wrong pointed at two histories no input carried
+(`examples_v7`, `forward_v7`; same example ids as v4):
+
+- **Same train, last 28 days:** the delay this train number gained or recovered between the
+  current stop and the target on each previous day, arrivals strictly before `t0`.
+- **Corridor:** trains that left the current stop in the last 3 hours and already reached the
+  target, their gains and arrival delays, last 8 by arrival.
+
+Coverage 98% and 82% of examples. Both lists enter the prompt as series (encoder only in `split`
+mode) and as scalars for XGBoost; the rationale gets one sentence with the medians.
+
+| Model | 5,000 shared test | Full test | September |
+|---|---|---|---|
+| XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
+| XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
+| TSLM, stacked text, v7, 2k | *running* | | |
+| TSLM, stacked split, v7, 2k | *running* | | |
+| TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
+
+- **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
+  XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
+  the best finished TSLM final (2.616 vs 2.644 on the full test), so the submission comparison is
+  against XGBoost-v7.
+
 ### Pending at the time of writing
 
 - Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text
