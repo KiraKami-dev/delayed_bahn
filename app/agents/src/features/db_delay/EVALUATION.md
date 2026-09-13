@@ -167,7 +167,7 @@ examples).
 | TSLM, text + encoder, combined data without the forecast, 2k | 2.711 | 2.148 | -0.028 (-0.072 to +0.005); within 15 min -0.071 (-0.160 to -0.023) real |
 | Lead-time blend of that (weights from May) | | | -0.044 (-0.086 to -0.018) real |
 | Final A: text, combined data, plain + CRPS, 12k (not stacked) | 2.669 | 2.106 | -0.070 (-0.111 to -0.041) real; median error -0.076 real; within 15 min -0.096 real |
-| Stacked finals (12k) | *pending* | | |
+| Stacked finals (12k) | not run | | superseded by the v7 models below before their September tests |
 
 Third September set, with the same-train and corridor series (`forward_v7`, same 10,000 examples);
 XGBoost retrained on those features on May:

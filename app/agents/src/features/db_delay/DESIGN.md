@@ -884,15 +884,11 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   because it largely repeats the forecast written into the prompt, and none of its 16 generated
   answers follows the answer format. Training adds the calibrated distribution and the answers.
 
-### Pending at the time of writing
+### Open at the time of writing (08:10)
 
-- Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text
-  with the plain loss, 24,000 steps (01:06); text on the combined data and text plus encoder on
-  the combined data with 72-hour series, both with the exact-minute plus CRPS loss (02:15).
-- The September forward test of the 2,000-step text models and of the long runs.
-- The plain 2,000-step checkpoint on the full 93,738-example test set.
-- The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
-  forward test.
+- Stacked text on v7 at 12,000 steps on the full test set (about 09:05), then its September test.
+  It replaces the 6,000-step submission model only if it is clearly better on both.
+- Every other run of the night is finished and recorded above; `trip/RUNS.md` lists them all.
 
 ### Still open
 
