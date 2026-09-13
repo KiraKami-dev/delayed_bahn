@@ -8,7 +8,7 @@ export type Stage = "idle" | "parsing" | "journey" | "predicting" | "predicted" 
 
 /** The model's own words for one leg: requested after the forecast, shown when ready. */
 export type ExplanationState =
-  | { status: "loading" }
+  | { status: "loading"; since: number; position: number; total: number }
   | { status: "done"; text: string; summary: string; answer: string | null; seconds: number }
   | { status: "error"; error: string }
 
@@ -135,7 +135,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // The model's own words, leg by leg after the forecast and the advice: each takes about 15 s.
   const explainLegs = useCallback(async (journey: Journey, requestId: number) => {
-    journey.legs.forEach((_, i) => dispatch({ type: "explanation", index: i, value: { status: "loading" } }))
+    const since = Date.now()
+    journey.legs.forEach((_, i) => dispatch({ type: "explanation", index: i, value: { status: "loading", since, position: i + 1, total: journey.legs.length } }))
     for (const [i, leg] of journey.legs.entries()) {
       if (requestId !== generation.current) return
       try {

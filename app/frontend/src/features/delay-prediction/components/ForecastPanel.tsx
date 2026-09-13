@@ -182,8 +182,14 @@ export function ForecastPanel() {
       </div>
       <BufferSlider journey={journey} prediction={prediction} />
       <p className="text-[11px] text-muted-foreground">
+        {/live on/i.test(prediction.modelId) && (
+          <span className="mr-2 inline-flex items-center gap-1 rounded-full bg-emerald-600/15 px-2 py-0.5 font-semibold text-emerald-700 dark:text-emerald-400">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden />LIVE · this forecast just ran on the GPU
+          </span>
+        )}
         Model: <span className="font-mono">{prediction.modelId}</span>
         {prediction.modelId.startsWith("mock") && " · prior only, the fine-tuned model server is offline"}
+        {/precomputed fallback/i.test(prediction.modelId) && " · the GPU job did not answer, so this is the model's stored held-out forecast"}
       </p>
     </div>
   )

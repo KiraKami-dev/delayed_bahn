@@ -45,20 +45,53 @@ function compactSentence(sentence: string) {
   return sentence.replace(/(;|, the latest|, against).*$/, '').replace(/\.?$/, '.')
 }
 const compactTake = (summary: string) => summary.split(/(?<=\.)\s+(?=[A-Z])/).slice(0, 2).map(compactSentence).join(' ')
+// The rationale the forecast already carries: the model's exact inputs, phrased by the server the
+// instant the forecast lands. Shown until the model has written its own words, and instead of them
+// when that never arrives.
+const HEADLINE = /^about \+\d+ min, likely \d+ to \d+ min, \d+% chance of arriving on time\.\s*/
+function useInstantTake(index: number) {
+  const reasoning = useStore().prediction?.legs[index]?.expectedDelayMinutes.reasoning ?? ''
+  return reasoning.replace(HEADLINE, '').trim()
+}
+function useElapsedSeconds(since?: number) {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => { if (since == null) return; const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t) }, [since])
+  return since == null ? 0 : Math.max(0, Math.round((now - since) / 1000))
+}
+function WritingNote({ e }: { e: { since: number; position: number; total: number } }) {
+  // Each train's own words take about a minute on the laptop and are written one after another.
+  const elapsed = useElapsedSeconds(e.since)
+  const queue = e.total > 1 ? `, train ${e.position} of ${e.total} in its queue` : ''
+  return <span className="mt-1 flex items-center gap-1 text-[10px] text-[#8a9a80]" aria-live="polite"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#9db08f]" aria-hidden />The model is writing its own take{queue} · {elapsed} s</span>
+}
 function TrainTake({ index }: { index: number }) {
-  // The model's two summary sentences on this train, shortened, woven into its card once written (about 15 s).
+  // The model's two summary sentences on this train, shortened, woven into its card: the instant
+  // rationale first, its freely written words once they arrive.
   const e = useStore().explanations[index]
-  if (!e || e.status === 'error') return null
-  if (e.status === 'loading') return <span className="mt-2 block space-y-1.5" aria-live="polite"><span className="sr-only">The model is reading this train.</span><span className="block h-1.5 w-11/12 animate-pulse rounded-full bg-[#e3e8da]" /><span className="block h-1.5 w-7/12 animate-pulse rounded-full bg-[#e3e8da] [animation-delay:200ms]" /></span>
-  return <span className="mt-2 flex gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="mt-px shrink-0 text-[#7c9070]" /><span>{compactTake(e.summary)}</span></span>
+  const instant = useInstantTake(index)
+  if (!e) return null
+  if (e.status === 'done') return <span className="mt-2 flex gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="mt-px shrink-0 text-[#7c9070]" /><span>{compactTake(e.summary)}</span></span>
+  if (!instant) return e.status === 'loading' ? <WritingNote e={e} /> : null
+  return <span className="mt-2 block" aria-live="polite">
+    <span className="flex gap-1.5 text-[11px] leading-snug text-[#4d5c46]"><Sparkles size={12} className="mt-px shrink-0 text-[#b3c0a8]" /><span>{compactTake(instant)}</span></span>
+    {e.status === 'loading' && <WritingNote e={e} />}
+  </span>
 }
 function ModelReasoning({ index }: { index: number }) {
-  // The full rationale the model wrote: a dropdown at the bottom of the panel that opens downwards.
+  // The full rationale: the instant one from the forecast right away, replaced by the words the
+  // model wrote itself when they arrive. A dropdown at the bottom of the panel that opens downwards.
   const e = useStore().explanations[index]
-  if (e?.status !== 'done') return null
+  const instant = useInstantTake(index)
+  if (!e || (e.status !== 'done' && !instant)) return null
+  const own = e.status === 'done'
   return <details className="group flex-1 border-t border-[#e6eadf] pt-2.5 animate-in fade-in duration-700">
-    <summary className="flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden"><span className="travel-kicker">IN THE MODEL’S OWN WORDS</span><ChevronDown size={12} className="text-[#687f5d] transition-transform group-open:rotate-180" /></summary>
-    <p className="travel-copy mt-1.5 text-[#55624d]">{e.text}</p><p className="travel-fine mt-1.5">Written freely by the model, so it can misstate numbers; the estimate above reads the exact inputs.</p>
+    <summary className="flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden"><span className="travel-kicker">{own ? 'IN THE MODEL’S OWN WORDS' : 'WHAT THE MODEL READ'}</span><ChevronDown size={12} className="text-[#687f5d] transition-transform group-open:rotate-180" /></summary>
+    <p className="travel-copy mt-1.5 text-[#55624d]">{own ? e.text : instant}</p>
+    {own
+      ? <p className="travel-fine mt-1.5">Written freely by the model, so it can misstate numbers; the estimate above reads the exact inputs.</p>
+      : e.status === 'loading'
+        ? <p className="travel-fine mt-1.5">The exact inputs behind the estimate. The model is writing its own explanation now; it replaces this text when done, about a minute per train.</p>
+        : <p className="travel-fine mt-1.5">The exact inputs behind the estimate. The model’s own explanation did not arrive ({e.error}).</p>}
   </details>
 }
 function JourneyPanel() {
