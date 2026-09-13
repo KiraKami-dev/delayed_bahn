@@ -835,6 +835,7 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
 | TSLM, encoder only (all series as embeddings, summaries in the rationale), v7, 2k | 3.451 / 2.773 | | |
 | TSLM, stacked split, v7, 2k: run and previous trains as text, the long history and both new series through the encoder only | 3.450 / 2.771 | | 2.543 / 2.023 (10,000) |
 | TSLM, stacked text, v7, 6k (candidate, 30,000 test examples) | 3.224 / 2.560 on its 30,000 | | *queued* |
+| TSLM, split, v7, 6k (30,000 test examples) | 3.234 / 2.570 on its 30,000 | | |
 | TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
 
 - **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
@@ -861,6 +862,9 @@ mode) and as scalars for XGBoost; the rationale gets one sentence with the media
   28,290 that ran: CRPS -0.074 (-0.097 to -0.055), median error -0.072, within 15 minutes -0.104,
   beyond 30 minutes -0.060, all real; against the 2,000-step v7 text model -0.019 (-0.037 to
   -0.002), real. Checkpoint in the bucket as `models/db-trip-delay-v7-text-6k.pt`.
+- **Split at 6,000 steps stays a hundredth behind (07:50).** 3.234 / 2.570 on the same 30,000:
+  against XGBoost-v7 -0.063 (-0.086 to -0.045), real; against the text candidate +0.010 (+0.007 to
+  +0.014), real. The same gap as at 2,000 steps.
 - **Written out, the same series do slightly better (06:10).** Stacked text on v7 after 2,000
   steps: CRPS -0.063 (-0.108 to -0.030) against XGBoost-v7, real; within 15 minutes -0.093 and
   beyond 30 minutes -0.053, both real. Against the split model -0.010 (-0.019 to -0.003), real

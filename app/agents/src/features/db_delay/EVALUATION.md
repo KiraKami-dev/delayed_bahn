@@ -106,6 +106,7 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | Final A: text, v2 data, plain + CRPS, 12k | 3.322 | 2.644 | against XGBoost on the combined features (3.414 / 2.720): -0.076 (-0.088 to -0.065) real; median error -0.093 real; within 15 min -0.092 real; beyond 30 min -0.073 real; lead-time blend weight 1.0 |
 | Final: stacked text, v4 data, plain + CRPS, 12k | 3.331 | 2.647 | against XGBoost on the combined features (3.414 / 2.720): -0.073 (-0.084 to -0.063) real; within 15 min -0.091 real; beyond 30 min -0.066 real; vs the unstacked text final +0.003, no difference |
 | Candidate: stacked text, v7 data, plain + CRPS, 6k (30,000 of the test) | 3.224 | 2.560 | against XGBoost-v7 on the same examples: -0.074 (-0.097 to -0.055) real; median error -0.072 real; within 15 min -0.104 real; beyond 30 min -0.060 real |
+| Split, v7 data, plain + CRPS, 6k (30,000 of the test) | 3.234 | 2.570 | against XGBoost-v7: -0.063 (-0.086 to -0.045) real; against the text candidate +0.010, real |
 | XGBoost with the same-train and corridor series (v7) | 3.278 | 2.616 | the stronger baseline: both text finals trail it (+0.031 and +0.028, real) |
 | Final B: text + encoder, v3 data, plain + CRPS, 12k | 3.319 | 2.643 | against XGBoost on the combined features: -0.077 (-0.089 to -0.066) real; within 15 min -0.093 real; beyond 30 min -0.073 real; vs the text final -0.001, no difference; vs XGBoost-v7 +0.027 |
 
