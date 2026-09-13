@@ -732,6 +732,8 @@ features (3.462 / 2.759 on the original features).
 | same, within 15 min | | | -0.092 (-0.117 to -0.070), real |
 | same, beyond 30 min | | | -0.073 (-0.087 to -0.059), real |
 | same, against text plus encoder with the plain loss | | | -0.054 (-0.062 to -0.047), real |
+| Stacked text, v4 data, exact-minute plus CRPS loss (06:05) | 3.331 | 2.647 | -0.073 (-0.084 to -0.063) against XGBoost on the combined features, real; within 15 min -0.091, beyond 30 min -0.066; against the unstacked text final +0.003 (-0.002 to +0.008), no difference |
+| XGBoost with the new series (v7), for reference | 3.278 | 2.616 | ahead of both text finals: +0.031 (+0.019 to +0.042) and +0.028 (+0.015 to +0.040) |
 
 - **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
   XGBoost beyond 30 minutes (+0.076) and overall (+0.015); at 12,000 steps it wins at every lead
@@ -739,6 +741,10 @@ features (3.462 / 2.759 on the original features).
 - **Better data and the exact-minute loss add another 0.054.** The text model on the combined
   data beats XGBoost trained on the same features by 0.076 on the full test, with the lead-time
   blend choosing weight 1.0: nothing left for XGBoost to add. Validation 2.665 / 2.139.
+- **Stacking saturates at 12,000 steps.** With enough training the unstacked text model reaches the
+  stacked one (+0.003, no difference). And XGBoost given the two new series (fifth wave) beats both
+  finals by about 0.03: the finals are trained on inputs that are now out of date, so the
+  submission model has to come from the v7 runs.
 - **September (05:30), 10,000 examples:** the combined-data text final scores 2.669 / 2.106 on the
   combined-feature September set against XGBoost's 2.745 / 2.175: CRPS -0.070 (-0.111 to -0.041),
   median error -0.076, within 15 minutes -0.096, all real, alone. Text plus encoder with the plain
