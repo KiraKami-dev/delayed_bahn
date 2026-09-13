@@ -126,28 +126,6 @@ export function BufferSlider({ journey, prediction }: { journey: Journey; predic
   )
 }
 
-/* ---------- the model's own words ---------- */
-export function ModelExplanation({ index }: { index: number }) {
-  const e = useStore().explanations[index]
-  if (!e) return null
-  return (
-    <div className="mt-2 rounded-lg border border-dashed border-border bg-white/60 p-3 text-xs text-muted-foreground" aria-live="polite">
-      <div className="mb-1 font-medium text-foreground/80">In the model’s own words</div>
-      {e.status === "loading" && <p className="animate-pulse">The model is writing its explanation… (about 15 s per train)</p>}
-      {e.status === "error" && <p>Its own explanation is unavailable ({e.error}). The forecast above is unaffected.</p>}
-      {e.status === "done" && (
-        <>
-          <p className="text-foreground/90">{e.text}</p>
-          <p className="mt-1 text-[11px] italic">
-            Written freely by the model{e.answer ? `, ending with its own guess of ${e.answer === "cancelled" ? "cancelled" : `+${e.answer} min`}` : ""}.
-            It can misstate numbers; the forecast above reads the exact inputs.
-          </p>
-        </>
-      )}
-    </div>
-  )
-}
-
 /* ---------- the panel ---------- */
 export function ForecastPanel() {
   const s = useStore()
@@ -189,7 +167,6 @@ export function ForecastPanel() {
                 <WhyDisclosure item={d.expectedDelayMinutes} label="Why this delay?" />
                 {i < journey.legs.length - 1 && <WhyDisclosure item={d.missProbability} label="Why this change?" />}
               </div>
-              <ModelExplanation index={i} />
             </LegCard>
           )
         })}

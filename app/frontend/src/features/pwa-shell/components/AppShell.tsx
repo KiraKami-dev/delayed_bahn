@@ -30,6 +30,14 @@ function TextPages({ text }: { text: string }) {
   const index = Math.min(page, Math.max(0, pages.length - 1))
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
+function ModelWords({ index }: { index: number }) {
+  // The model's own rationale for this train, generated after the estimate (about 15 s per train).
+  const e = useStore().explanations[index]
+  if (!e) return null
+  if (e.status === 'loading') return <p className="travel-fine" role="status"><Loader2 size={12} className="animate-spin" /> The model is writing its own explanation for this train…</p>
+  if (e.status === 'error') return <p className="travel-fine">The model’s own explanation is unavailable. The estimate above is unaffected.</p>
+  return <details className="travel-fine"><summary>In the model’s own words{e.answer ? ` · its guess: ${e.answer === 'cancelled' ? 'cancelled' : `+${e.answer} min`}` : ''}</summary><TextPages text={`${e.text} Written freely by the model, so it can misstate numbers; the estimate reads the exact inputs.`} /></details>
+}
 function JourneyPanel() {
   const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)
   const leg = journey.legs[index], forecast = s.prediction?.legs[index], next = journey.legs[index + 1]
@@ -43,6 +51,7 @@ function JourneyPanel() {
       <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small></div>
     </button>
     {!!leg.disruptions?.length && <details className="travel-fine"><summary>Reported service notice</summary><TextPages text={leg.disruptions.map(n => `${n.text} Source: ${n.source}.`).join(' ')} /></details>}
+    <ModelWords index={index} />
     <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
     <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />
 
