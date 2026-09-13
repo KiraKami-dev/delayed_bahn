@@ -30,12 +30,27 @@ function TextPages({ text }: { text: string }) {
   const index = Math.min(page, Math.max(0, pages.length - 1))
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
+// One of the model's summary sentences, shorter: the same facts, station names and delays in fewer words.
+function compactSentence(sentence: string) {
+  let m: RegExpMatchArray | null
+  if ((m = sentence.match(/^The train left (.+?) (-?\d+) minutes late/))) return `The train left ${m[1]} ${m[2]} min late.`
+  if ((m = sentence.match(/^Today the previous \d+ trains? .*?reached (.+?) ((?:-?\d+, )*-?\d+) minutes late/))) {
+    const delays = m[2].split(', ').map(Number)
+    if (delays.length === 1) return `The train before it reached ${m[1]} ${delays[0]} min late.`
+    const list = delays.length <= 3 ? `${delays.slice(0, -1).join(', ')} and ${delays.at(-1)}` : `between ${Math.min(...delays)} and ${Math.max(...delays)}`
+    return `The last ${delays.length} trains reached ${m[1]} ${list} min late.`
+  }
+  if ((m = sentence.match(/^No earlier train of this type towards .+? reached (.+?) in the last 6 hours/))) return `No earlier train of this type reached ${m[1]} in 6 hours.`
+  if ((m = sentence.match(/^At (.+?), (\d+%) of stops ran at least 6 minutes late in the last 3 hours/))) return `${m[2]} of stops at ${m[1]} ran late in the last 3 hours.`
+  return sentence.replace(/(;|, the latest|, against).*$/, '').replace(/\.?$/, '.')
+}
+const compactTake = (summary: string) => summary.split(/(?<=\.)\s+(?=[A-Z])/).slice(0, 2).map(compactSentence).join(' ')
 function TrainTake({ index }: { index: number }) {
-  // The model's own two sentences on this train, woven into its card once written (about 15 s).
+  // The model's two summary sentences on this train, shortened, woven into its card once written (about 15 s).
   const e = useStore().explanations[index]
   if (!e || e.status === 'error') return null
   if (e.status === 'loading') return <span className="mt-2 block space-y-1.5" aria-live="polite"><span className="sr-only">The model is reading this train.</span><span className="block h-1.5 w-11/12 animate-pulse rounded-full bg-[#e3e8da]" /><span className="block h-1.5 w-7/12 animate-pulse rounded-full bg-[#e3e8da] [animation-delay:200ms]" /></span>
-  return <span className="mt-2 flex gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="mt-px shrink-0 text-[#7c9070]" /><span>{e.summary}</span></span>
+  return <span className="mt-2 flex gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="mt-px shrink-0 text-[#7c9070]" /><span>{compactTake(e.summary)}</span></span>
 }
 function ModelReasoning({ index }: { index: number }) {
   // The full rationale the model wrote: a dropdown at the bottom of the panel that opens downwards.
