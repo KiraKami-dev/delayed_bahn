@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CSHX41GFDMBJTNWA4845ZG",
+  "session_id": "cd860853-789b-4793-89dd-f90596af0281",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T07:08:55.996775Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "530f0c65eec0",
+  "checkpoint_transcript_start": 571,
+  "transcript_lines_at_start": 571,
+  "compact_transcript_start": 88,
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 2402,
+    "cache_read_tokens": 744114,
+    "output_tokens": 1196,
+    "api_call_count": 5
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_01RNNkaPbEgNDYYSERQDXpm2",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "schedule"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "be11cda5d70f",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 84,
+        "end": 85,
+        "entry_ids": [
+          "28b4e832-950e-4bd0-ac9e-8a32b7f213bb"
+        ],
+        "tool_use_id": "toolu_01RNNkaPbEgNDYYSERQDXpm2"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_01RNNkaPbEgNDYYSERQDXpm2"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: schedule",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 8
+  }
+}
