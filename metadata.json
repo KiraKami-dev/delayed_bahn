@@ -4,20 +4,7 @@
   "strategy": "manual-commit",
   "branch": "feat/db-route-multiscale",
   "checkpoints_count": 56,
-  "files_touched": [
-    "app/agents/.gitignore",
-    "app/agents/src/features/db_route/anchors.py",
-    "app/agents/src/features/db_route/build.py",
-    "app/agents/src/features/db_route/entities.py",
-    "app/agents/src/features/db_route/facts.py",
-    "app/agents/src/features/db_route/profiles.py",
-    "app/agents/src/features/db_route/remote_extract.py",
-    "app/agents/src/features/db_route/resample.py",
-    "app/agents/src/features/db_route/tests/test_anchors.py",
-    "app/agents/src/features/db_route/tests/test_resample.py",
-    "app/agents/src/features/db_route/tests/test_validate.py",
-    "app/agents/src/features/db_route/validate.py"
-  ],
+  "files_touched": null,
   "sessions": [
     {
       "metadata": "/0/metadata.json",
@@ -28,17 +15,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 4034,
-    "cache_creation_tokens": 1206384,
-    "cache_read_tokens": 109134233,
-    "output_tokens": 287027,
-    "api_call_count": 235,
-    "subagent_tokens": {
-      "input_tokens": 438,
-      "cache_creation_tokens": 795680,
-      "cache_read_tokens": 30015505,
-      "output_tokens": 205506,
-      "api_call_count": 219
-    }
+    "input_tokens": 4930,
+    "cache_creation_tokens": 2064978,
+    "cache_read_tokens": 391040693,
+    "output_tokens": 741707,
+    "api_call_count": 683
   }
 }
