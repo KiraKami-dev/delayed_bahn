@@ -781,6 +781,12 @@ summary numbers.
   numbers in the prompt the series stay worth 0.05 at 12,000 steps (text plus encoder -0.051,
   real). After long training the language model beats XGBoost by 0.077 from the timetable and
   the rationale's summary numbers alone.
+- **Out of time the series gain does not show (07:00).** On the original September set the no-series
+  model at 12,000 steps scores 3.190 / 2.549 against XGBoost's 3.244 / 2.586 (-0.037, -0.060 to
+  -0.016, real), and text plus encoder at 12,000 steps (plain loss) is not better than it: +0.017
+  (-0.011 to +0.047), beyond 30 minutes +0.044 (-0.017 to +0.106). The 0.05 the series add on the
+  June to August test is within what September can resolve; the losses also differ (plain against
+  exact-minute plus CRPS), so this pair is not a clean ablation.
 - **Forcing the model to read the encoder does not help.** Hiding the numbers from the text in half
   the training rows (modality dropout) costs 0.027 against plain text plus encoder, and splitting
   the inputs so the encoder alone carries the long history costs 0.023 on the stacked data. One

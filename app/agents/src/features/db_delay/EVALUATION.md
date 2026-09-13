@@ -135,6 +135,7 @@ are new.
 | TSLM, text, plain + CRPS loss, 2k | 3.266 | 2.610 | +0.024; within 15 min -0.016 (-0.026 to -0.006) real |
 | Lead-time blend of that | 3.230 | 2.573 | -0.013 (-0.022 to -0.005) real |
 | TSLM, encoder only, plain + CRPS loss, 12k | 3.199 | 2.553 | -0.033 (-0.050 to -0.017) real; median error -0.045 real; within 15 min -0.038 real; May blend weights 1.0, nothing to add |
+| TSLM, no series at all, plain + CRPS loss, 12k | 3.190 | 2.549 | -0.037 (-0.060 to -0.016) real; median error -0.054 real; within 15 min -0.036 real |
 | Final: text + encoder, plain loss, 12k | 3.214 | 2.566 | -0.020 (-0.042 to +0.003); within 15 min -0.040 real; lead-time blend -0.031 (-0.048 to -0.015) real |
 
 Second September set, built with the combined features (previous trains on the route) and the
