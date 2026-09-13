@@ -174,7 +174,7 @@ class TripTSLM(OpenTSLMSP):
         }
 
     @torch.no_grad()
-    def generate_answers(self, batch: list[dict], max_new_tokens: int = 200) -> list[str]:
+    def generate_answers(self, batch: list[dict], max_new_tokens: int = 360) -> list[str]:
         """Free generation of rationale and answer, left-padded so every row continues from its own end."""
         embeds, mask, _ = self._assemble(batch, [[] for _ in batch], left_pad=True)
         ids = self.llm.generate(inputs_embeds=embeds, attention_mask=mask, max_new_tokens=max_new_tokens,
