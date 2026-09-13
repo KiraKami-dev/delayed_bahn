@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2CPWC44CB9WXDTMRJTZVTT7",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 11,
+  "files_touched": [
+    ".env.example",
+    "app/agents/.gitignore",
+    "app/agents/src/features/db_route/TRAINING.md",
+    "app/agents/src/features/db_route/build_cancellation_rates.py",
+    "app/agents/src/features/db_route/fetch_serving_data.sh",
+    "app/agents/src/features/db_route/parse_generations.py",
+    "app/agents/src/features/db_route/serve_route.py",
+    "app/agents/src/features/db_route/serve_route.sh",
+    "app/backend/README.md",
+    "app/backend/src/features/causes/causes.test.js",
+    "app/backend/src/features/causes/routes/causes.js",
+    "app/backend/src/features/delay-prediction/backends/http.js",
+    "app/backend/src/features/delay-prediction/routes/delay-prediction.js",
+    "app/frontend/HOMEPAGE-REVIEW.md",
+    "app/frontend/public/proof.json",
+    "app/frontend/src/features/delay-prediction/components/ForecastPanel.tsx",
+    "app/frontend/src/features/evidence/components/EvidencePanel.tsx",
+    "app/frontend/src/features/evidence/components/ModelVoices.tsx",
+    "app/frontend/src/features/pwa-shell/components/AppShell.tsx",
+    "app/frontend/src/features/recommendation/components/AdvicePanel.tsx",
+    "app/frontend/src/features/share-parser/components/JourneyBuilder.tsx",
+    "app/frontend/src/lib/api.ts",
+    "app/frontend/src/lib/contract.ts",
+    "app/frontend/src/lib/geo.ts",
+    "app/frontend/src/lib/store.tsx",
+    "app/frontend/src/lib/travel-date.ts",
+    "app/frontend/src/single-screen.css",
+    "app/frontend/train-visual.smoke.mjs",
+    "team-setup/state/decisions.md",
+    "team-setup/state/owners.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 4950,
+    "cache_creation_tokens": 329335,
+    "cache_read_tokens": 43841037,
+    "output_tokens": 135487,
+    "api_call_count": 165
+  }
+}

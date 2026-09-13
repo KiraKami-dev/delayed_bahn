@@ -1,0 +1,41 @@
+can you the get the backend up and running which is from feat/db-route-multiscale then integrate it frontend to use the real data from now on instead of mock data
+
+---
+
+can you run the server and then run the frontend
+
+---
+
+if estimated plan failure risk is good then higher confident then it should be green color and positive numhber like if the connection looks good it should be 96% you will make it and other different scenarios take care of that
+
+---
+
+how are you getting the numbers is it actually coming from backend or just faking the change you make it part
+
+---
+
+done. Can you check where the reasoning of the postlytic comes? The worst at some point, man, I would put a five models of things like as a text. Is that still sitting there?
+
+---
+
+who wrote the code which gives this output in the back end. Check the original author
+
+---
+
+Let let me confirm. So, basically, Jonas made the code in Python, and then we had the core... the same code in JavaScript, you are saying? Is it like that for the connections?
+
+---
+
+But where did the output of the final reasoning or why the output got produced? That there was a string output at the very end. Where did that go?
+
+---
+
+Where is the model generation output logged and where is it saved? we need them and that is to be shown on frontend
+
+---
+
+it still shows chance you make every change on ui
+
+---
+
+[Image #1] it only says this all the time can you check if the local host is reloaded or is it another mistake
