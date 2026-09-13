@@ -55,8 +55,10 @@
 .travel-connection strong { font-size: 12px; }
 .travel-connection p { margin: 3px 0 0; font-size: 9px; line-height: 1.4; color: #78806e; }
 .travel-connection[data-tight="true"] strong { color: #ab483b; }
-.travel-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10px; color: #708061; }
-.travel-pager button { display: grid; place-items: center; min-width: 42px; height: 34px; border: 1px solid #e0e6d6; border-radius: 10px; background: #f6f8ee; }
+.travel-pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .2px; color: #708061; }
+.travel-pager button { display: grid; place-items: center; min-width: 30px; height: 26px; border: 0; border-radius: 999px; background: transparent; color: #5f7555; transition: background-color .15s, opacity .15s; }
+.travel-pager button:hover:not(:disabled), .travel-pager button:focus-visible { background: #eef2e6; }
+.travel-pager button:disabled { opacity: .3; }
 .travel-primary { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 44px; padding: 11px 15px; background: #285b43; color: #fff; border-radius: 12px; font-size: 12px; font-weight: 600; }
 .travel-subtabs { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 12px; background: #eff3e7; }
 .travel-subtabs button { flex: 1; min-width: 0; padding: 7px 3px; min-height: 36px; font-size: 10px; line-height: 1.3; border-radius: 8px; color: #6c7f60; }
