@@ -1,0 +1,77 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2C7NJE5FVGTKDR78SQ06BAK",
+  "session_id": "abdb3068-b181-45de-82c2-0cdd5152ab32",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T01:56:20.496201Z",
+  "branch": "db-train-model",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "c32180a2e2fc",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 10550,
+    "cache_creation_tokens": 1711979,
+    "cache_read_tokens": 226273120,
+    "output_tokens": 915536,
+    "api_call_count": 572
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_01JbfWq4VYNGTEDNoEuHy7Go",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "artifact-design"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "06ef08617cb5",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 4851,
+        "end": 4852,
+        "entry_ids": [
+          "e636dc6c-3ce5-4ff7-ad8c-083efa9b64af"
+        ],
+        "tool_use_id": "toolu_01JbfWq4VYNGTEDNoEuHy7Go"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_01JbfWq4VYNGTEDNoEuHy7Go"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: artifact-design",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 89
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 46,
+      "user_lines_removed": 8,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/agents/src/features/db_delay/DESIGN.md": 9,
+        "app/agents/src/features/db_delay/EVALUATION.md": 15,
+        "app/agents/src/features/db_delay/trip/README.md": 14,
+        "app/agents/uv.lock": 8
+      },
+      "user_removed_per_file": {
+        "app/agents/src/features/db_delay/EVALUATION.md": 8
+      }
+    }
+  ]
+}
