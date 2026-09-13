@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2CSETKCVS1BN70ZG8RXZHDN",
   "session_id": "f367c1a0-5ca9-4267-ba17-c73dc43314e1",
   "strategy": "manual-commit",
-  "created_at": "2026-09-13T07:07:16.98824Z",
+  "created_at": "2026-09-13T07:07:20.321484Z",
   "branch": "main",
   "checkpoints_count": 2,
   "files_touched": [
@@ -22,57 +22,29 @@
   "agent": "Claude Code",
   "model": "claude-fable-5-1",
   "turn_id": "19a38c186c0a",
-  "compact_transcript_start": 0,
+  "checkpoint_transcript_start": 156,
+  "transcript_lines_at_start": 156,
+  "compact_transcript_start": 16,
   "token_usage": {
-    "input_tokens": 200,
-    "cache_creation_tokens": 39565,
-    "cache_read_tokens": 622495,
-    "output_tokens": 7174,
-    "api_call_count": 10
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
   },
   "session_metrics": {
     "turn_count": 2
   },
   "initial_attribution": {
-    "calculated_at": "2026-09-13T07:07:16.972029Z",
+    "calculated_at": "2026-09-13T07:07:20.304653Z",
     "agent_lines": 0,
-    "agent_removed": 27,
+    "agent_removed": 0,
     "human_added": 0,
     "human_modified": 0,
-    "human_removed": 86,
-    "total_committed": 71,
-    "total_lines_changed": 113,
-    "agent_percentage": 23.893805309734514,
+    "human_removed": 0,
+    "total_committed": 0,
+    "total_lines_changed": 0,
+    "agent_percentage": 0,
     "metric_version": 2
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 325,
-      "user_lines_removed": 86,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts": 48,
-        "app/frontend/src/features/globe-map/train-layer.ts": 47,
-        "app/frontend/src/features/globe-map/train-models.ts": 104,
-        "app/frontend/src/lib/contract.ts": 1,
-        "app/frontend/src/lib/journey-search.ts": 11,
-        "app/frontend/src/lib/rail-router.ts": 35,
-        "app/frontend/src/lib/train-story.ts": 58,
-        "app/frontend/src/single-screen.css": 4,
-        "app/frontend/train-visual.smoke.mjs": 17
-      },
-      "user_removed_per_file": {
-        "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts": 5,
-        "app/frontend/src/features/globe-map/train-layer.ts": 58,
-        "app/frontend/src/features/pwa-shell/components/AppShell.tsx": 1,
-        "app/frontend/src/lib/contract.ts": 1,
-        "app/frontend/src/lib/journey-search.ts": 7,
-        "app/frontend/src/lib/train-story.ts": 7,
-        "app/frontend/src/single-screen.css": 1,
-        "app/frontend/train-visual.smoke.mjs": 6
-      }
-    }
-  ]
+  }
 }

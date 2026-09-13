@@ -37,14 +37,14 @@
       "transcript": "/2/full.jsonl",
       "compact_transcript": "/2/transcript.jsonl",
       "content_hash": "/2/content_hash.txt",
-      "prompt": "/2/prompt.txt"
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 332,
-    "cache_creation_tokens": 303690,
-    "cache_read_tokens": 7444272,
-    "output_tokens": 43129,
-    "api_call_count": 76
+    "input_tokens": 132,
+    "cache_creation_tokens": 264125,
+    "cache_read_tokens": 6821777,
+    "output_tokens": 35955,
+    "api_call_count": 66
   }
 }
