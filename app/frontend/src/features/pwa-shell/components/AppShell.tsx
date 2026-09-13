@@ -30,17 +30,18 @@ function TextPages({ text }: { text: string }) {
   const index = Math.min(page, Math.max(0, pages.length - 1))
   return <><p className="travel-copy">{pages[index]}</p>{pages.length > 1 && <Pager label="page" index={index} count={pages.length} onChange={setPage} />}</>
 }
-function ModelWords({ index }: { index: number }) {
-  // The model's own short take on this train, generated after the estimate (about 15 s per train).
+function TrainTake({ index }: { index: number }) {
+  // The model's own one or two sentences on this train, woven into its card once written (about 15 s).
   const e = useStore().explanations[index]
-  if (!e) return null
-  const guess = e.status === 'done' && e.answer ? ` · its guess ${e.answer === 'cancelled' ? 'cancelled' : `+${e.answer} min`}` : ''
-  return <section className="rounded-2xl border border-[#d9e2d6] bg-[#f3f6ef] px-3.5 py-3 text-[#2f4035]" aria-live="polite">
-    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6b7f5f]">{e.status === 'loading' ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}The model’s take{guess}</div>
-    {e.status === 'loading' && <p className="mt-1.5 text-[13px] leading-snug text-[#78806e]">Reading this train… its short explanation follows in about 15 seconds.</p>}
-    {e.status === 'error' && <p className="mt-1.5 text-[13px] leading-snug text-[#78806e]">Unavailable right now. The estimate above is unaffected.</p>}
-    {e.status === 'done' && <><p className="mt-1.5 text-[13px] leading-snug">{e.summary}</p><details className="travel-fine mt-1"><summary>Full text · written freely, may misstate numbers</summary><TextPages text={e.text} /></details></>}
-  </section>
+  if (!e || e.status === 'error') return null
+  if (e.status === 'loading') return <span className="mt-2 block space-y-1.5" aria-live="polite"><span className="sr-only">The model is reading this train.</span><span className="block h-1.5 w-11/12 animate-pulse rounded-full bg-[#e3e8da]" /><span className="block h-1.5 w-7/12 animate-pulse rounded-full bg-[#e3e8da] [animation-delay:200ms]" /></span>
+  return <span className="mt-2 flex gap-1.5 text-[11px] leading-snug text-[#4d5c46] animate-in fade-in slide-in-from-bottom-1 duration-700" aria-live="polite"><Sparkles size={12} className="mt-px shrink-0 text-[#7c9070]" /><span>{e.summary}</span></span>
+}
+function TakeDetails({ index }: { index: number }) {
+  const e = useStore().explanations[index]
+  if (e?.status !== 'done') return null
+  const guess = e.answer ? ` · its guess ${e.answer === 'cancelled' ? 'cancelled' : `+${e.answer} min`}` : ''
+  return <details className="travel-fine"><summary>Model’s full reasoning{guess}</summary><TextPages text={`${e.text} Written freely by the model, so it can misstate numbers; the estimate reads the exact inputs.`} /></details>
 }
 function JourneyPanel() {
   const s = useStore(); const journey = s.journey!; const index = Math.min(s.selectedLeg ?? 0, journey.legs.length - 1)
@@ -52,10 +53,10 @@ function JourneyPanel() {
   return <div className="travel-panel-body">
     <div className="travel-verdict"><div><span className="travel-kicker">YOUR WHOLE JOURNEY</span><h2>{risk == null ? s.error ? 'Forecast unavailable.' : 'Checking your connections…' : journey.legs.length === 1 ? 'One train. A simpler journey.' : risk < .15 ? 'This connection looks good.' : 'Give your day a backup plan.'}</h2></div><strong>{risk == null ? '—' : direct ? `+${Math.round(forecast?.expectedDelayMinutes.value ?? 0)}` : `${Math.round(risk * 100)}%`}<small>{direct ? 'minutes estimated arrival delay' : 'estimated plan-failure risk'}</small></strong></div>
     <button type="button" className="travel-train-card" onClick={() => s.dispatch({ type: 'selectLeg', index })} aria-label={`Focus map on ${leg.trainId}`}>
-      <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small></div>
+      <ServiceTrain leg={leg} /><div><span className="travel-kicker">{trainVisual(leg).label} · {index + 1}</span><h3>{leg.trainId}<em>{forecast ? `+${Math.round(forecast.expectedDelayMinutes.value)} min` : 'Checking…'}</em></h3><p>{leg.from.name} <ArrowRight size={12} /> {leg.to.name}</p><small>{fmtTime(leg.plannedDeparture)} — {fmtTime(leg.plannedArrival)} · scheduled</small><TrainTake index={index} /></div>
     </button>
     {!!leg.disruptions?.length && <details className="travel-fine"><summary>Reported service notice</summary><TextPages text={leg.disruptions.map(n => `${n.text} Source: ${n.source}.`).join(' ')} /></details>}
-    <ModelWords index={index} />
+    <TakeDetails index={index} />
     <div className="travel-connection" data-tight={left != null && left < 8}><Clock3 size={18} /><div><strong>{!next ? 'Your final stop.' : left == null ? `${Math.round(change!)} minutes scheduled to change` : left < 0 ? `${Math.abs(left)} min past the next departure` : `${left} minutes left to change`}</strong><p>{next ? 'Assumes the next train leaves on time; walking time not included.' : 'An arrival delay can still affect your plans after the train.'}</p></div></div>
     <Pager label="train" index={index} count={journey.legs.length} onChange={i => s.dispatch({ type: 'selectLeg', index: i })} />
 

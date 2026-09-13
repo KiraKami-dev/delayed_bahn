@@ -115,14 +115,14 @@ def rounded(probs: np.ndarray) -> list[float]:
 
 
 def short_explanation(text: str) -> str:
-    """Up to three of the model's own sentences a traveller needs: where the train is, how the trains
-    before it did today, and how late the target ran in the last hours. The rationale follows a fixed
-    order, so they are found by their openings; without a match the first two sentences are used."""
+    """One or two of the model's own sentences for the train card: how late the running train left its
+    last stop, how the trains before it did today, else how late the target ran in the last hours. The
+    rationale follows a fixed order, so they are found by their openings; without a match, the first."""
     sentences = [s.strip() for s in re.split(r"(?<=\.)\s+(?=[A-Z])", text.strip()) if s.strip()]
-    chosen = {s for s in sentences if s.startswith(("The train", "Today the previous", "No earlier train"))}
-    chosen |= {s for s in sentences if re.match(r"At .+ of stops ran", s)}
-    picked = [s for s in sentences if s in chosen][:3]
-    return " ".join(picked or sentences[:2])
+    running = [s for s in sentences if s.startswith("The train left")]
+    today = [s for s in sentences if s.startswith(("Today the previous", "No earlier train"))]
+    recent = [s for s in sentences if re.match(r"At .+ of stops ran", s)]
+    return " ".join((running + today + recent)[:2] or sentences[:1])
 
 
 def leg_key(leg: dict) -> str:
