@@ -1,0 +1,1906 @@
+{
+  "generated": "2026-09-13T05:15:10+00:00",
+  "window": [
+    "2025-11-02",
+    "2026-08-31"
+  ],
+  "entries": [
+    {
+      "id": "known:piebro/deutsche-bahn-data",
+      "title": "DB Timetables API archive (piebro)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "events",
+      "probe": {
+        "columns": [
+          "station_name",
+          "xml_station_name",
+          "eva",
+          "train_number",
+          "line_number",
+          "final_destination_station",
+          "delay_in_min",
+          "time",
+          "arrival_is_canceled",
+          "departure_is_canceled",
+          "train_type",
+          "train_line_ride_id",
+          "train_line_station_num",
+          "arrival_planned_time",
+          "arrival_change_time",
+          "departure_planned_time",
+          "departure_change_time",
+          "id"
+        ],
+        "n_columns": 18,
+        "per_month": {
+          "2025-10": {
+            "rows": 1989180,
+            "stations": 107
+          },
+          "2025-11": {
+            "rows": 13943561,
+            "stations": 5293
+          },
+          "2026-08": {
+            "rows": 14270628,
+            "stations": 5203
+          }
+        },
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_platform": false,
+        "has_cause_codes": false,
+        "coverage_step": {
+          "before": 107,
+          "after": 5293,
+          "ratio": 49.5
+        },
+        "notes": "cause codes live only in raw_data/ IRIS XML (measured 30.1% of stops carry one)",
+        "probed": true,
+        "seconds": 17.3
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "0.0166667 h",
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "primary series",
+        "notes": "processed monthly parquet + raw IRIS XML; ~100 stations to 2025-11-02, all stations after",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:bahn-vorhersage",
+      "title": "Bahn-Vorhersage archive (Univ. Augsburg)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "ODbL-1.0",
+      "kind": "events",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "0.0166667 h",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "primary series",
+        "notes": "DB Timetable API polled per station since 2021; ~3.5-5M stops/week",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:openholidays",
+      "title": "OpenHolidays API",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "ODbL-1.0",
+      "kind": "calendar",
+      "probe": {
+        "school_periods_BY": 7,
+        "public_holidays_BY": 13,
+        "fields": [
+          "endDate",
+          "id",
+          "name",
+          "nationwide",
+          "regionalScope",
+          "startDate",
+          "subdivisions",
+          "temporalScope",
+          "type"
+        ],
+        "probed": true,
+        "seconds": 0.3
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "24 h",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "annotations",
+        "notes": "public and school holidays per Bundesland",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:db-stations",
+      "title": "db-stations (station hub)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "ISC",
+      "kind": "reference",
+      "probe": {
+        "stations": 5388,
+        "fields": [
+          "additionalIds",
+          "address",
+          "category",
+          "federalState",
+          "hasBicycleParking",
+          "hasCarRental",
+          "hasDBLounge",
+          "hasLocalPublicTransport",
+          "hasLockerSystem",
+          "hasLostAndFound",
+          "hasMobilityService",
+          "hasParking",
+          "hasPublicFacilities",
+          "hasRailwayMission",
+          "hasSteplessAccess",
+          "hasTaxiRank",
+          "hasTravelCenter",
+          "hasTravelNecessities",
+          "hasWiFi",
+          "id"
+        ],
+        "with_federal_state": 5388,
+        "probed": true,
+        "seconds": 0.3
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "5,388 stations: EVA, DS100, Bundesland, category, weight, coordinates",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:bright-sky",
+      "title": "Bright Sky (DWD hourly weather)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "weather",
+      "probe": {
+        "hourly_rows_one_week": 169,
+        "fields": [
+          "cloud_cover",
+          "condition",
+          "dew_point",
+          "fallback_source_ids",
+          "icon",
+          "precipitation",
+          "precipitation_probability",
+          "precipitation_probability_6h",
+          "pressure_msl",
+          "relative_humidity",
+          "solar",
+          "source_id",
+          "sunshine",
+          "temperature",
+          "timestamp",
+          "visibility",
+          "wind_direction",
+          "wind_gust_direction",
+          "wind_gust_speed",
+          "wind_speed"
+        ],
+        "source": "München-Stadt",
+        "probed": true,
+        "seconds": 0.1
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "1 h",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "context annotations or channels",
+        "notes": "hourly observations for any lat/lon, no key",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:infrago-infrastruktur",
+      "title": "DB InfraGO Infrastrukturdaten",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "infrastructure",
+      "probe": {
+        "status": 200,
+        "size_mb": null,
+        "content_type": "application/octet-stream",
+        "probed": true,
+        "seconds": 0.6
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations",
+        "notes": "track count, electrification, line speed, Bauzustand, Betriebsstellen with DS100 and km",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:zensus-2022-grid",
+      "title": "Zensus 2022 population grid (100 m)",
+      "registry": "known",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "status": 200,
+        "size_mb": null,
+        "content_type": "application/zip",
+        "probed": true,
+        "seconds": 0.1
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "catchment population per station",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "known:mobilithek-delfi-gtfs",
+      "title": "DELFI GTFS Germany (Mobilithek)",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "known:db-gtfs-rt",
+      "title": "DB GTFS-RT",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "events"
+    },
+    {
+      "id": "known:db-timetables-api",
+      "title": "DB Timetables (IRIS) API",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "events"
+    },
+    {
+      "id": "known:stada",
+      "title": "DB StaDa (station data)",
+      "registry": "known",
+      "accepted": false,
+      "reason": "needs registration or an API key: not reproducible by a stranger running timenet-build",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "known:openligadb",
+      "title": "openligadb (football fixtures)",
+      "registry": "known",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "ODbL-1.0",
+      "kind": "other"
+    },
+    {
+      "id": "known:auma-messen",
+      "title": "AUMA trade-fair calendar",
+      "registry": "known",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "other"
+    },
+    {
+      "id": "known:ticketmaster-discovery",
+      "title": "Ticketmaster Discovery API",
+      "registry": "known",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "proprietary",
+      "kind": "other"
+    },
+    {
+      "id": "hf:deutschebahn/mnist",
+      "title": "deutschebahn/mnist",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "UNKNOWN",
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:islam-hajosman/deutsche_bahn_faq_1k",
+      "title": "islam-hajosman/deutsche_bahn_faq_1k",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:islam-hajosman/deutsche_bahn_faq_128",
+      "title": "islam-hajosman/deutsche_bahn_faq_128",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:islam-hajosman/deutsche_bahn_faq_1k_emails",
+      "title": "islam-hajosman/deutsche_bahn_faq_1k_emails",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "hf:piebro/deutsche-bahn-data",
+      "title": "piebro/deutsche-bahn-data",
+      "registry": "huggingface",
+      "accepted": true,
+      "reason": "coverage measured by probe: 2025-10..2026-08 present",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "columns": [
+          "station_name",
+          "xml_station_name",
+          "eva",
+          "train_number",
+          "line_number",
+          "final_destination_station",
+          "delay_in_min",
+          "time",
+          "arrival_is_canceled",
+          "departure_is_canceled",
+          "train_type",
+          "train_line_ride_id",
+          "train_line_station_num",
+          "arrival_planned_time",
+          "arrival_change_time",
+          "departure_planned_time",
+          "departure_change_time",
+          "id"
+        ],
+        "n_columns": 18,
+        "per_month": {
+          "2025-10": {
+            "rows": 1989180,
+            "stations": 107
+          },
+          "2025-11": {
+            "rows": 13943561,
+            "stations": 5293
+          },
+          "2026-08": {
+            "rows": 14270628,
+            "stations": 5203
+          }
+        },
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_platform": false,
+        "has_cause_codes": false,
+        "coverage_step": {
+          "before": 107,
+          "after": 5293,
+          "ratio": 49.5
+        },
+        "notes": "cause codes live only in raw_data/ IRIS XML (measured 30.1% of stops carry one)",
+        "probed": true,
+        "seconds": 15.7
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": true,
+        "has_cancellation": true,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "lastModified 2026-09-12, downloads 6408; duplicates known:piebro/deutsche-bahn-data (scout confirms the primary source)",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "hf:kamalnsr123456/deutsche-bahn-data",
+      "title": "kamalnsr123456/deutsche-bahn-data",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "lastModified 2026-01-18, downloads 121",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "hf:ksg104/deutsche-bahn-data",
+      "title": "ksg104/deutsche-bahn-data",
+      "registry": "huggingface",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "CC-BY-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "lastModified 2026-06-27, downloads 61",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:haltestellen-deutsche-bahn",
+      "title": "Haltestellen Deutsche Bahn",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Metropolregion Rhein-Neckar; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gpkg', 'http://publications.europa.eu/resource/authority/file-type/wms_srvc']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:schienennetz-deutsche-bahnddea3",
+      "title": "Schienennetz Deutsche Bahn",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Metropolregion Rhein-Neckar; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/geojson', 'http://publications.europa.eu/resource/authority/file-type/gpkg', 'http://publications.europa.eu/resource/authority/file-type/wms_srvc']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:wfs-geoinformation-deutsches-zentrum-fur-schienenverkehrsforschung-beim-eisenbahn-bundesamt-dzs",
+      "title": "(WFS) Geoinformation Deutsches Zentrum für Schienenverkehrsforschung beim Eisenbahn-Bundesamt (DZSF)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wmts-geoinformation-deutsches-zentrum-fur-schienenverkehrsforschung-beim-eisenbahn-bundesamt-dz",
+      "title": "(WMTS) Geoinformation Deutsches Zentrum für Schienenverkehrsforschung beim Eisenbahn-Bundesamt (DZSF)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:wms-potenzielle-naturliche-gefahrdung-an-schienenwegen-des-bundes",
+      "title": "(WMS) Potenzielle natürliche Gefährdung an Schienenwegen des Bundes",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehr-krefeld",
+      "title": "Verkehr Krefeld",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schienennetze-norddeutschland",
+      "title": "Schienennetze Norddeutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin,http://publications.europa.eu/resource/authority/file-type/gml,http://publications.europa.eu/resource/authority/file-type/html' is not machine-readable data (map service / html / pdf)",
+      "licence": "ODbL-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:schienennetze-norddeutschland15266",
+      "title": "Schienennetze Norddeutschland",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'gml,html,oaf,wfs,wms' is not machine-readable data (map service / html / pdf)",
+      "licence": "ODbL-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:infrastrukturdaten-der-db-infrago",
+      "title": "Infrastrukturdaten der DB InfraGO",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/bin', 'http://publications.europa.eu/resource/authority/file-type/csv']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:larmkarte-essen",
+      "title": "Lärmkarte Essen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:beta-boschungsbrandgefahrdung47997",
+      "title": "(Beta) - Böschungsbrandgefährdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hochwassergefahrdung-hq100",
+      "title": "Hochwassergefährdung HQ100",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:v2x-durail-funkinterferenzdaten-zwischen-stadtischen-kooperative-intelligente-verkehrssystemen-",
+      "title": "V2X-DuRail Funkinterferenzdaten zwischen städtischen kooperative, intelligente Verkehrssystemen im Straßen- und Schienenverkehr",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:potentielle-hangmurena498a",
+      "title": "potentielle Hangmuren",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:murganggefaehrdung",
+      "title": "Murganggefaehrdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:hangrutschungsgefahrdung",
+      "title": "Hangrutschungsgefährdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:potentielle-murgange861b3",
+      "title": "potentielle Murgänge",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:potentielle-murgange-hangmuren",
+      "title": "potentielle Murgänge Hangmuren",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:flachennutzungsplan-der-kreisstadt-olpe",
+      "title": "Flächennutzungsplan der Kreisstadt Olpe",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:beta-boschungsbrandgefahrdung-aggregiert",
+      "title": "(Beta) - Böschungsbrandgefährdung aggregiert",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:murgang-und-hangmurengefahrdung-kombiniert",
+      "title": "Murgang- und Hangmurengefährdung kombiniert",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:mobilfunk-signalstarke-signalqualitat-fur-gsm-umts-und-lte",
+      "title": "Mobilfunk Signalstärke & Signalqualität für GSM, UMTS und LTE",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "ODbL-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:hangmurengefahrdung",
+      "title": "Hangmurengefährdung",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bundesflachen-hamburg",
+      "title": "Bundesflächen Hamburg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:bebauungsplan-wilhelmsburg-90-hamburg",
+      "title": "Bebauungsplan Wilhelmsburg 90 Hamburg",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:fahrplandaten-magdeburger-regionalverkehrsverbund-gmbh-marego-ohne-bahn",
+      "title": "Fahrplandaten Magdeburger Regionalverkehrsverbund GmbH (marego) - ohne Bahn",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:lvb-fahrplandaten",
+      "title": "LVB-Fahrplandaten",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:vbb-fahrplandaten-via-gtfs61e61",
+      "title": "VBB-Fahrplandaten via GTFS",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Berlin Open Data; formats []",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:vbb-fahrplandaten-november-2017-bis-dezember-2018",
+      "title": "VBB-Fahrplandaten November 2017 bis Dezember 2018",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Berlin Open Data; formats ['zip']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:vbb-fahrplandaten-via-apidb58a",
+      "title": "VBB-Fahrplandaten via API",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "licence 'other-closed' not in the open allowlist",
+      "licence": "other-closed",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:soll-fahrplandaten-mvv-regionalbus-gtfs",
+      "title": "Soll-Fahrplandaten MVV-Regionalbus (GTFS)",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/zip']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:barrierefreiheit-an-bahnhofen-und-haltepunkten-spnv-baden-wurttembergf63fb",
+      "title": "Barrierefreiheit an Bahnhöfen und Haltepunkten (SPNV) Baden-Württemberg",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Open Data Baden-Württemberg; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/pdf', 'http://publications.europa.eu/resource/authority/file-type/zip']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:streckenlange-des-schienennetzes-deutschland-stichtag-betriebsordnung",
+      "title": "Streckenlänge des Schienennetzes: Deutschland, Stichtag, Betriebsordnung",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:streckenlange-des-schienennetzes-bundeslander-stichtag-betriebsordnung",
+      "title": "Streckenlänge des Schienennetzes: Bundesländer, Stichtag, Betriebsordnung",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Statistisches Bundesamt; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:schienennetz-und-geplante-schienenprojekte-in-der-lausitz",
+      "title": "Schienennetz und geplante Schienenprojekte in der Lausitz",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC-BY-4.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/json']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:streckenlange-des-schienennetzes-nach-betriebsordnung-2-land-jahr",
+      "title": "Streckenlänge des Schienennetzes nach Betriebsordnung (2) -Land - Jahr",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Open.NRW; formats ['http://publications.europa.eu/resource/authority/file-type/csv', 'http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-atkis-basis-dlm51119",
+      "title": "INSPIRE HH Verkehrsnetze ATKIS Basis-DLM",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-alkis3f62f",
+      "title": "INSPIRE HH Verkehrsnetze ALKIS",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "http://www.govdata.de/dl-de/by-2-0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrsweg-ulr51f4b",
+      "title": "Verkehrsweg (ULR)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:verkehrsweg-erweiterte-kartierung74c16",
+      "title": "Verkehrsweg (erweiterte Kartierung)",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:landesentwicklungsplan-hessen-inspire",
+      "title": "Landesentwicklungsplan Hessen INSPIRE",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:historisches-digitales-basis-landschaftsmodell-nw79824",
+      "title": "Historisches Digitales Basis-Landschaftsmodell NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitales-landschaftsmodell-50-nwc49b4",
+      "title": "Digitales Landschaftsmodell 50 NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-atkis-basis-dlm2a318",
+      "title": "INSPIRE HH Verkehrsnetze ATKIS Basis-DLM",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:inspire-hh-verkehrsnetze-alkis4788c",
+      "title": "INSPIRE HH Verkehrsnetze ALKIS",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:historisches-digitales-landschaftsmodell-50-nw52a25",
+      "title": "Historisches Digitales Landschaftsmodell 50 NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitales-basis-landschaftsmodell-nwff5f5",
+      "title": "Digitales Basis-Landschaftsmodell NW",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:historische-topographische-karte-nw-1-100-000",
+      "title": "Historische Topographische Karte NW 1:100 000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-10-000-historisch",
+      "title": "Digitale Topographische Karte NW 1:10 000, historisch",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:deutsche-grundkarte-nw-1-5-00042979",
+      "title": "Deutsche Grundkarte NW 1:5 000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-25-000-schwarz-weisscc992",
+      "title": "Digitale Topographische Karte NW 1:25 000 Schwarz-Weiß",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-50-000-schwarz-weiss05327",
+      "title": "Digitale Topographische Karte NW 1:50 000 Schwarz-Weiß",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "dl-de-zero-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:landesentwicklungsplan-hessen",
+      "title": "Landesentwicklungsplan Hessen",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "CC0-1.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "govdata:digitale-topographische-karte-nw-1-50-00032bf1",
+      "title": "Digitale Topographische Karte NW 1:50 000",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:parking-information-service-db-bahnpark",
+      "title": "Parking Information Service - DB Bahnpark",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "DL-DE-BY-2.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/json']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:wms-schienenverkehrsnetz-db-infrago",
+      "title": "WMS Schienenverkehrsnetz DB-InfraGO",
+      "registry": "govdata",
+      "accepted": false,
+      "reason": "format 'http://publications.europa.eu/resource/authority/file-type/bin' is not machine-readable data (map service / html / pdf)",
+      "licence": "CC-BY-4.0",
+      "kind": "reference"
+    },
+    {
+      "id": "govdata:openstation-siri-fm-realtime-facility-status",
+      "title": "OpenStation SIRI FM – Realtime Facility Status",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC0-1.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "govdata:beta-openstation-netex-station-infrastructure",
+      "title": "OpenStation NeTEx – Static Station Infrastructure",
+      "registry": "govdata",
+      "accepted": true,
+      "reason": "passes every gate",
+      "licence": "CC0-1.0",
+      "kind": "reference",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": true,
+        "resolution": "static",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": true,
+        "role": "annotations / join hub",
+        "notes": "publisher Mobilithek; formats ['http://publications.europa.eu/resource/authority/file-type/xml']",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "zenodo:22730376",
+      "title": "Towards the Development of a Framework for Intelligent Traffic Management Using Deep Reinforcement Learning and Edge Computing",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22729809",
+      "title": "SPARQ: spiking physics-in-the-loop autonomous reinforcement triage of quantum emitters",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "apache2.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22728833",
+      "title": "HW-DDS: A MATLAB implementation of Holt–Winters forecasting with a damped double-smoothed trend",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22728195",
+      "title": "rotation of two dipoles and according polarization response",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22727690",
+      "title": "Connection of imaginaries, vernaculars and affordances in cultural climate modelling",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22725500",
+      "title": "MATLAB code for \"Global Stability of a Delayed Multi-Platform Misinformation Model with Saturated Incidence\"",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "mit-license",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "published 2026-09-12; access open",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "zenodo:22720478",
+      "title": "7-Tage-Inzidenz der COVID-19-Fälle in Deutschland",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22719740",
+      "title": "Why Public Service Underperforms: Behavioural Governance, Misconduct, and Administrative Inefficiency in a Small Island Developing State (SIDS) Administration",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22717729",
+      "title": "Constraint Polarity in Treasury Intermediation",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "format 'pdf' is not machine-readable data (map service / html / pdf)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22715141",
+      "title": "Code and Data: Increased moisture recycling over the world's water towers during droughts",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22712500",
+      "title": "Elevated early Eocene atmospheric CO₂ tied to reduced Southern Ocean biological pump efficiency",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22711426",
+      "title": "Overview of data cube technologies and review of other emerging technologies (NFDI4Earth Deliverable D2.5.4)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22689601",
+      "title": "Environmental assessment in German Landscape Framework Plans: Dataset and codebook",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22710543",
+      "title": "Global Regularity by Dissipative Topological Surgery Exact Mechanisms against Catastrophic Buildup in Fluid and Spectral Space plus Spectral Regularity via Ramanujan Dissipation",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22709786",
+      "title": "London Customs Accounts, 1380-1560: machine-readable data and research tools",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22703601",
+      "title": "Data services for German marine research",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22708307",
+      "title": "Differential impact of mutant Ataxin-3 in hindbrain regions: further evidence of white matter loss as a core pathological feature",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22707711",
+      "title": "WeirNet: A Large-Scale 3D CFD Benchmark for Geometric Surrogate Modeling of Piano Key Weirs",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-nc-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22701493",
+      "title": "Regenerative Physiology in Livestock: Harnessing Stem Cells, Exosomes and Biomaterial Platforms for Sustainable Animal Health and Productivity",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22705891",
+      "title": "Revisiting Christ's Crucifixion & Resurrection: Pinpointing History's Most Important Dates",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22704587",
+      "title": "Gene Editing for ATXN3 Inactivation in Machado-Joseph disease: CRISPR-Cas9 as a Therapeutic Alternative to TALEN-Induced Toxicity",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": null,
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22670554",
+      "title": "Towards the Integration of Additive Manufacturing into a Cyber-Physical Construction System",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22703673",
+      "title": "Data and analysis code for: 3D-printed resin abutments are not passive in crown aging simulations",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22702228",
+      "title": "Report on data made available for research by governmental authorities (NFDI4Earth Deliverable D2.3.1)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22700088",
+      "title": "Association between postoperative pain severity and oxygen saturation: a retrospective cross-sectional study in  surgical patients",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732415",
+      "title": "SARS-CoV-2 Infektionen in Deutschland",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732343",
+      "title": "Dataset from John Wick Institutional Analysis by Audience",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732327",
+      "title": "TQH-C2: An Encrypted Command-and-Control Traffic Dataset Across Protocols and Encryption Layers",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732251",
+      "title": "Intercropping camphor basil shrubs with selected food crops for ecosystem services in the upper midland agroecological zone of Western Kenya",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732252",
+      "title": "Annotix: An Open-Source Desktop Platform for Machine Learning Dataset Annotation",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "mit-license",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731317",
+      "title": "Structural characterization and virtual screening of Anopheles gambiae innexin-1: A novel target for antimalarial drug development",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22719139",
+      "title": "seqFISH spatial transcriptomic data associated with \"Adm and Ackr3 regulate cardiac lymphatic vessel formation during zebrafish heart development and regeneration\"",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732000",
+      "title": "EIP Policy Firm-Year Analysis Data",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22732022",
+      "title": "Dataset for: DGSM, History Matching and Bayesian calibration at rest and during exercise using OpenCRS, an open-source cardiorespiratory model",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731902",
+      "title": "Plasma Proteome Profiles in Progressive Prostate Cancer States and Development of Composite Prognostic Stratification Scores in Metastatic Castration-Resistant Prostate Cancer",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731921",
+      "title": "Sampling Effort Data",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730874",
+      "title": "Anthropogenic landscape configuration, not just composition, shapes terrestrial mammalian movements: code and data",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731710",
+      "title": "CourtDyn: code and aggregate results for rank agreement and unit responsiveness (P1/P2 revision)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "mit-license",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731727",
+      "title": "Submarine groundwater discharge and nutrient–carbon outwelling from the world's largest sand barrier island",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731675",
+      "title": "AccessDetector: Android accessibility audit dataset (720 screens x 3 VLMs, 9-tag taxonomy, human-validated ground truth)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731412",
+      "title": "Dataset for \"Constraining earthquake nucleation from geodetic non-detections: a catalog-wide analysis of borehole strainmeter observations\"",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "temporal coverage not stated and no probe could measure it",
+      "licence": "cc-by-4.0",
+      "kind": "unknown",
+      "probe": {
+        "probed": false,
+        "reason": "no probe for this source; accepted on metadata only"
+      },
+      "rubric": {
+        "covers_window": false,
+        "resolution": "unknown",
+        "has_actual_times": false,
+        "has_cancellation": false,
+        "has_cause_codes": false,
+        "static": false,
+        "role": "unknown",
+        "notes": "published 2026-09-13; access open",
+        "filled_by": "metadata+probe"
+      }
+    },
+    {
+      "id": "zenodo:22731553",
+      "title": "Monthly Dengue, Environmental, Climatic, and Socioeconomic Dataset for Recife, Brazil (2013–2025)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731539",
+      "title": "Supplementary Data for Edge-Intelligent Architectures and Dynamic Modeling of Visual Attention Indicators in Educational Environments",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731474",
+      "title": "Supplementary datasets for: Systems-level transcriptomics reveals the regulatory architecture of the post-pollination syndrome in Vanilla planifolia",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22715306",
+      "title": "Cupressus Disease Dataset",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22685033",
+      "title": "Global CO2 flux products from the YanDong Carbon Assimilation System (v2026.1)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730896",
+      "title": "Italian word2vec embeddings trained on OpenSubtitles Part 2",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "format 'bz2,md,ps1' is not machine-readable data (map service / html / pdf)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22731184",
+      "title": "dathere/qsv: 23.0.1",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22730917",
+      "title": "MI-Snow1000 reviewer deposit",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22699408",
+      "title": "Reproducibility data for \"Beyond Bonding Evolution Sequences: The Multidimensional Topological Organization of the Electron Localization Function",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22729931",
+      "title": "Emotional costs and empathy are associated with tolerance toward wolves",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22726129",
+      "title": "Surveillance for virus and other non-culturable pathogens in forestry tree species (VirnoTree)",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22726423",
+      "title": "Intensivkapazitäten und COVID-19-Intensivbettenbelegung in Deutschland",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22726103",
+      "title": "Daily streamflow substantially underestimates the severity of extreme river floods",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22726232",
+      "title": "Global Sales & Financial Performance",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22694906",
+      "title": "Geochemical evidence for Cambrian subduction-influenced magmatism in the Heritage Range, Ellsworth–Whitmore Mountains, Antarctica: analytical dataset",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22724933",
+      "title": "Daten der Notaufnahmesurveillance",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721921",
+      "title": "Supplementary material 2 from: Alibrandi A, Plewka J, Vuillemin A, Bartholomäus A, di Primio R, Probst AJ, Kallmeyer J (2026) Reservoir fluids versus produced water as proxies for oil reservoir microbiomes. Metabarcoding and Metagenomics 10: e194096. https://doi.org/10.3897/mbmg.10.194096",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721919",
+      "title": "Supplementary material 1 from: Alibrandi A, Plewka J, Vuillemin A, Bartholomäus A, di Primio R, Probst AJ, Kallmeyer J (2026) Reservoir fluids versus produced water as proxies for oil reservoir microbiomes. Metabarcoding and Metagenomics 10: e194096. https://doi.org/10.3897/mbmg.10.194096",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721781",
+      "title": "A new short-beaked stem group cormorant (Phalacrocoracidae), an unusual new hawk (Accipitridae), a small swift (Apodidae), and other avian remains from the early Late Miocene hominid Fossil-Lagerstätte Hammerschmiede, southern Germany",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721757",
+      "title": "Reservoir fluids versus produced water as proxies for oil reservoir microbiomes",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22721581",
+      "title": "Challenges and impact of the farmer-scientists training program on community development in Bohol, Philippines",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "format 'pdf' is not machine-readable data (map service / html / pdf)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22720492",
+      "title": "COVID-19-Todesfälle in Deutschland",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22720361",
+      "title": "COVID-19-Hospitalisierungen in Deutschland",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22714897",
+      "title": "PerseusDL/canonical-greekLit: 0.0.34646009516",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-sa-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22709312",
+      "title": "Computational Reproducibility Package for the Qattara HP-SWRO B1 Specific-Energy Uncertainty Analysis, Version 4.0",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-by-4.0",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22713034",
+      "title": "Syntretus (Syntretus) ocularis van Achterberg & Haeselbarth 2003",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22713029",
+      "title": "Meteorus salicorniae Schmiedeknecht 1897",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22712049",
+      "title": "Streblocera (Streblocera) fulviceps Westwood 1833",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22712039",
+      "title": "Perilitus stelleri",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    },
+    {
+      "id": "zenodo:22712035",
+      "title": "Perilitus rutilus",
+      "registry": "zenodo",
+      "accepted": false,
+      "reason": "not about rail operations, weather, calendar or infrastructure (name/description)",
+      "licence": "cc-zero",
+      "kind": "unknown"
+    }
+  ]
+}
