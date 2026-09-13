@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2D2CDANEM0PNG5P1JWR4RTA",
+  "session_id": "f367c1a0-5ca9-4267-ba17-c73dc43314e1",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-13T09:43:11.766195Z",
+  "branch": "main",
+  "checkpoints_count": 16,
+  "files_touched": [
+    ".env.example",
+    "app/agents/src/features/db_delay/trip/run_local.sh",
+    "app/backend/src/features/delay-prediction/README.md",
+    "app/backend/src/features/delay-prediction/backends/http.js",
+    "app/backend/src/features/delay-prediction/delay-prediction.test.js",
+    "app/backend/src/features/delay-prediction/routes/delay-prediction.js"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-fable-5-1",
+  "turn_id": "96928a7cc13a",
+  "checkpoint_transcript_start": 1555,
+  "transcript_lines_at_start": 1555,
+  "compact_transcript_start": 196,
+  "token_usage": {
+    "input_tokens": 32,
+    "cache_creation_tokens": 10506,
+    "cache_read_tokens": 362683,
+    "output_tokens": 1512,
+    "api_call_count": 1
+  },
+  "session_metrics": {
+    "turn_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-13T09:43:11.578328Z",
+    "agent_lines": 139,
+    "agent_removed": 6,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 139,
+    "total_lines_changed": 145,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
