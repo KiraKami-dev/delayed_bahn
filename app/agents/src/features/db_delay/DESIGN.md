@@ -574,10 +574,122 @@ Full test set, all 93,738 examples, plain cross-entropy at 2,000 steps against X
   model; blending takes P(cancelled) mostly from XGBoost.
 - **Free generation works:** 16 of 16 generated answers parse, with a median error of about 2 minutes.
 
+### Second wave, 01:00 to 02:15: teach the encoder, give it more, use the data better
+
+All plain loss, 2,000 steps on an H100, scored on the same 5,000 test examples; the partner for
+each row is named. An identical repeat of the best recipe (text plus plain) scored 3.635 / 2.913
+against 3.635 / 2.907, so two identical trainings differ by about 0.006 CRPS.
+
+| Change | Partner | Median error | CRPS | Verdict |
+|---|---|---|---|---|
+| Encoder only, series keep their scale (no z-normalisation) | encoder only 3.702 / 2.954 | 3.719 | 2.966 | no gain |
+| Encoder only, 30% series-reading questions mixed in | same | 3.756 | 3.000 | worse |
+| Encoder only, both of the above | same | 3.756 | 2.992 | worse |
+| Encoder only, 720 hourly points instead of 72 | same | 3.709 | 2.959 | no gain |
+| Text plus encoder, 720 hourly points | text plus encoder 3.641 / 2.912 | 3.657 | 2.924 | no gain |
+| Text plus encoder, scale kept plus questions | same | 3.647 | 2.913 | no gain |
+| Text, multi-scale history summaries in the rationale | text 3.635 / 2.907 | 3.635 | 2.912 | better on validation (2.219 vs 2.233), no gain on test |
+| Text plus encoder, multi-scale summaries | text plus encoder | 3.630 | 2.914 | no gain |
+| Text, exact-minute loss plus 0.1 CRPS term | text 3.635 / 2.907 | 3.621 | 2.903 | best validation (2.192 vs 2.233); test gain inside noise |
+| Text, 5,000 steps | text 2,000 steps | 3.614 | 2.883 | more training helps |
+| Text, previous trains on the route (combined data) | text 3.635 / 2.907 | 3.616 | 2.889 | helps; XGBoost gains as much |
+| Text plus encoder, previous trains (combined data, 720 h series) | text on the same data 3.616 / 2.889 | 3.603 | 2.877 | best 2,000-step run; beats XGBoost retrained on the same data alone (CRPS -0.060, -0.130 to -0.005); vs text -0.013 (-0.035 to +0.009) |
+
+- **Nothing aimed at the encoder worked.** Keeping the level of the series, teaching it to read
+  with exact-answer questions (OpenTSLM's curriculum idea folded into training), and ten times
+  more hourly history all leave the encoder-only model where it was or make it worse, and none of
+  it adds anything on top of the text channel. On short operational series the language model
+  reads the numbers itself; the encoder buys context length this task does not need.
+- **Richer data helps both models.** The arrival delays of the previous trains of the same type
+  towards the same destination at the target stop (up to five, within six hours, arrived by the
+  prediction moment; 77% of examples have at least one) improve the text model by 0.018 CRPS and
+  XGBoost retrained on the same columns by 0.036 on the full test set (3.462 / 2.759 to 3.413 /
+  2.723). Against that fairer XGBoost on the shared 5,000 examples the text model is ahead by
+  0.048 CRPS (interval -0.121 to +0.010), its lead-time blend significantly (-0.049, -0.100 to
+  -0.015), and it keeps its significant edge within 15 minutes of arrival (-0.084).
+- **Multi-scale summaries as text** (90-day and 7-day route history, same-time-of-day lateness)
+  improve validation but not the test examples.
+- **The exact-minute loss plus a CRPS term** is the best single 2,000-step model on both splits,
+  with the test gain over plain inside the noise; it rewards near misses through a proper score
+  instead of blurred targets, so it is the loss of the long runs.
+- **The September forward test** (10,000 examples the training never saw; XGBoost trained on
+  the same May training split and scored on September, like the TSLM): XGBoost 3.244 / 2.586; the original recipe at 12,000 steps 3.257 / 2.611; text
+  plus plain at 2,000 steps 3.281 / 2.626; text plus plain plus CRPS 3.266 / 2.610. Alone, every
+  TSLM is behind the tabular model overall in September (plain: +0.040 CRPS, +0.013 to +0.068),
+  ahead within 15 minutes of arrival (plain: -0.011, -0.021 to -0.002; plain plus CRPS: -0.016,
+  -0.026 to -0.006) and clearly behind beyond 30 minutes (+0.089). The lead-time blend with
+  weights fitted on May and applied blind to September beats XGBoost overall: plain 3.225 / 2.570
+  (CRPS -0.016, -0.027 to -0.006), plain plus CRPS (CRPS -0.013, -0.022 to -0.005). Three
+  different checkpoints give the same shape out of time.
+- **Stacking and trajectory channels, submitted 02:29 to 02:33:** the XGBoost forecast as a
+  sentence in the prompt (out-of-fold on the training split, `stack.py`); encoder-only runs with
+  12,000 steps, a five-times higher encoder learning rate, and a frozen language model (stage 1);
+  the planned trajectory of the run (running time, dwell, minutes left per stop) as encoder-only
+  channels. Results follow.
+
+### Third wave: encoder experiments, first results (02:47)
+
+Encoder only, exact-minute plus CRPS loss, 2,000 steps, same 5,000 test examples; partner is the
+encoder-only plain run at 3.702 / 2.954.
+
+| Change | Median error | CRPS | Verdict |
+|---|---|---|---|
+| Encoder learning rate five times higher (1e-3) | 3.687 | 2.956 | no gain; lead blend beats XGBoost (CRPS -0.039, -0.093 to -0.007) |
+| Stage 1: language model frozen, only encoder and projector trained | 3.724 | 3.031 | worse than XGBoost alone (+0.059, -0.002 to +0.113); validation 2.288 |
+| Stage 2: resume that encoder, add the text channel, unfreeze the adapters (partner: text plus CRPS loss 3.621 / 2.903) | 3.608 | 2.900 | beats XGBoost (-0.072, -0.133 to -0.023); vs text -0.004 (-0.016 to +0.008): the pre-trained encoder adds nothing |
+| Text plus encoder, combined data, 72-hour series, CRPS loss (partner: same with 720-hour series and plain loss, 3.603 / 2.877) | 3.606 | 2.878 | identical (+0.001, -0.031 to +0.036); beats XGBoost retrained on the same data (-0.057, -0.117 to -0.009) |
+
+- Training the encoder alone, with the language model fixed, is the cleanest test of whether the
+  series channel carries the signal: it lands 0.08 CRPS behind the text models and behind the
+  tabular baseline. Stage 2 (resume that checkpoint, unfreeze the adapters, add the text channel)
+  was submitted at 02:52 and tells whether a pre-trained encoder gives the joint model a better
+  start than the ECG-trained one.
+- A faster encoder does not change the outcome either; the encoder's ceiling is not a learning
+  rate problem.
+- Giving the joint model an encoder that was trained first (stage 2) lands exactly on the text
+  model: the encoder channel is read, but it carries nothing the text does not. And 72 hourly
+  points through the encoder do as well as 720, so the short series is enough for the finals.
+
+### Stacking: the statistical forecast as a sentence in the prompt (03:15)
+
+Text, exact-minute plus CRPS loss, 2,000 steps, `examples_v4` (the combined data plus XGBoost's
+own median, 10 to 90% range, P(late) and P(cancelled) as one rationale sentence; out-of-fold on
+the training split so the model never sees a forecast fitted on its own row). Partner: XGBoost
+retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
+
+| Model | Median error | CRPS | vs XGBoost (CRPS, 95% interval) |
+|---|---|---|---|
+| Text, stacked, 2k | 3.573 | 2.860 | -0.075 (-0.116 to -0.044), real |
+| same, within 15 min (1,927) | | | -0.086 (-0.180 to -0.024), real |
+| same, beyond 30 min (2,158) | | | -0.085 (-0.123 to -0.047), real |
+| vs text plus encoder on the combined data (3.603 / 2.877) | | | -0.017 (-0.058 to +0.032) |
+
+- **The first single model that beats XGBoost at every lead time.** Given the statistical
+  forecast as a starting point, the language model corrects it with what it reads live; the
+  correction is worth 0.075 CRPS overall and, for the first time, as much beyond 30 minutes as
+  within 15. The lead-time blend fitted on validation chooses weight 1.0 for the TSLM: there is
+  nothing left for a blend to add, because the stacked model already contains XGBoost.
+- Validation is unchanged against the plain text run (2.188 vs 2.192), so the gain shows on the
+  test months only; the 5,000-step version (running) and the 12,000-step finals on the full test
+  (submitted 03:20: text, and text plus encoder, both on `examples_v4`) tell whether it holds.
+- **September, out of time (03:30):** the same 2,000-step stacked model scored on 10,000
+  September examples built with the combined features (`forward_v4.parquet`; XGBoost trained on
+  May, scored on September, and its September forecast written into the prompts). Persistence
+  3.057 / 2.493, XGBoost 2.745 / 2.175, stacked TSLM **2.689 / 2.136**: CRPS -0.039 (-0.076 to
+  -0.015) and median error -0.056 (-0.107 to -0.023), both real; within 15 minutes -0.068
+  (-0.148 to -0.025); the blind lead-time blend -0.040. The first TSLM that beats the tabular
+  baseline alone on data none of it had seen. (This September set is the combined-feature build
+  with 32,553 test examples; its numbers are not comparable with the earlier 10,000 from
+  `forward.parquet`, where XGBoost scored 3.244 / 2.586.)
+- **Planned trajectory channels** (running time, dwell and minutes left per stop through the
+  encoder, `examples_v5`): 3.604 / 2.879 against 3.606 / 2.878 without them. Nothing.
+
 ### Pending at the time of writing
 
-- The long run of the chosen recipe (12,000 steps, text plus encoder, plain loss) on the full
-  test set, started 00:50 on 13 September.
+- Long runs on the full test set: text plus encoder with the plain loss (started 00:50); text
+  with the plain loss, 24,000 steps (01:06); text on the combined data and text plus encoder on
+  the combined data with 72-hour series, both with the exact-minute plus CRPS loss (02:15).
+- The September forward test of the 2,000-step text models and of the long runs.
 - The plain 2,000-step checkpoint on the full 93,738-example test set.
 - The main configuration at 12,000 steps, on an H100 and on the devbox, followed by the September
   forward test.

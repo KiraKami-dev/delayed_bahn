@@ -51,11 +51,12 @@ def normalised(values, label: str, unit: str, scaling: str = "z") -> tuple[str, 
     """
     series = np.asarray(values, dtype=np.float64)
     if scaling == "fixed":
-        scale = MINUTES_PER_UNIT if unit == "minutes" else 1.0
-        note = f"in tens of minutes" if unit == "minutes" else "as a share from 0 to 1"
+        scale = MINUTES_PER_UNIT if unit in ("minutes", "plan") else 1.0
+        note = f"in tens of minutes" if unit in ("minutes", "plan") else "as a share from 0 to 1"
         return f"{label}, {note}:", (series / scale).tolist()
     mean = float(series.mean())
     std = max(float(series.std()), MIN_STD)
+    unit = "minutes" if unit == "plan" else unit
     return f"{label}, in {unit}, mean {mean:.2f} and std {std:.2f}:", ((series - mean) / std).tolist()
 
 
@@ -102,6 +103,12 @@ def rationale(row: pd.Series) -> str:
                          f"the latest {gaps[-1]:.0f} minutes before this one is due.")
         else:
             parts.append(f"No earlier train of this type towards {name(row['dest'])} reached {stop} in the last 6 hours.")
+    if "xgb_median" in row and np.isfinite(row["xgb_median"]):
+        # The statistical forecast as a starting point; the model's job is to correct it with what
+        # it reads live and to say why.
+        parts.append(f"A statistical model expects about {row['xgb_median']:.0f} minutes late (likely "
+                     f"{row['xgb_q10']:.0f} to {row['xgb_q90']:.0f}), with {pct(row['xgb_p_late'])} chance of being at "
+                     f"least 6 minutes late and {pct(row['xgb_p_cancel'])} of cancellation.")
     if "station_late_same_hour" in row and len(row["station_series"]) >= 168:
         parts.append(f"At this time of day, {pct(row['station_late_same_hour'])} of stops at {stop} ran late over the "
                      f"last {len(row['station_series']) // 24} days, {pct(row['network_late_same_hour'])} nationwide.")
@@ -158,6 +165,11 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
         (f"Hourly share of late {row['cls']} stops nationwide, last {len(row['network_series'])} hours",
          row["network_series"], "share"),
     ]
+    if run and "run_plan_left" in row and as_list(row["run_plan_left"]):
+        # The planned trajectory of the run, stop by stop, next to the delays: encoder channels only.
+        raw += [("Planned running time from each stop so far to the next, minutes", as_list(row["run_plan_next"]), "plan"),
+                ("Planned dwell at each stop so far, minutes", as_list(row["run_plan_dwell"]), "plan"),
+                (f"Planned minutes left to {stop} at each departure so far", as_list(row["run_plan_left"]), "plan")]
     if "prev_arr_delays" in row:
         raw.append((f"Arrival delay at {stop} of the previous trains on this route today, oldest first"
                     if prev else "No previous train on this route reached the stop in the last 6 hours",
@@ -166,6 +178,8 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
         # The same numbers written into the prompt; in ``text`` no time-series encoder is involved.
         lines = []
         for label, values, unit in raw:
+            if unit == "plan":  # trajectory channels are for the encoder; the text has the delays and the lead time
+                continue
             values = np.asarray(values, dtype=np.float64)
             if unit == "share" and len(values) > TEXT_HOURS:  # long hourly series: the text gets the recent end
                 values = values[-TEXT_HOURS:]
