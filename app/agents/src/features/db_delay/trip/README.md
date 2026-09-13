@@ -45,6 +45,28 @@ bash trip/run_overnight.sh                            # full runs and out/trip/r
 Needs `duckdb`, `pandas`, `pyarrow`, `xgboost`, `torch`, `transformers`, `peft` and
 `opentslm`, plus one 48 GB GPU for training at batch 8.
 
+## Model server for the app
+
+`serve.py` answers the backend's `PREDICT_URL` contract: a journey in, one arrival-delay
+distribution per leg out (`legs[].arrival.probs` over whole minutes, `pCancel`, a rationale and
+sources). Each leg is matched to a recorded trip by train, target station and planned arrival, and
+answered with the forecast the model made for that trip, either saved by `train.py`/`combine.py` or
+computed live from a checkpoint on a GPU. A leg with no recorded trip gets the empirical
+distribution of its train type, marked as `confidence: low` and "not a forecast", so a journey is
+never dropped whole. An optional `now` in the body picks the forecast that was available at that
+time; without it the last forecast before the planned arrival is used.
+
+```bash
+python trip/serve.py --examples data/trip/forward.parquet \
+    --predictions out/trip/forward_text-plaincrps/blend_lead_test.npz \
+                  out/trip/forward_text-plaincrps/tslm_test.npz --port 8501
+# then, for the Node backend: PREDICT_URL=http://127.0.0.1:8501/ npm run dev
+```
+
+`GET /health` reports how many trips and saved forecasts are loaded; `test_serve.py` covers the
+matching (train spellings, time zones, station name variants), the rebuilt distribution for
+quantile-only prediction files, and the HTTP round trip.
+
 ## Demo: a traveller's connection
 
 `predict.py` turns a trained checkpoint into the traveller view for recorded trips. With two
