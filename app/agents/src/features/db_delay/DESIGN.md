@@ -703,6 +703,10 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
   (-0.072 to +0.005), no clear difference; within 15 minutes -0.071 (-0.160 to -0.023) and the
   blind lead-time blend -0.044 (-0.086 to -0.018) are real. The stacked sentence is what turns
   the model into one that beats XGBoost on its own out of time.
+- **More steps do not carry out of time (05:10):** the 5,000-step stacked text model on the same
+  September examples scores 2.741 / 2.161: CRPS -0.014 (-0.058 to +0.019) against XGBoost, no clear
+  difference, where the 2,000-step model had -0.039 real. Within 15 minutes -0.086 (-0.175 to
+  -0.038) and the blind blend -0.040 (-0.082 to -0.011) stay real.
 - **Planned trajectory channels** (running time, dwell and minutes left per stop through the
   encoder, `examples_v5`): 3.604 / 2.879 against 3.606 / 2.878 without them. Nothing.
 
@@ -740,7 +744,8 @@ summary numbers.
 |---|---|---|---|---|
 | Not at all | 365 | 3.677 | 2.957 | +0.054 (+0.023 to +0.085), worse |
 | As numbers in the text | 844 | 3.621 | 2.903 | |
-| Through the encoder only | 365 + 45 soft | *running* | | |
+| Through the encoder only | 365 + 45 soft | 3.693 | 2.956 | +0.052 (+0.025 to +0.083), worse; vs not at all -0.002 (-0.014 to +0.011) |
+| Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | no-series partner at 12,000 steps *running* |
 | Text plus encoder | 961 + 45 soft | *running* | | |
 | Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | *running* | | |
 
@@ -748,6 +753,9 @@ summary numbers.
   -0.073 to +0.035); with them it beats it. The series are worth 0.101 CRPS beyond 30 minutes
   (-0.169 to -0.041) and 0.012 within 15 minutes, where the current delay in the rationale
   already says most.
+- **At 2,000 steps the encoder reads nothing yet.** Encoder only equals no series on the test set;
+  at 12,000 steps the same route reaches the text level (third wave). Whether that gain is the
+  series or just longer training is what the 12,000-step no-series run decides.
 - **The encoder is the compact route:** the four series cost about 480 prompt tokens as numbers
   and 45 soft tokens through the encoder.
 
