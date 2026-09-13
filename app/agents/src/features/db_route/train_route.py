@@ -262,6 +262,8 @@ def main() -> int:
     ap.add_argument("--grad-checkpointing", action="store_true")
     ap.add_argument("--caption-only", action="store_true", help="zero every series, keep the captions: the encoder ablation")
     ap.add_argument("--lora-lr", type=float, default=None, help="alias of --lr")
+    ap.add_argument("--checkpoint", default=None,
+                    help="score a saved checkpoint instead of training: pass --steps 0 and --eval-limit 0 for every row")
     args = ap.parse_args()
     if args.lora_lr is not None:
         args.lr = args.lora_lr
@@ -307,6 +309,10 @@ def main() -> int:
         model.enable_lora()
     if args.grad_checkpointing:
         model.llm.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    if args.checkpoint:
+        # Same sequence as generate_route.py: base + published start, LoRA on, then our weights.
+        model.load_from_file(args.checkpoint)
+        log(rank, f"{profile}: loaded {args.checkpoint}")
 
     def collate(batch: list[dict]) -> list[dict]:
         batch = [strip(s) for s in batch]
@@ -348,12 +354,14 @@ def main() -> int:
             run_log.append({"step": step, "seconds": round(el, 1)} | mean); window = []
         if step % args.save_every == 0:
             model.store_to_file(str(local / "checkpoint.pt"))
-    model.store_to_file(str(local / "checkpoint.pt"))
+    if step:
+        model.store_to_file(str(local / "checkpoint.pt"))
     log(rank, f"{profile}: trained {step} steps in {time.time() - started:.0f}s, {skipped} skipped")
 
     # -- evaluate
     model.eval()
-    results: dict = {"profile": profile, "dataset_id": dataset_id, "steps": step, "args": vars(args), "cells": {}}
+    results: dict = {"profile": profile, "dataset_id": dataset_id, "steps": step, "args": vars(args),
+                     "checkpoint": args.checkpoint, "cells": {}}
     train_scalar = [r for r in train if r["kind"] == "ScalarPredictionTask"]
     for cell, cell_rows in by_cell.items():
         scalar = [r for r in cell_rows if r["kind"] == "ScalarPredictionTask"]
