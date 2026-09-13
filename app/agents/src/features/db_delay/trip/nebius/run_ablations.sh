@@ -10,7 +10,8 @@ set -uo pipefail
 
 DATA=/data
 EXAMPLES=${EXAMPLES:-data/examples.parquet}  # e.g. data/examples_720h.parquet for the long-series build
-for required in code/trip.tar.gz code/requirements.txt "$EXAMPLES"; do
+CODE=${CODE:-code/trip.tar.gz}  # a pinned tarball, so a later upload cannot change a queued job
+for required in "$CODE" code/requirements.txt "$EXAMPLES"; do
   # Fail in seconds, not after the package install, when the bucket is not filled yet.
   [ -f "$DATA/$required" ] || { echo "missing $DATA/$required in the bucket"; exit 1; }
 done
@@ -46,7 +47,7 @@ uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cu130
 uv pip install --python .venv/bin/python -r "$DATA/code/requirements.txt"
 
-tar -xzf "$DATA/code/trip.tar.gz"
+tar -xzf "$DATA/$CODE"
 mkdir -p data/trip
 cp "$DATA/$EXAMPLES" data/trip/examples.parquet
 
