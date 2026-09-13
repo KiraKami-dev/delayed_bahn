@@ -168,26 +168,25 @@ class Feeds:
 
     def __init__(self, client: Client, change_ttl: float = 60.0):
         self.client, self.change_ttl = client, change_ttl
-        self.stations: dict[str, tuple[str, str] | None] = {}
+        self.stations: dict[str, tuple[str, str, list[str]] | None] = {}
         self.plans: dict[tuple[str, str], ET.Element | None] = {}
         self.changes: dict[str, tuple[float, ET.Element]] = {}
 
-    def station(self, name: str) -> tuple[str, str] | None:
-        """EVA number and Timetables name for a station name."""
+    def station(self, name: str) -> tuple[str, str, list[str]] | None:
+        """EVA number, Timetables name and the EVA numbers of its sub-stations for a station name."""
         key = norm(name)
         if key not in self.stations:
             found = []
             # The pattern is a URL path segment: cut at "/" and let the exact match pick the station.
             for pattern in dict.fromkeys([name.split("/")[0].strip(), re.sub(r"\s*\(.*?\)", "", name).split("/")[0].strip()]):
-                try:
-                    found = self.client.find_stations(pattern)
-                except dbx.DBError:
-                    found = []
+                # An error is raised, not cached: a shorter pattern would find the wrong station, e.g. the
+                # main station for "Stuttgart Hbf (tief)", and keep it for the whole process.
+                found = self.client.find_stations(pattern)
                 if found:
                     break
             exact = [s for s in found if norm(s.name) == key]
             pick = (exact or found or [None])[0]
-            self.stations[key] = (pick.eva, pick.name) if pick else None
+            self.stations[key] = (pick.eva, pick.name, [m for m in pick.meta if len(m) == 7]) if pick else None
         return self.stations[key]
 
     def plan(self, eva: str, hour: datetime) -> ET.Element | None:
@@ -264,14 +263,19 @@ class Live:
         rows = self.stored[mask]
         return None if rows.empty else rows.loc[rows["t0"].idxmax()]
 
-    def _resolve(self, stop: dict | None) -> tuple[str, str]:
+    def _candidates(self, stop: dict | None) -> list[str]:
+        """EVA numbers to try for a journey station: the one sent, the name's, and their sub-stations.
+
+        DB gives platforms of one place their own numbers (Stuttgart Hbf's S-Bahn platforms are
+        "Stuttgart Hbf (tief)"), and an app may send the main station's number for either."""
         stop = stop or {}
-        found = self.feeds.station(stop.get("name") or "")
-        if stop.get("evaNumber"):
-            return str(stop["evaNumber"]), (found[1] if found else stop.get("name") or "")
-        if found is None:
+        evas = [str(stop["evaNumber"])] if stop.get("evaNumber") else []
+        found = self.feeds.station(stop["name"]) if stop.get("name") else None
+        if found:
+            evas += [found[0]] + found[2]
+        if not evas:
             raise LookupError(f"station {stop.get('name')!r} not found in the Timetables API")
-        return found
+        return list(dict.fromkeys(evas))
 
     def example(self, leg: dict, now: datetime | None = None) -> tuple[pd.Series, list[str]]:
         """One v7 example row for the leg at t0 = now, and the sources of its parts."""
@@ -279,18 +283,26 @@ class Live:
         departure, arrival = local_naive(leg["plannedDeparture"]), local_naive(leg["plannedArrival"])
         calls_before = self.feeds.client.calls
         wanted = leg_keys(leg)
-        f_eva, f_name = self._resolve(leg.get("from"))
-        k_eva, k_name = self._resolve(leg.get("to"))
+        f_name, k_name = (leg.get("from") or {}).get("name"), (leg.get("to") or {}).get("name")
 
-        at_f = [r for r in self.feeds.stops(f_eva, [departure]) if r["dep_pt"] and abs(minutes(r["dep_pt"], departure)) <= 1
-                and row_keys(r) & wanted]
-        if not at_f:
+        f = f_eva = None
+        for eva in self._candidates(leg.get("from")):
+            at_f = [r for r in self.feeds.stops(eva, [departure]) if r["dep_pt"] and abs(minutes(r["dep_pt"], departure)) <= 1
+                    and row_keys(r) & wanted]
+            if at_f:
+                f, f_eva = at_f[0], eva
+                break
+        if f is None:
             raise LookupError(f"{leg.get('trainId')} does not leave {f_name} at {departure:%H:%M} in the live timetable")
-        f = at_f[0]
         run = f["run"]
         k_hours = hours(arrival - PREV_HOURS * HOUR, min(arrival, now)) + [arrival] + hours(now - LIVE_STATION_HOURS * HOUR, now)
-        k_rows = self.feeds.stops(k_eva, k_hours)
-        k = next((r for r in k_rows if r["run"] == run and r["arr_pt"]), None)
+        k = k_rows = None
+        for eva in self._candidates(leg.get("to")):
+            rows = self.feeds.stops(eva, k_hours)
+            k = next((r for r in rows if r["run"] == run and r["arr_pt"]), None)
+            if k is not None:
+                k_rows = rows
+                break
         if k is None:
             raise LookupError(f"{leg.get('trainId')} has no planned arrival at {k_name} at {arrival:%H:%M}")
 

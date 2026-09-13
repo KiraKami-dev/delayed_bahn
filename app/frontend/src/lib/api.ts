@@ -3,6 +3,9 @@ import type { Causes, Journey, Prediction, Recommendation, Reroute } from "./con
 // Serverless cold starts and slow mobile links need patience: 20 s per try,
 // one retry on network failure, timeout or 5xx. 4xx is returned immediately.
 const TIMEOUT_MS = 20000
+// Forecasts from live DB data wait for the timetable API's per-minute budget: a cold journey of
+// several legs can take a minute or more. The model server shares one answer between retries.
+const FORECAST_TIMEOUT_MS = 150000
 const RETRIES = 1
 
 export class ApiError extends Error {
@@ -13,11 +16,11 @@ export class ApiError extends Error {
   }
 }
 
-async function once<T>(path: string, init?: RequestInit): Promise<T> {
+async function once<T>(path: string, init?: RequestInit, timeoutMs = TIMEOUT_MS): Promise<T> {
   const res = await fetch(path, {
     ...init,
     headers: { "content-type": "application/json", ...(init?.headers || {}) },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
     cache: "no-store",
   })
   const type = res.headers.get("content-type") || ""
@@ -40,11 +43,11 @@ async function once<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, timeoutMs = TIMEOUT_MS): Promise<T> {
   let last: unknown
   for (let attempt = 0; attempt <= RETRIES; attempt++) {
     try {
-      return await once<T>(path, init)
+      return await once<T>(path, init, timeoutMs)
     } catch (e) {
       last = e
       const status = (e as ApiError).status
@@ -65,11 +68,11 @@ export const api = {
   health: () => request<{ ok: boolean }>("/api/health"),
   seedDemo: () => request<Journey>("/api/seed/demo"),
   parseJourney: (text: string) => request<Journey>("/api/journeys/parse", post({ text })),
-  predict: (journey: Journey) => request<Prediction>("/api/predict", post(journey)),
+  predict: (journey: Journey) => request<Prediction>("/api/predict", post(journey), FORECAST_TIMEOUT_MS),
   recommend: (journey: Journey, prediction: Prediction, doorToStationMin?: number, acceptableRisk?: number) =>
-    request<Recommendation>("/api/recommend", post({ journey, prediction, doorToStationMin, acceptableRisk })),
+    request<Recommendation>("/api/recommend", post({ journey, prediction, doorToStationMin, acceptableRisk }), FORECAST_TIMEOUT_MS),
   reroute: (journey: Journey, missedLegIndex: number) =>
-    request<Reroute>("/api/reroute", post({ journey, missedLegIndex })),
+    request<Reroute>("/api/reroute", post({ journey, missedLegIndex }), FORECAST_TIMEOUT_MS),
   causes: (evaNumber: string, name?: string) =>
     request<Causes>(`/api/causes?eva=${encodeURIComponent(evaNumber)}${name ? `&station=${encodeURIComponent(name)}` : ""}`),
 }

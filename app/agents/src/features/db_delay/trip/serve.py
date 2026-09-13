@@ -26,6 +26,8 @@ import argparse
 import json
 import re
 import sys
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -41,6 +43,7 @@ LOCAL_TZ = "Europe/Berlin"
 MINUTES = 1000  # the model's minute vocabulary
 MATCH_MINUTES = 1  # planned arrival may differ by this much between the app and the record
 MIN_PRIOR = 200  # rows needed before a train type gets its own prior instead of its class
+LIVE_CACHE_SECONDS = 60  # a live leg forecast is reused this long (app retries, the recommendation's re-check)
 LONG_DISTANCE = {"ICE", "IC", "EC", "ECE", "TGV", "RJ", "RJX", "NJ", "FLX"}
 SOURCES = ["delays at the stops so far", "previous trains on the route today",
            "90-day route history", "72 h of hourly late shares at the station and nationwide"]
@@ -118,6 +121,9 @@ class Forecaster:
         self.frame = frame.reset_index(drop=True)
         self.model, self.mode, self.scaling, self.model_id = model, mode, scaling, model_id
         self.live = live  # live.Live: examples built from the Timetables API for legs without a record
+        self.live_cache: dict[str, tuple[float, dict]] = {}
+        self.live_locks: dict[str, threading.Lock] = {}
+        self.guard, self.model_lock = threading.Lock(), threading.Lock()
         arrivals = pd.to_datetime(self.frame["k_arr_pt"])
         self.by_minute: dict[pd.Timestamp, list[int]] = {}
         for i, ts in enumerate(arrivals.dt.floor("min")):
@@ -182,8 +188,24 @@ class Forecaster:
         """The loaded model's minute distribution and P(cancelled) for one example row."""
         from train import collate  # noqa: PLC0415  (torch stays optional for the precomputed mode)
 
-        out = self.model.predict_distribution(collate([prompts.sample(row, mode=self.mode, scaling=self.scaling)]))
+        with self.model_lock:  # one forward pass at a time on the GPU
+            out = self.model.predict_distribution(collate([prompts.sample(row, mode=self.mode, scaling=self.scaling)]))
         return out["probs"][0].float().cpu().numpy().astype(np.float64), float(out["p_cancel"][0])
+
+    def cached_live_forecast(self, leg: dict) -> dict:
+        """live_forecast, reused for a minute. Requests for the same leg wait for the first one, so an app
+        retry or the recommendation's re-check does not spend the API budget again. Failures are not kept."""
+        key = json.dumps([leg.get(k) for k in ("trainId", "trainNumber", "plannedDeparture", "plannedArrival")]
+                         + [(leg.get(s) or {}).get("name") for s in ("from", "to")], ensure_ascii=False)
+        with self.guard:
+            lock = self.live_locks.setdefault(key, threading.Lock())
+        with lock:
+            hit = self.live_cache.get(key)
+            if hit is not None and time.monotonic() - hit[0] < LIVE_CACHE_SECONDS:
+                return hit[1]
+            out = self.live_forecast(leg)
+            self.live_cache[key] = (time.monotonic(), out)
+            return out
 
     def live_forecast(self, leg: dict) -> dict:
         """The leg forecast from an example built live from the Timetables API."""
@@ -240,7 +262,7 @@ class Forecaster:
         live_failure = ""
         if self.live is not None and self.model is not None:
             try:
-                return self.live_forecast(leg)
+                return self.cached_live_forecast(leg)
             except (LookupError, RuntimeError, OSError, ValueError, KeyError) as error:
                 live_failure = f" Live data could not be used: {error}."
                 print(f"live example failed for {leg.get('trainId')}: {error!r}", flush=True)
