@@ -3,7 +3,7 @@
   "checkpoint_id": "01M2CXFBFRAJDSDK2AFB2WJTXF",
   "session_id": "6f11fbbe-b41b-4ac6-96cf-af296c485bf7",
   "strategy": "manual-commit",
-  "created_at": "2026-09-13T08:17:31.689259Z",
+  "created_at": "2026-09-13T08:17:39.048335Z",
   "branch": "feat/agentic-retrieval-v2",
   "checkpoints_count": 29,
   "save_step_count": 1,
@@ -13,18 +13,11 @@
   "turn_id": "076d1ee3e860",
   "compact_transcript_start": 0,
   "token_usage": {
-    "input_tokens": 9748,
-    "cache_creation_tokens": 2831297,
-    "cache_read_tokens": 667483632,
-    "output_tokens": 1054582,
-    "api_call_count": 1147,
-    "subagent_tokens": {
-      "input_tokens": 1032,
-      "cache_creation_tokens": 2154469,
-      "cache_read_tokens": 63576015,
-      "output_tokens": 793299,
-      "api_call_count": 516
-    }
+    "input_tokens": 9780,
+    "cache_creation_tokens": 2834162,
+    "cache_read_tokens": 667948525,
+    "output_tokens": 1056161,
+    "api_call_count": 1148
   },
   "skill_events_version": 1,
   "skill_events": [
@@ -124,24 +117,5 @@
   ],
   "session_metrics": {
     "turn_count": 29
-  },
-  "prompt_attributions": [
-    {
-      "checkpoint_number": 1,
-      "user_lines_added": 647,
-      "user_lines_removed": 0,
-      "agent_lines_added": 0,
-      "agent_lines_removed": 0,
-      "user_added_per_file": {
-        "pred.html": 647
-      }
-    },
-    {
-      "checkpoint_number": 2,
-      "user_lines_added": 0,
-      "user_lines_removed": 0,
-      "agent_lines_added": 647,
-      "agent_lines_removed": 0
-    }
-  ]
+  }
 }
