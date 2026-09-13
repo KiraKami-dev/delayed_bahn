@@ -101,9 +101,9 @@ Median error / CRPS. "Partner" names the run each experiment is compared with.
 | TSLM, plain loss, encoder, 2k | 3.477 | 2.774 | +0.015 |
 | Lead-time blend of that with XGBoost | 3.427 | 2.731 | -0.028 (-0.039 to -0.019) real; median error -0.035 |
 | TSLM, original recipe, 12k (30,000 of the test) | 3.434 | 2.754 | XGBoost on the same 30,000: 3.469 / 2.765; median error real |
-| Final: text + encoder, plain loss, 12k | *pending, about 04:35* | | |
-| Final: text, plain loss, 24k | *pending, about 05:05* | | |
-| Final A: text, v2 data, plain + CRPS, 12k | *pending, about 05:30* | | |
+| Final: text + encoder, plain loss, 12k | 3.397 | 2.699 | -0.060 (-0.073 to -0.048) real; median error -0.066 real; within 15 min -0.091 real; beyond 30 min -0.046 real; lead-time blend -0.067 |
+| Final: text, plain loss, 24k | 3.374 | 2.680 | -0.079 (-0.091 to -0.067) real; median error -0.088 real; within 15 min -0.100 real; beyond 30 min -0.073 real; vs text + encoder 12k -0.019 real |
+| Final A: text, v2 data, plain + CRPS, 12k | 3.322 | 2.644 | against XGBoost on the combined features (3.414 / 2.720): -0.076 (-0.088 to -0.065) real; median error -0.093 real; within 15 min -0.092 real; beyond 30 min -0.073 real; lead-time blend weight 1.0 |
 | Final B: text + encoder, v3 data, plain + CRPS, 12k | *pending, about 06:30* | | |
 
 ### 5.3 By lead time (full test, TSLM plain 2k vs XGBoost)
@@ -133,7 +133,7 @@ are new.
 | TSLM, text, plain + CRPS loss, 2k | 3.266 | 2.610 | +0.024; within 15 min -0.016 (-0.026 to -0.006) real |
 | Lead-time blend of that | 3.230 | 2.573 | -0.013 (-0.022 to -0.005) real |
 | TSLM, encoder only, plain + CRPS loss, 12k | 3.199 | 2.553 | -0.033 (-0.050 to -0.017) real; median error -0.045 real; within 15 min -0.038 real; May blend weights 1.0, nothing to add |
-| Finals | *pending* | | |
+| Final: text + encoder, plain loss, 12k | 3.214 | 2.566 | -0.020 (-0.042 to +0.003); within 15 min -0.040 real; lead-time blend -0.031 (-0.048 to -0.015) real |
 
 Second September set, built with the combined features (previous trains on the route) and the
 statistical forecast: 10,000 of its 32,553 September examples; XGBoost retrained on those
@@ -146,11 +146,18 @@ examples).
 | XGBoost (combined features) | 2.745 | 2.175 | |
 | TSLM, stacked, 2k | 2.689 | 2.136 | -0.039 (-0.076 to -0.015) real; median error -0.056 (-0.107 to -0.023) real; within 15 min -0.068 (-0.148 to -0.025) real |
 | Lead-time blend of that (weights from May) | | | -0.040 (-0.075 to -0.019) real |
+| TSLM, stacked, 5k | 2.741 | 2.161 | -0.014 (-0.058 to +0.019); within 15 min -0.086 real |
+| Lead-time blend of that (weights from May) | | | -0.040 (-0.082 to -0.011) real |
+| TSLM, text + encoder, combined data without the forecast, 2k | 2.711 | 2.148 | -0.028 (-0.072 to +0.005); within 15 min -0.071 (-0.160 to -0.023) real |
+| Lead-time blend of that (weights from May) | | | -0.044 (-0.086 to -0.018) real |
+| Final A: text, combined data, plain + CRPS, 12k (not stacked) | 2.669 | 2.106 | -0.070 (-0.111 to -0.041) real; median error -0.076 real; within 15 min -0.096 real |
 | Stacked finals (12k) | *pending* | | |
 
 The shape found on June to August holds out of time: alone, a 2,000-step TSLM is behind the
 tabular model overall and ahead in the last quarter hour; blended by lead time with weights that
 never saw September, it beats XGBoost.
+On the combined-feature set the same holds for the model without the statistical forecast;
+only the stacked model beats XGBoost alone out of time, so stacking is what carries it.
 
 ## 6. What the ablations established
 

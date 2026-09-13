@@ -38,7 +38,10 @@ def train_label(row: pd.Series) -> str:
     return service
 
 
-SCALINGS = ("z", "fixed")
+SCALINGS = ("z", "fixed", "z4")
+# "plan" marks the run's timetable channels; "history" marks minute series that describe the past of
+# other runs (earlier days, earlier trains), which ``split`` mode sends through the encoder only.
+MINUTE_UNITS = ("minutes", "plan", "history")
 MINUTES_PER_UNIT = 10.0  # fixed scaling: minutes divided by this, shares as they are
 
 
@@ -47,22 +50,37 @@ def normalised(values, label: str, unit: str, scaling: str = "z") -> tuple[str, 
 
     ``z``: z-normalise and state mean and spread, as OpenTSLM's own datasets do; the encoder then
     sees shape only. ``fixed``: keep the level, minutes divided by 10 and shares as they are, so
-    +2 and +40 minutes stay different for the encoder.
+    +2 and +40 minutes stay different for the encoder. ``z4``: ``z`` with every value repeated over
+    one patch of four, so each soft token holds exactly one value instead of blurring four.
     """
     series = np.asarray(values, dtype=np.float64)
     if scaling == "fixed":
-        scale = MINUTES_PER_UNIT if unit in ("minutes", "plan") else 1.0
-        note = f"in tens of minutes" if unit in ("minutes", "plan") else "as a share from 0 to 1"
+        scale = MINUTES_PER_UNIT if unit in MINUTE_UNITS else 1.0
+        note = f"in tens of minutes" if unit in MINUTE_UNITS else "as a share from 0 to 1"
         return f"{label}, {note}:", (series / scale).tolist()
     mean = float(series.mean())
     std = max(float(series.std()), MIN_STD)
-    unit = "minutes" if unit == "plan" else unit
-    return f"{label}, in {unit}, mean {mean:.2f} and std {std:.2f}:", ((series - mean) / std).tolist()
+    unit = "minutes" if unit in MINUTE_UNITS else unit
+    scaled = (series - mean) / std
+    if scaling == "z4":
+        scaled = np.repeat(scaled, 4)
+    return f"{label}, in {unit}, mean {mean:.2f} and std {std:.2f}:", scaled.tolist()
 
 
 def pct(share: float) -> str:
     """A share as a whole percentage."""
     return f"{100 * share:.0f}%"
+
+
+def start_station(row: pd.Series) -> str:
+    """Where the trip still to go starts: the first station before departure, else the last departed one."""
+    j = row.get("j_station")
+    return name(row["first_station"] if row["pre_departure"] or not isinstance(j, str) else j)
+
+
+def signed(minutes: float) -> str:
+    """Whole minutes with a sign, never minus zero."""
+    return f"{round(float(minutes)):+d}"
 
 
 def rationale(row: pd.Series) -> str:
@@ -103,12 +121,37 @@ def rationale(row: pd.Series) -> str:
                          f"the latest {gaps[-1]:.0f} minutes before this one is due.")
         else:
             parts.append(f"No earlier train of this type towards {name(row['dest'])} reached {stop} in the last 6 hours.")
+    if "same_train_days" in row:
+        start = start_station(row)
+        if row["same_train_days"] > 0:
+            same = (f"on {int(row['same_train_days'])} of the last {len(row['same_train_gains'])} days this train number "
+                    f"gained a median of {signed(row['same_train_gain_median'])} minutes from {start} to {stop} "
+                    f"({signed(row['same_train_gain_median_7'])} over the last 7 days), which would put it about "
+                    f"{row['same_train_expected']:.0f} minutes late")
+        else:
+            same = f"no earlier run of this train number from {start} to {stop} is on record for the last 4 weeks"
+        if row["corridor_n"] > 0:
+            n = int(row["corridor_n"])
+            if n == 1:
+                corridor = (f"the one other train that left {start} in the last 3 hours and already reached {stop} "
+                            f"gained {signed(row['corridor_gain_last'])} minutes")
+            else:
+                corridor = (f"the latest {n} other trains that left {start} in the last 3 hours and already reached "
+                            f"{stop} gained {signed(row['corridor_gain_mean'])} minutes on average, the latest "
+                            f"{signed(row['corridor_gain_last'])}")
+        else:
+            corridor = f"no other train that left {start} in the last 3 hours has reached {stop} yet"
+        sentence = f"{same}; {corridor}."
+        parts.append(sentence[0].upper() + sentence[1:])
     if "xgb_median" in row and np.isfinite(row["xgb_median"]):
         # The statistical forecast as a starting point; the model's job is to correct it with what
         # it reads live and to say why.
         parts.append(f"A statistical model expects about {row['xgb_median']:.0f} minutes late (likely "
                      f"{row['xgb_q10']:.0f} to {row['xgb_q90']:.0f}), with {pct(row['xgb_p_late'])} chance of being at "
                      f"least 6 minutes late and {pct(row['xgb_p_cancel'])} of cancellation.")
+    if "cause_text" in row and isinstance(row["cause_text"], str) and row["cause_text"]:
+        # Delay causes and notices reported before the prediction moment (causes.py); empty when none.
+        parts.append(row["cause_text"])
     if "station_late_same_hour" in row and len(row["station_series"]) >= 168:
         parts.append(f"At this time of day, {pct(row['station_late_same_hour'])} of stops at {stop} ran late over the "
                      f"last {len(row['station_series']) // 24} days, {pct(row['network_late_same_hour'])} nationwide.")
@@ -129,7 +172,7 @@ def as_text(values: np.ndarray) -> str:
     return ", ".join(f"{value:.0f}" for value in values)
 
 
-MODES = ("series", "text", "both")
+MODES = ("series", "text", "both", "none", "split")
 TEXT_HOURS = 72  # the prompt never carries more than this many hourly values; the encoder gets them all
 TEXT_DAYS = 30  # likewise for the daily route history
 
@@ -139,7 +182,10 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
 
     ``mode`` decides how the four series reach the model: through the time-series encoder
     (``series``), written into the prompt as numbers with no encoder (``text``, the baseline;
-    ``text_only`` is the same), or both at once (``both``).
+    ``text_only`` is the same), both at once (``both``), or not at all (``none``, the ablation:
+    only the timetable facts and the rationale's summary numbers remain), or divided (``split``: the
+    run and the previous trains as text, the long history through the encoder only, so neither
+    route repeats the other).
     """
     if text_only:
         mode = "text"
@@ -174,11 +220,31 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
         raw.append((f"Arrival delay at {stop} of the previous trains on this route today, oldest first"
                     if prev else "No previous train on this route reached the stop in the last 6 hours",
                     prev or [0.0], "minutes"))
-    if mode in ("text", "both"):
+    if "same_train_gains" in row:
+        # The past of other runs between the start station and the target: long history, so ``split``
+        # sends it through the encoder only, while ``text`` and ``both`` also write it out.
+        start = start_station(row)
+        days = len(row["same_train_gains"])
+        raw.append((f"Delay gained from {start} to {stop} by this train number on each of the last {days} days, "
+                    "oldest first" if row["same_train_days"] > 0
+                    else f"No run of this train number from {start} to {stop} in the last {days} days",
+                    row["same_train_gains"], "history"))
+        corridor = as_list(row["corridor_gains"])
+        raw.append((f"Delay gained from {start} to {stop} by the other trains that left {start} in the last 3 hours "
+                    "and already arrived, oldest arrival first" if corridor
+                    else f"No other train from {start} reached {stop} in the last 3 hours",
+                    corridor or [0.0], "history"))
+
+    def long_history(label: str, unit: str) -> bool:
+        return unit in ("share", "history") or label.startswith("Daily median")
+
+    if mode in ("text", "both", "split"):
         # The same numbers written into the prompt; in ``text`` no time-series encoder is involved.
         lines = []
         for label, values, unit in raw:
             if unit == "plan":  # trajectory channels are for the encoder; the text has the delays and the lead time
+                continue
+            if mode == "split" and long_history(label, unit):
                 continue
             values = np.asarray(values, dtype=np.float64)
             if unit == "share" and len(values) > TEXT_HOURS:  # long hourly series: the text gets the recent end
@@ -187,10 +253,12 @@ def sample(row: pd.Series, text_only: bool = False, mode: str = "series", scalin
             elif "Daily median" in label and len(values) > TEXT_DAYS:
                 values = values[-TEXT_DAYS:]
                 label = label.rsplit(", last ", 1)[0] + f", last {TEXT_DAYS} days"
-            lines.append(f"{label}, in {'percent' if unit == 'share' else unit}: "
+            lines.append(f"{label}, in {'percent' if unit == 'share' else 'minutes' if unit == 'history' else unit}: "
                          f"{as_text(values * (100 if unit == 'share' else 1))}")
         pre_prompt = pre_prompt + "\n" + "\n".join(lines)
-    series = [] if mode == "text" else [normalised(values, label, unit, scaling) for label, values, unit in raw]
+    if mode == "split":
+        raw = [(label, values, unit) for label, values, unit in raw if unit == "plan" or long_history(label, unit)]
+    series = [] if mode in ("text", "none") else [normalised(values, label, unit, scaling) for label, values, unit in raw]
     post_prompt = (f"How many minutes late will the train arrive at {stop}? Reason from the data, "
                    f"then answer with whole minutes or {CANCELLED}.\nRationale:")
     reasoning = rationale(row)

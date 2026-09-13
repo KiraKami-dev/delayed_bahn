@@ -680,6 +680,9 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
 | vs text plus encoder on the combined data (3.603 / 2.877) | | | -0.017 (-0.058 to +0.032) |
 | Text, stacked, 5k | 3.587 | 2.858 | -0.077 (-0.131 to -0.027), real; vs the 2k run -0.003 (-0.034 to +0.029): validation improves (2.162, the best of the night), test does not |
 | Text plus encoder, stacked, 2k | 3.572 | 2.864 | same as stacked text (validation 2.192 vs 2.188): the encoder adds nothing on top of the stacked text either |
+| Encoder only, stacked, 2k (05:25) | 3.583 | 2.880 | -0.055 (-0.093 to -0.026), real; beyond 30 min -0.047 (-0.078 to -0.017), real; vs stacked text +0.019 (+0.010 to +0.030) with half the prompt: the series as 45 embeddings instead of about 480 number tokens |
+| Split, stacked, 2k: run and previous trains as text, long history through the encoder only (05:35) | 3.594 | 2.883 | -0.052 (-0.084 to -0.028), real; vs stacked text +0.023 (+0.011 to +0.036): giving the encoder the history the text no longer has does not beat writing it out |
+| Split, stacked, one value per patch (`z4`), 2k (05:40) | 3.580 | 2.877 | -0.057 (-0.098 to -0.027), real; vs stacked text +0.017 (+0.008 to +0.027): the best encoder route on the stacked data, still behind the text |
 
 - **The first single model that beats XGBoost at every lead time.** Given the statistical
   forecast as a starting point, the language model corrects it with what it reads live; the
@@ -698,8 +701,122 @@ retrained on the combined features, 3.650 / 2.935 on the same 5,000 examples.
   baseline alone on data none of it had seen. (This September set is the combined-feature build
   with 32,553 test examples; its numbers are not comparable with the earlier 10,000 from
   `forward.parquet`, where XGBoost scored 3.244 / 2.586.)
+- **Without the forecast in the prompt it does not hold alone (04:30):** text plus encoder on the
+  same combined data, 2,000 steps, on the same September examples: 2.711 / 2.148, CRPS -0.028
+  (-0.072 to +0.005), no clear difference; within 15 minutes -0.071 (-0.160 to -0.023) and the
+  blind lead-time blend -0.044 (-0.086 to -0.018) are real. The stacked sentence is what turns
+  the model into one that beats XGBoost on its own out of time.
+- **More steps do not carry out of time (05:10):** the 5,000-step stacked text model on the same
+  September examples scores 2.741 / 2.161: CRPS -0.014 (-0.058 to +0.019) against XGBoost, no clear
+  difference, where the 2,000-step model had -0.039 real. Within 15 minutes -0.086 (-0.175 to
+  -0.038) and the blind blend -0.040 (-0.082 to -0.011) stay real.
 - **Planned trajectory channels** (running time, dwell and minutes left per stop through the
   encoder, `examples_v5`): 3.604 / 2.879 against 3.606 / 2.878 without them. Nothing.
+
+### Finals: 12,000 steps, full test set (93,738 examples)
+
+Scored on every test example; bootstraps on the 88,479 that ran, against XGBoost on the same
+features (3.462 / 2.759 on the original features).
+
+| Model | Median error | CRPS | vs XGBoost (CRPS, 95% interval) |
+|---|---|---|---|
+| Text plus encoder, plain loss (04:47) | 3.397 | 2.699 | -0.060 (-0.073 to -0.048), real |
+| same, within 15 min (36,556) | | | -0.091 (-0.116 to -0.069), real |
+| same, beyond 30 min (39,829) | | | -0.046 (-0.063 to -0.029), real |
+| its lead-time blend | 3.387 | 2.692 | -0.067 (-0.078 to -0.056), real |
+| Text, plain loss, 24,000 steps (05:15) | 3.374 | 2.680 | -0.079 (-0.091 to -0.067), real; within 15 min -0.100, beyond 30 min -0.073; against text plus encoder at 12,000 steps -0.019 (-0.024 to -0.013), real |
+| Text, combined data (previous trains, 720 h), exact-minute plus CRPS loss (05:10) | 3.322 | 2.644 | -0.076 (-0.088 to -0.065) against XGBoost on the combined features (3.414 / 2.720), real |
+| same, within 15 min | | | -0.092 (-0.117 to -0.070), real |
+| same, beyond 30 min | | | -0.073 (-0.087 to -0.059), real |
+| same, against text plus encoder with the plain loss | | | -0.054 (-0.062 to -0.047), real |
+
+- **The long run closes the gap beyond 30 minutes.** The same recipe at 2,000 steps lost to
+  XGBoost beyond 30 minutes (+0.076) and overall (+0.015); at 12,000 steps it wins at every lead
+  time on the full test set, alone. Validation 2.709 / 2.175.
+- **Better data and the exact-minute loss add another 0.054.** The text model on the combined
+  data beats XGBoost trained on the same features by 0.076 on the full test, with the lead-time
+  blend choosing weight 1.0: nothing left for XGBoost to add. Validation 2.665 / 2.139.
+- **September (05:30), 10,000 examples:** the combined-data text final scores 2.669 / 2.106 on the
+  combined-feature September set against XGBoost's 2.745 / 2.175: CRPS -0.070 (-0.111 to -0.041),
+  median error -0.076, within 15 minutes -0.096, all real, alone. Text plus encoder with the plain
+  loss on the original September set: 3.214 / 2.566 against 3.244 / 2.586, -0.020 (-0.042 to
+  +0.003) alone, within 15 minutes -0.040 and the blind blend -0.031 real.
+
+### Fourth wave: what the time series and the embeddings add (05:00)
+
+Same data (`examples.parquet`), exact-minute plus CRPS loss, 2,000 steps, the same 5,000 test
+examples; only the route by which the four series reach the model changes. Every prompt keeps
+the rationale sentence (current delay, trend, 30-day median), so "no series" still knows the
+summary numbers.
+
+| Series reach the model | Prompt tokens (median) | Median error | CRPS | vs text (CRPS, 95% interval) |
+|---|---|---|---|---|
+| Not at all | 365 | 3.677 | 2.957 | +0.054 (+0.023 to +0.085), worse |
+| As numbers in the text | 844 | 3.621 | 2.903 | |
+| Through the encoder only | 365 + 45 soft | 3.693 | 2.956 | +0.052 (+0.025 to +0.083), worse; vs not at all -0.002 (-0.014 to +0.011) |
+| Through the encoder only, 12,000 steps (third wave) | 365 + 45 soft | 3.602 | 2.889 | no-series partner at 12,000 steps *running* |
+| Through the encoder only, one value per patch (`z4`) | 365 + about 230 soft | 3.689 | 2.959 | vs the encoder with patches of four +0.003 (-0.010 to +0.016) |
+| Text plus encoder | 961 + 45 soft | 3.617 | 2.898 | -0.005 (-0.023 to +0.011); vs not at all -0.059 (-0.092 to -0.028), real |
+| Text plus encoder, numbers hidden in 50% of training rows | 961 + 45 soft | 3.647 | 2.925 | vs text plus encoder +0.027 (+0.003 to +0.052), worse |
+
+- **The time series carry the win.** Without them the model is level with XGBoost (-0.014,
+  -0.073 to +0.035); with them it beats it. The series are worth 0.101 CRPS beyond 30 minutes
+  (-0.169 to -0.041) and 0.012 within 15 minutes, where the current delay in the rationale
+  already says most.
+- **At 2,000 steps the encoder reads nothing yet.** Encoder only equals no series on the test set;
+  at 12,000 steps the same route reaches the text level (third wave). Whether that gain is the
+  series or just longer training is what the 12,000-step no-series run decides.
+- **Forcing the model to read the encoder does not help.** Hiding the numbers from the text in half
+  the training rows (modality dropout) costs 0.027 against plain text plus encoder, and splitting
+  the inputs so the encoder alone carries the long history costs 0.023 on the stacked data. One
+  soft token per value instead of patches of four changes nothing. At 2,000 steps, on four short
+  series, writing the numbers out is the better route; the encoder matches it at about half the
+  prompt when it also has the stacked forecast (0.019 behind).
+- **The encoder is the compact route:** the four series cost about 480 prompt tokens as numbers
+  and 45 soft tokens through the encoder.
+
+### Delay causes from the raw feeds (05:40)
+
+The team's cause extraction (`db_route`: IRIS cause codes and planned-works notices from the raw
+DB XML) rerun over November to August and joined as one sentence in the stacked prompt
+(`trip/cause_text.py`, `examples_v6`). Leakage rule: cause codes only from stops already passed
+before `t0` (earlier stops of this run, other trains at the target station in the last 3 hours),
+never the target stop; notices only if issued before `t0` and valid at the planned arrival.
+Coverage 82% of examples.
+
+| Model | Median error | CRPS | vs stacked text (CRPS, 95% interval) |
+|---|---|---|---|
+| Stacked text, 2k | 3.573 | 2.860 | |
+| same plus the cause sentence, 2k | 3.583 | 2.863 | +0.002 (-0.006 to +0.013), no difference |
+
+- **Causes add nothing measurable.** The codes are archived after the fact, so only codes of
+  stops already passed are usable, and those mostly restate the delay the run already shows.
+
+### Fifth wave: series the text did not have (05:20)
+
+A probe of what XGBoost still gets wrong pointed at two histories no input carried
+(`examples_v7`, `forward_v7`; same example ids as v4):
+
+- **Same train, last 28 days:** the delay this train number gained or recovered between the
+  current stop and the target on each previous day, arrivals strictly before `t0`.
+- **Corridor:** trains that left the current stop in the last 3 hours and already reached the
+  target, their gains and arrival delays, last 8 by arrival.
+
+Coverage 98% and 82% of examples. Both lists enter the prompt as series (encoder only in `split`
+mode) and as scalars for XGBoost; the rationale gets one sentence with the medians.
+
+| Model | 5,000 shared test | Full test | September |
+|---|---|---|---|
+| XGBoost, combined features (v3) | 3.650 / 2.935 | 3.414 / 2.720 | 2.786 / 2.207 |
+| XGBoost with the new series (v7) | 3.507 / 2.824 | 3.278 / 2.616 | 2.645 / 2.100 |
+| TSLM, stacked text, v7, 2k | *running* | | |
+| TSLM, stacked split, v7, 2k | *running* | | |
+| TSLM, stacked text, v7, 12k (final) | | *running, about 09:00* | |
+
+- **The best single improvement of the night, and it helps the baseline too:** -0.111 CRPS for
+  XGBoost on the shared test (-0.149 to -0.077), real at every lead time. XGBoost-v7 alone now beats
+  the best finished TSLM final (2.616 vs 2.644 on the full test), so the submission comparison is
+  against XGBoost-v7.
 
 ### Pending at the time of writing
 
@@ -745,6 +862,18 @@ corroborated rather than surprising.
   International Journal of Forecasting 2023; Cerqueira and Torgo, arXiv:2306.14563), with the
   warning that per-horizon weights overfit small calibration sets. Our five bucket weights are
   fitted on 3,000 validation examples and confirmed on 88,479 test examples.
+- **Stacking is the oldest combination recipe; an LLM as the second stage is new.** Wolpert
+  (Neural Networks 1992) and Breiman ("Stacked regressions", Machine Learning 1996) fit the
+  second stage on out-of-fold predictions of the first, which is why XGBoost's forecast in the
+  training prompts is out-of-fold. Bates and Granger (1969) and the M4 competition (Makridakis
+  et al., IJF 2018: 12 of the 17 most accurate methods were combinations) say combining beats
+  either forecaster alone. The nearest LLM work is CorDP (Ashok et al., TMLR 2026,
+  arXiv:2508.09904): an LLM is handed a probabilistic forecast from Chronos, Lag-Llama or ARIMA
+  and corrects it, beating the base forecaster in 11 of 13 models on the Context is Key benchmark
+  (Williams et al., ICML 2025, arXiv:2410.18959); the two failures are the smallest models (1B and
+  1.5B), and none is fine-tuned. We found no published case of a fine-tuned 3B model trained on
+  out-of-fold base forecasts, which is what the stacked TSLM is, and its blend weight of 1.0 is
+  the expected outcome once the second stage already contains the first.
 - **Train delay prediction.** Published real-time MAEs of 0.5 to 2.5 minutes (Kecman and Goverde
   2015 on NS; Oneto et al. 2018 on RFI; Spanninger et al. 2022 review) come from short horizons on
   more punctual networks; the RIDE benchmark (Elliker et al., arXiv:2606.05070, Belgian network,

@@ -26,11 +26,13 @@ ANSWER_RE = re.compile(r"Answer:\s*(cancelled|\d+)")
 class TripDataset(Dataset):
     """Formats examples lazily, so large splits cost no upfront time."""
 
-    def __init__(self, frame: pd.DataFrame, mode: str = "series", scaling: str = "z", caption_share: float = 0.0):
+    def __init__(self, frame: pd.DataFrame, mode: str = "series", scaling: str = "z", caption_share: float = 0.0,
+                 text_dropout: float = 0.0):
         self.frame = frame.reset_index(drop=True)
         self.mode = mode
         self.scaling = scaling
         self.caption_share = caption_share
+        self.text_dropout = text_dropout
 
     def __len__(self) -> int:
         return len(self.frame)
@@ -43,6 +45,12 @@ class TripDataset(Dataset):
             draw = (int(row["example_id"]) * 2654435761) % 1000
             if draw < self.caption_share * 1000:
                 return prompts.caption_sample(row, seed=draw, scaling=self.scaling)
+        if self.mode == "both" and self.text_dropout > 0:
+            # Modality dropout: a fixed share of rows hide the numbers from the text, so the series
+            # reach the model through the encoder only and the model has to learn to read it.
+            draw = (int(row["example_id"]) * 40503 + 7) % 1000
+            if draw < self.text_dropout * 1000:
+                return prompts.sample(row, mode="series", scaling=self.scaling)
         return prompts.sample(row, mode=self.mode, scaling=self.scaling)
 
 
@@ -54,9 +62,9 @@ def collate(batch: list[dict]) -> list[dict]:
 
 
 def loader(frame: pd.DataFrame, batch_size: int, shuffle: bool, workers: int, mode: str = "series",
-           scaling: str = "z", caption_share: float = 0.0) -> DataLoader:
+           scaling: str = "z", caption_share: float = 0.0, text_dropout: float = 0.0) -> DataLoader:
     """A DataLoader over formatted samples."""
-    return DataLoader(TripDataset(frame, mode, scaling, caption_share), batch_size=batch_size, shuffle=shuffle, collate_fn=collate,
+    return DataLoader(TripDataset(frame, mode, scaling, caption_share, text_dropout), batch_size=batch_size, shuffle=shuffle, collate_fn=collate,
                       num_workers=workers, persistent_workers=False)
 
 
@@ -157,6 +165,8 @@ def main() -> None:
                         help="z-normalise each series for the encoder, or keep the level (fixed)")
     parser.add_argument("--caption-share", type=float, default=0.0,
                         help="share of training rows turned into series-reading questions (curriculum mixed in)")
+    parser.add_argument("--text-dropout", type=float, default=0.0,
+                        help="in both mode, share of training rows whose numbers are hidden from the text")
     parser.add_argument("--grad-checkpointing", action="store_true",
                         help="recompute activations in the backward pass; fits the longer text-only prompts in 48 GB")
     args = parser.parse_args()
@@ -198,7 +208,8 @@ def main() -> None:
         started, step, window, skipped = time.time(), 0, [], 0
         stop = False
         while not stop:
-            for batch in loader(train, args.batch_size, True, args.workers, mode, args.series_scaling, args.caption_share):
+            for batch in loader(train, args.batch_size, True, args.workers, mode, args.series_scaling, args.caption_share,
+                                args.text_dropout):
                 for group, base in zip(optimizer.param_groups, base_lrs):
                     group["lr"] = base * learning_rate_factor(step, warmup, total)
                 try:
