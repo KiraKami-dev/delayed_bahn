@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2H0Y686FM5TTVEBZ384Z0X6",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/frontend/src/features/globe-map/components/GlobeMap.tsx",
+    "app/frontend/src/features/globe-map/hooks/useRouteLayers.ts",
+    "app/frontend/src/features/globe-map/label-placement.ts",
+    "app/frontend/src/index.css",
+    "app/frontend/src/lib/journey-search.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 842,
+    "cache_creation_tokens": 364255,
+    "cache_read_tokens": 6559033,
+    "output_tokens": 78760,
+    "api_call_count": 34
+  }
+}
