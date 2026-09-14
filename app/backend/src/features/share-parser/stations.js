@@ -1,8 +1,12 @@
 // Station name -> { evaNumber, name, lat, lon }. Local table first, then the
 // DB Timetables station lookup when credentials exist, else the bare name.
+// Timetables has no coordinates, so remote hits get them by EVA from RIS::Stations,
+// or from OpenStreetMap when the DB app has no RIS::Stations subscription.
 import { readFileSync } from 'node:fs';
 
 export const DB_TIMETABLES_BASE = 'https://apis.deutschebahn.com/db-api-marketplace/apis/timetables/v1';
+export const RIS_STATIONS_BASE = 'https://apis.deutschebahn.com/db-api-marketplace/apis/ris-stations/v1';
+export const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
 export function normaliseName(s = '') {
   return String(s)
@@ -30,7 +34,10 @@ export function createStationResolver({ env = process.env, stations, fetchImpl =
     for (const a of s.aliases || []) byName.set(normaliseName(a), s);
   }
   const cache = new Map();
+  const coordinateCache = new Map(); // successes only: a dropped connection must not hide a station for good
+  let risSubscribed = true;
   const pick = (s) => ({ evaNumber: String(s.evaNumber), name: s.name, lat: s.lat, lon: s.lon });
+  const position = (lat, lon) => (Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : null);
 
   function local(name) {
     const n = normaliseName(name);
@@ -71,12 +78,50 @@ export function createStationResolver({ env = process.env, stations, fetchImpl =
     }
   }
 
+  async function risCoordinates(eva) {
+    if (!risSubscribed) return null;
+    const res = await fetchImpl(`${RIS_STATIONS_BASE}/stop-places/by-key?keyType=EVA&key=${eva}`, {
+      headers: { 'DB-Client-Id': env.DB_CLIENT_ID, 'DB-Api-Key': env.DB_API_KEY, Accept: 'application/vnd.de.db.ris+json' },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (res.status === 401 || res.status === 403) { risSubscribed = false; return null; }
+    if (!res.ok) return null;
+    const p = (await res.json()).stopPlaces?.[0]?.position;
+    return p ? position(p.latitude, p.longitude) : null;
+  }
+
+  async function osmCoordinates(eva) {
+    // OpenStreetMap tags German stations with their EVA number as uic_ref.
+    const query = `[out:json][timeout:10];nwr["uic_ref"="${eva}"];out center 1;`;
+    const res = await fetchImpl(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'delayedBahn-backend' }, // Overpass answers 406 without one
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!res.ok) return null;
+    const el = (await res.json()).elements?.[0];
+    return el ? position(el.lat ?? el.center?.lat, el.lon ?? el.center?.lon) : null;
+  }
+
+  async function coordinates(eva) {
+    if (!/^\d{6,8}$/.test(eva)) return null;
+    if (coordinateCache.has(eva)) return coordinateCache.get(eva);
+    for (const source of [risCoordinates, osmCoordinates]) {
+      const hit = await source(eva).catch(() => null);
+      if (hit) { coordinateCache.set(eva, hit); return hit; }
+    }
+    return null;
+  }
+
   return {
     byEva: (eva) => (byEva.has(String(eva)) ? pick(byEva.get(String(eva))) : null),
     resolveLocal: local,
     async resolve(name) {
       const clean = String(name || '').trim();
-      return local(clean) || (await remote(clean)) || { evaNumber: '', name: clean };
+      const found = local(clean) || (await remote(clean));
+      if (!found) return { evaNumber: '', name: clean };
+      if (found.lat != null && found.lon != null) return found;
+      const at = await coordinates(found.evaNumber);
+      return at ? { ...found, ...at } : found;
     },
     table,
   };

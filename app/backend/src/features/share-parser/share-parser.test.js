@@ -30,13 +30,39 @@ test('station resolver: local table, aliases, loose match, unknown keeps the nam
 
 test('station resolver uses the DB Timetables API when creds exist', async () => {
   const calls = [];
-  const fetchImpl = async (url) => { calls.push(url); return { ok: true, text: async () => '<stations><station p="true" meta="" name="Kleinkleckersdorf" eva="8001234" ds100="NKL"/></stations>' }; };
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.includes('/timetables/')) return { ok: true, text: async () => '<stations><station p="true" meta="" name="Kleinkleckersdorf" eva="8001234" ds100="NKL"/></stations>' };
+    return { ok: false, status: 404 };
+  };
   const r = createStationResolver({ env: { DB_CLIENT_ID: 'id', DB_API_KEY: 'key' }, fetchImpl });
   const s = await r.resolve('Kleinkleckersdorf');
   assert.deepEqual(s, { evaNumber: '8001234', name: 'Kleinkleckersdorf' });
   await r.resolve('Kleinkleckersdorf');
-  assert.equal(calls.length, 1, 'cached');
+  assert.equal(calls.filter((url) => url.includes('/timetables/')).length, 1, 'cached');
   assert.match(calls[0], /timetables\/v1\/station\/Kleinkleckersdorf/);
+});
+
+test('station resolver fills coordinates from RIS::Stations, else OpenStreetMap', async () => {
+  const calls = [];
+  const resolverWith = (ris) => createStationResolver({
+    env: { DB_CLIENT_ID: 'id', DB_API_KEY: 'key' },
+    fetchImpl: async (url) => {
+      calls.push(url);
+      if (url.includes('/timetables/')) return { ok: true, text: async () => '<stations><station name="Kleinkleckersdorf" eva="8001234"/></stations>' };
+      if (url.includes('/ris-stations/')) return ris;
+      return { ok: true, json: async () => ({ elements: [{ type: 'node', lat: 48.5, lon: 10.5 }] }) };
+    },
+  });
+  const fromRis = await resolverWith({ ok: true, status: 200, json: async () => ({ stopPlaces: [{ position: { latitude: 49.1, longitude: 11.2 } }] }) }).resolve('Kleinkleckersdorf');
+  assert.deepEqual(fromRis, { evaNumber: '8001234', name: 'Kleinkleckersdorf', lat: 49.1, lon: 11.2 });
+
+  const r = resolverWith({ ok: false, status: 401 });
+  assert.deepEqual(await r.resolve('Kleinkleckersdorf'), { evaNumber: '8001234', name: 'Kleinkleckersdorf', lat: 48.5, lon: 10.5 });
+  assert.match(calls.at(-1), /uic_ref/);
+  calls.length = 0;
+  await r.resolve('Kleinkleckersdorf');
+  assert.deepEqual(calls, [], 'station and coordinates cached');
 });
 
 test('tokenizer classifies the real sample line by line', () => {
