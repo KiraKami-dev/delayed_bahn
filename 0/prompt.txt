@@ -1,0 +1,13 @@
+How to start this up?
+
+---
+
+Yeah, just build and start it
+
+---
+
+Currently on the train back from the hackathon and thinking about taking a screenshot for a (LinkedIn) post. What I noticed: Why does it show just one connection (and here not the one from the lower section) in the map)? [Image #1] Is that intended?
+
+---
+
+Do the proper fix.
