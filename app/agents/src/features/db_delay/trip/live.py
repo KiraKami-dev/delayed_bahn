@@ -310,6 +310,7 @@ class Live:
         stored["_keys"] = [row_keys(r) for r in identity.to_dict("records")]
         self.stored = stored
         self.station_names = stored["_k"].unique()
+        self.train_types = set(stored["train_type"].astype(str))
         self.data_end = stored["t0"].max()
 
     def _at_station(self, name: str) -> pd.Series:
@@ -536,12 +537,19 @@ class Live:
         same_train = template is not None
         if template is None:
             template = self._latest(at_k & (self.stored["train_type"] == kind))
+        if template is None and len(kind) >= 2:
+            # A train from abroad (an EC from Zürich) may have no run of its type recorded at a German stop
+            # while a sibling type has (an ECE; IC and ICE alike): borrow that route, keep the train's own type.
+            types = self.stored["train_type"].astype(str)
+            template = self._latest(at_k & (types.str.startswith(kind) | types.map(lambda t: bool(t) and kind.startswith(t))))
         if template is None:
-            raise LookupError(f"no recorded {leg.get('trainId')} or {kind or 'train'} run to {to_name} for an offline estimate")
+            template = self._latest(at_k & (self.stored["cls"] == train_class(kind)))
+        if template is None:
+            raise LookupError(f"no recorded {leg.get('trainId')} or {train_class(kind)} run to {to_name} for an offline estimate")
 
-        train_type = template["train_type"]
+        train_type = template["train_type"] if same_train or kind not in self.train_types else kind
         train_number = template["train_number"] if same_train else str(leg.get("trainNumber") or "")
-        cls = template["cls"]
+        cls = template["cls"] if same_train else train_class(train_type)
         first = template["first_station"] if same_train else from_name
         row = {
             "example_id": -1, "split": "offline", "run": "", "cls": cls, "train_type": train_type, "train_number": train_number,
@@ -558,7 +566,7 @@ class Live:
                                                 first if same_train else None, cls, now, arrival, None)
         row = self._finish(row)
         route = (f"route of the latest recorded {train_type} {train_number} to {template['k_station']} ({template['t0']:%d %b})"
-                 if same_train else f"no recorded run of {leg.get('trainId')}: a {train_type} train to {template['k_station']} as the template")
+                 if same_train else f"no recorded run of {leg.get('trainId')}: a {template['train_type']} train to {template['k_station']} as the template")
         sources = [
             f"offline estimate at {now:%H:%M}: DB live data unavailable ({reason or 'no live data'}), so no live delays, "
             "previous trains or corridor trains",
