@@ -1,0 +1,4 @@
+It says "Offline estimate • DB live data unavailable, based on
+timetable and history" though which is annoying for the screenshot (and generally). And then the reasoning: "• No earlier train of this type reached Buchloe in 6
+hours. 100% of stops at Buchloe ran late in the last
+3 hours." do we pass the correct data? Otherwise this is werid tbh, the reasoning may be off also if it really think 0 trains were there)
