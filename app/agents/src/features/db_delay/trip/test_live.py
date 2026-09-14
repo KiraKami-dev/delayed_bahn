@@ -113,6 +113,25 @@ def test_offline_row_falls_back_to_a_train_of_the_same_type(offline_live):
         offline_live.offline_example(leg("ICE 5", "Harbour Station"), NOW)
 
 
+def test_a_train_matches_its_sibling_type_with_the_same_number():
+    ece = {"train_type": "ECE", "train_number": "199", "line_number": None}
+    assert live.same_train(ece, leg("EC 199", "Lake Station"))
+    assert live.same_train({"train_type": "ICE", "train_number": "5", "line_number": None}, leg("IC 5", "Lake Station"))
+    assert not live.same_train(ece, leg("RE 199", "Lake Station"))
+    assert not live.same_train(ece, leg("EC 198", "Lake Station"))
+
+
+def test_offline_row_borrows_a_sibling_type_but_keeps_the_trains_own_type():
+    stored = pd.DataFrame([
+        recorded_run("ECE", "197", "", "Lake Station", "2026-09-12 15:00"),
+        recorded_run("EC", "44", "", "Big City Hbf", "2026-09-12 14:00"),
+    ])
+    lake = live.Live(live.Feeds(live.Client(live.dbx.Credentials("", ""), offline=True)), stored, FixedForecast())
+    row, sources = lake.offline_example(leg("EC 199", "Lake Station"), NOW)
+    assert row["train_type"] == "EC" and row["cls"] == "long-distance" and row["k_station"] == "Lake Station"
+    assert "no recorded run of EC 199: a ECE train to Lake Station" in sources[1]
+
+
 def test_forecaster_falls_back_from_live_to_offline_to_the_prior(offline_live):
     frame = pd.DataFrame([trip(100 + i, "RE", str(i), "RE1", "Elsewhere", "2026-09-10 10:00", "2026-09-10 09:30", target=i % 7)
                           for i in range(serve.MIN_PRIOR)])

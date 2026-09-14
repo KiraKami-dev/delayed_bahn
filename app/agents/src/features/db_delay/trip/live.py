@@ -149,6 +149,18 @@ def leg_keys(leg: dict) -> set[str]:
     return {k for k in keys if k}
 
 
+def same_train(row: dict, leg: dict) -> bool:
+    """Whether a timetable row is the leg's train: a shared spelling, else the same number under a sibling
+    type, since the app may say EC 199 where the Timetables API says ECE 199 (IC and ICE alike)."""
+    if row_keys(row) & leg_keys(leg):
+        return True
+    m = re.match(r"([A-Za-z]+)\s*(\d+)$", str(leg.get("trainId") or "").strip())
+    kind, kind_row = (m.group(1).upper() if m else ""), str(row.get("train_type") or "").upper()
+    number = str(leg.get("trainNumber") or (m.group(2) if m else ""))
+    return (bool(number) and min(len(kind), len(kind_row)) >= 2 and str(row.get("train_number") or "") == number
+            and (kind_row.startswith(kind) or kind.startswith(kind_row)))
+
+
 class Client(dbx.TimetablesClient):
     """Timetables with a sliding one-minute window, short timeouts and a pause after the API fails.
 
@@ -393,32 +405,74 @@ class Live:
         row |= self.forecast.columns_for(pd.DataFrame([row])).iloc[0].to_dict()
         return pd.Series(row)
 
+    def _entry_stop(self, leg: dict, arrival: datetime) -> tuple[dict, str] | None:
+        """For a train starting outside the Timetables API (the EC 199 from Zürich HB), its first stop the API
+        knows: the target's plan lists the stations before it, and that station's plan holds the same run."""
+        k = None
+        for eva in self._candidates(leg.get("to")):
+            k = next((r for r in self.feeds.stops(eva, [arrival]) if r["arr_pt"] and abs(minutes(r["arr_pt"], arrival)) <= 1
+                      and same_train(r, leg)), None)
+            if k is not None:
+                break
+        if k is None:
+            return None
+        for name in k["before"]:
+            station = self.feeds.station(name)
+            if station is None:
+                continue
+            hour = floor_hour(k["arr_pt"])
+            for _ in range(SEARCH_HOURS + 1):
+                mine = [r for r in self.feeds.stops(station[0], [hour]) if r["run"] == k["run"] and r["dep_pt"]]
+                if mine:
+                    return mine[0], station[0]
+                hour -= HOUR
+        return None
+
     def example(self, leg: dict, now: datetime | None = None) -> tuple[pd.Series, list[str]]:
         """One v7 example row for the leg at t0 = now, and the sources of its parts."""
         now = now or now_local()
         departure, arrival = local_naive(leg["plannedDeparture"]), local_naive(leg["plannedArrival"])
         calls_before = self.feeds.client.calls
-        wanted = leg_keys(leg)
         f_name, k_name = (leg.get("from") or {}).get("name"), (leg.get("to") or {}).get("name")
 
-        f = f_eva = None
-        for eva in self._candidates(leg.get("from")):
+        f = f_eva = abroad = None
+        try:
+            boarding = self._candidates(leg.get("from"))
+        except LookupError:
+            boarding = []
+        for eva in boarding:
             at_f = [r for r in self.feeds.stops(eva, [departure]) if r["dep_pt"] and abs(minutes(r["dep_pt"], departure)) <= 1
-                    and row_keys(r) & wanted]
+                    and same_train(r, leg)]
             if at_f:
                 f, f_eva = at_f[0], eva
                 break
+        if f is None and f_name and self.feeds.station(f_name) is None:
+            # Boarding outside the API, e.g. abroad: start from the train's first stop that the API knows.
+            entry = self._entry_stop(leg, arrival)
+            if entry is not None:
+                (f, f_eva), abroad = entry, f_name
         if f is None:
             raise LookupError(f"{leg.get('trainId')} does not leave {f_name} at {departure:%H:%M} in the live timetable")
         run = f["run"]
         k_hours = hours(arrival - PREV_HOURS * HOUR, min(arrival, now)) + [arrival] + hours(now - LIVE_STATION_HOURS * HOUR, now)
-        k = k_rows = k_eva = None
-        for eva in self._candidates(leg.get("to")):
-            rows = self.feeds.stops(eva, k_hours)
-            k = next((r for r in rows if r["run"] == run and r["arr_pt"]), None)
-            if k is not None:
-                k_rows, k_eva = rows, eva
-                break
+
+        def at_target(run: str) -> tuple[dict | None, list[dict] | None, str | None]:
+            for eva in self._candidates(leg.get("to")):
+                rows = self.feeds.stops(eva, k_hours)
+                hit = next((r for r in rows if r["run"] == run and r["arr_pt"]), None)
+                if hit is not None:
+                    return hit, rows, eva
+            return None, None, None
+
+        k, k_rows, k_eva = at_target(run)
+        if k is None and abroad is None:
+            # DB may list a cross-border train as two runs split at the border (EC 199 as an EC from Zürich HB
+            # to Lindau-Reutin, then an ECE on to Munich): continue with the run that reaches the target.
+            entry = self._entry_stop(leg, arrival)
+            if entry is not None and entry[0]["run"] != run:
+                (f, f_eva), abroad = entry, f_name
+                run = f["run"]
+                k, k_rows, k_eva = at_target(run)
         if k is None:
             raise LookupError(f"{leg.get('trainId')} has no planned arrival at {k_name} at {arrival:%H:%M}")
 
@@ -513,6 +567,8 @@ class Live:
             f"same train number on {int(row['same_train_days'])} days, older station and nationwide hours by hour of day",
             "statistical forecast refitted on the v7 training split",
         ]
+        if abroad:
+            sources.insert(1, f"live data starts at {f['station']}: DB's timetable does not follow this train from {abroad} to {k['station']}")
         used = set(stations_of.values()) | {k_eva, start_eva}
         stale = [t for eva, t in self.feeds.stale.items() if eva in used]
         if stale:
