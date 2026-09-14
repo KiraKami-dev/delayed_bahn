@@ -2,6 +2,7 @@ import * as maplibregl from "maplibre-gl"
 import type { Journey } from "@/lib/contract"
 import { legLine, RISK_MAP_COLOUR } from "@/lib/geo"
 import { DUR, motionOff } from "@/lib/motion"
+import { placeLabels, type LabelTarget } from "../label-placement"
 
 export type RouteKind = "main" | "alt"
 
@@ -11,14 +12,19 @@ type Handles = {
   sourceIds: string[]
   anim: number
   flow: number
+  labels: LabelTarget[]
+  lines: [number, number][][]
+  relayout?: () => void
+  detach?: () => void
 }
 
 const registry = new WeakMap<maplibregl.Map, Record<RouteKind, Handles>>()
+const emptyHandles = (): Handles => ({ markers: [], layerIds: [], sourceIds: [], anim: 0, flow: 0, labels: [], lines: [] })
 
 function handles(map: maplibregl.Map, kind: RouteKind): Handles {
   let r = registry.get(map)
   if (!r) {
-    r = { main: { markers: [], layerIds: [], sourceIds: [], anim: 0, flow: 0 }, alt: { markers: [], layerIds: [], sourceIds: [], anim: 0, flow: 0 } }
+    r = { main: emptyHandles(), alt: emptyHandles() }
     registry.set(map, r)
   }
   return r[kind]
@@ -29,12 +35,53 @@ export function clearRoute(map: maplibregl.Map, kind: RouteKind) {
   cancelAnimationFrame(h.anim)
   window.clearInterval(h.flow)
   h.flow = 0
+  h.detach?.()
+  h.detach = h.relayout = undefined
   for (const id of h.layerIds) if (map.getLayer(id)) map.removeLayer(id)
   for (const id of h.sourceIds) if (map.getSource(id)) map.removeSource(id)
   for (const m of h.markers) m.remove()
   h.layerIds = []
   h.sourceIds = []
   h.markers = []
+  h.labels = []
+  h.lines = []
+}
+
+/** Re-place station labels, e.g. after their text changed. */
+export function relayoutLabels(map: maplibregl.Map, kind: RouteKind = "main") {
+  handles(map, kind).relayout?.()
+}
+
+/** Every n-th point: enough to tell whether a label covers the line. */
+function thin(line: [number, number][], max = 120): [number, number][] {
+  if (line.length <= max) return line
+  const step = (line.length - 1) / (max - 1)
+  return Array.from({ length: max }, (_, i) => line[Math.round(i * step)])
+}
+
+/** Keep labels placed while the camera moves, the viewport resizes or the trip sheet changes height. */
+function attachLabelLayout(map: maplibregl.Map, h: Handles) {
+  let frame = 0, last = 0
+  const run = () => { frame = 0; last = performance.now(); placeLabels(map, h.labels, h.lines) }
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(run) }
+  const onMove = () => { if (performance.now() - last > 120) schedule() }
+  const sheet = document.querySelector(".travel-sheet")
+  const observer = new ResizeObserver(schedule)
+  if (sheet) observer.observe(sheet)
+  map.on("move", onMove)
+  map.on("moveend", schedule)
+  map.on("resize", schedule)
+  window.addEventListener("rail-layout", schedule)
+  h.relayout = schedule
+  h.detach = () => {
+    cancelAnimationFrame(frame)
+    observer.disconnect()
+    map.off("move", onMove)
+    map.off("moveend", schedule)
+    map.off("resize", schedule)
+    window.removeEventListener("rail-layout", schedule)
+  }
+  run()
 }
 
 /** Point a fraction `t` along the straight segment from a to b. */
@@ -76,6 +123,7 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
   journey.legs.forEach((leg, i) => {
     const line = legLine(leg)
     if (!line) return
+    h.lines.push(thin(line))
     const colour = opts.colours?.[i] ?? base
     const sourceId = `route-${kind}-${i}`
     map.addSource(sourceId, {
@@ -158,20 +206,27 @@ export function drawRoute(map: maplibregl.Map, kind: RouteKind, journey: Journey
       dot.className = "dot"
       dot.style.setProperty("--c", colour)
       el.append(dot)
+      let tag: HTMLElement | undefined
       if (opts.labels !== false) {
+        // The tag holds the name and, once forecast, the delay; label-placement.ts picks its side.
+        tag = document.createElement("span")
+        tag.className = "station-tag"
         const label = document.createElement("span")
         label.className = "label"
         label.textContent = st.name
-        el.append(label)
+        tag.append(label)
+        el.append(tag)
       }
       el.addEventListener("click", (e) => {
         e.stopPropagation()
         opts.onStationClick?.(i, end)
       })
-      const m = new maplibregl.Marker({ element: el, anchor: "left", offset: [-10, 0] }).setLngLat([st.lon, st.lat]).addTo(map)
+      const m = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([st.lon, st.lat]).addTo(map)
       h.markers.push(m)
+      if (tag) h.labels.push({ marker: m, tag })
     }
   })
+  if (h.labels.length) attachLabelLayout(map, h)
 
   if (animate) animateDraw(map, kind, journey)
   if (!motionOff()) {

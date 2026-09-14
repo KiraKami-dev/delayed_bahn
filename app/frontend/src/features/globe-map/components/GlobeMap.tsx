@@ -11,7 +11,7 @@ import { resolveJourneyGeometry } from "@/lib/journey-search"
 import { validTrack } from "@/lib/track-path"
 import { reuseMappedServiceGeometry } from "@/lib/osm-route"
 import type { Journey } from "@/lib/contract"
-import { clearRoute, drawRoute, recolourRoute } from "../hooks/useRouteLayers"
+import { clearRoute, drawRoute, recolourRoute, relayoutLabels } from "../hooks/useRouteLayers"
 import { fitJourney, flyToLeg, flyToStation, goHome, HOME, panelPadding } from "../camera"
 
 // Two keyless basemaps. Default: Esri dark grey raster (renders everywhere, cheap).
@@ -59,6 +59,7 @@ export function GlobeMap() {
   // Chase camera: on for a fresh journey, off as soon as the traveller moves the map themselves.
   const [follow, setFollow] = useState(true)
   const trainLayer = useRef<TrainLayer | null>(null)
+  const drawnJourney = useRef<string | null>(null)
   const holdUntil = useRef(0)
   const hold = (ms: number) => { holdUntil.current = Math.max(holdUntil.current, performance.now() + ms) }
 
@@ -134,7 +135,8 @@ export function GlobeMap() {
     const controller = new AbortController()
     let active = true
     const timeout = window.setTimeout(() => controller.abort(), 30000)
-    void resolveJourneyGeometry(original, controller.signal).then(next => {
+    // Each leg's track replaces its straight fallback as soon as any source answers.
+    void resolveJourneyGeometry(original, controller.signal, next => {
       if (active && !controller.signal.aborted) setResolved(next)
     }).catch(() => { /* Preserve the parsed journey and explicitly dashed fallback. */ }).finally(() => {
       window.clearTimeout(timeout)
@@ -197,21 +199,25 @@ export function GlobeMap() {
   useEffect(() => {
     if (!map) return
     if (journey) return
+    drawnJourney.current = null
     clearRoute(map, "main")
     clearRoute(map, "alt")
     goHome(map)
   }, [map, journey, still])
 
-  // Journey drawn and framed.
+  // Journey drawn and framed. Track upgrades for the same trip redraw in place: no second draw-in animation.
   useEffect(() => {
     if (!map || !journey) return
     try {
+      const fresh = drawnJourney.current !== journey.id
+      drawnJourney.current = journey.id
       drawRoute(map, "main", journey, {
         colours: legColours,
         satellite: basemapMode === "earth",
+        animate: fresh,
         onStationClick: (i) => s.dispatch({ type: "selectLeg", index: i }),
       })
-      if (!followActive) fitJourney(map, [journey])
+      if (!followActive) fitJourney(map, [journey], fresh ? {} : { duration: motionOff() ? 0 : 600 })
       console.info("[route] drawn", journey.legs.length, "legs")
     } catch (e) {
       console.error("[route] draw failed", e)
@@ -237,10 +243,11 @@ export function GlobeMap() {
       const index = journey.legs.findIndex(l => l.to.name === marker.getAttribute("aria-label"))
       if (index < 0) return
       let factor = marker.querySelector<HTMLElement>(".station-factor")
-      if (!factor) { factor = document.createElement("span"); factor.className = "station-factor"; marker.append(factor) }
+      if (!factor) { factor = document.createElement("span"); factor.className = "station-factor"; (marker.querySelector(".station-tag") ?? marker).append(factor) }
       const leg = prediction.legs[index]
       factor.textContent = `+${Math.round(leg.expectedDelayMinutes.value)} min${index < journey.legs.length - 1 ? ` · ${Math.round(leg.missProbability.value * 100)}% transfer risk` : ' arrival estimate'}`
     })
+    relayoutLabels(map)
     if (s.tab !== "forecast") return
     let worst = -1
     let worstP = 0

@@ -2,7 +2,7 @@ import { parseRouteGeometry, routeMatches } from './route-geometry'
 import { applyMappedRoute, fetchMappedRoute, matchesMappedRoute, type MappedRoute } from './osm-route'
 import { validTrack } from './track-path'
 import { fetchRailRoute } from './rail-router'
-import type { Journey, Station } from './contract'
+import type { Journey, Leg, Station } from './contract'
 
 type Stop = { id?: string; name?: string; location?: { latitude?: number; longitude?: number } }
 type TimetableLeg = { remarks?: { type?: string; text?: string; summary?: string }[]; polyline?: unknown; walking?: boolean; cancelled?: boolean; line?: { name?: string; mode?: string; productName?: string; product?: string; operator?: { name?: string } }; origin?: Stop; destination?: Stop; plannedDeparture?: string; plannedArrival?: string }
@@ -33,7 +33,8 @@ export async function searchTransportRest(from: Station, to: Station, signal: Ab
   })
 }
 
-export async function resolveJourneyGeometry(journey: Journey, signal: AbortSignal): Promise<Journey> {
+/** Track geometry per leg. `onProgress` receives the journey whenever a leg's route improves, so the map can show tracks before every source has answered. */
+export async function resolveJourneyGeometry(journey: Journey, signal: AbortSignal, onProgress?: (journey: Journey) => void): Promise<Journey> {
   let cached: MappedRoute[] = []
   try {
     const response = await fetch('/seed/mapped-routes.json', { signal: AbortSignal.any([signal, AbortSignal.timeout(3000)]) })
@@ -42,27 +43,46 @@ export async function resolveJourneyGeometry(journey: Journey, signal: AbortSign
       if (Array.isArray(data.routes)) cached = data.routes
     }
   } catch {}
-  const legs = await Promise.all(journey.legs.map(async leg => {
-    if (validTrack(leg.routeGeometry) || signal.aborted) return leg
+  const legs = [...journey.legs]
+  // Legs that answer together become one update, so the map redraws once rather than per leg.
+  let pending = 0
+  const snapshot = () => ({ ...journey, legs: [...legs] })
+  const publish = () => {
+    if (!onProgress || pending) return
+    pending = window.setTimeout(() => { pending = 0; if (!signal.aborted) onProgress(snapshot()) }, 150)
+  }
+  await Promise.all(journey.legs.map(async (leg, i) => {
+    if (validTrack(leg.routeGeometry) || signal.aborted) return
+    // The best route so far is shown as soon as it answers: timetable polyline (the real service
+    // path) over a mapped OSM route over the rail-network router. A slow or failing timetable
+    // service therefore no longer keeps straight lines on the map while the router already knows the track.
+    let rank = 0
+    const offer = (next: Leg, nextRank: number) => {
+      if (nextRank <= rank || signal.aborted) return
+      rank = nextRank
+      legs[i] = next
+      publish()
+    }
     const saved = cached.find(route => matchesMappedRoute(leg, route))
-    if (journey.source === 'seed' && saved) return applyMappedRoute(leg, saved)
-    // Timetable polyline (the real service path) and the rail-network router run together;
-    // the timetable wins when it answers, the router keeps the route on the tracks otherwise.
+    if (saved) offer(applyMappedRoute(leg, saved), 2)
+    if (journey.source === 'seed' && saved) return
     const timetable = journey.source === 'seed' ? Promise.resolve(undefined) : searchTransportRest(leg.from, leg.to, AbortSignal.any([signal, AbortSignal.timeout(6000)]), leg.plannedDeparture)
       .then(options => options.flatMap(option => option.legs).find(candidate => routeMatches(candidate, leg) && validTrack(candidate.routeGeometry)))
       .catch(() => undefined)
     const routed = fetchRailRoute(leg, AbortSignal.any([signal, AbortSignal.timeout(15000)])).catch(() => undefined)
+    void routed.then(track => { if (track) offer({ ...leg, routeGeometry: track, routeGeometrySource: 'router' }, 1) })
     const match = await timetable
-    if (match) return { ...leg, routeGeometry: match.routeGeometry, routeGeometrySource: 'timetable' as const, serviceCategory: match.serviceCategory ?? leg.serviceCategory, serviceProduct: match.serviceProduct ?? leg.serviceProduct, operatorName: match.operatorName ?? leg.operatorName }
-    if (signal.aborted) return leg
-    if (saved) return applyMappedRoute(leg, saved)
-    const track = await routed
-    if (track && !signal.aborted) return { ...leg, routeGeometry: track, routeGeometrySource: 'router' as const }
+    if (match) offer({ ...leg, routeGeometry: match.routeGeometry, routeGeometrySource: 'timetable', serviceCategory: match.serviceCategory ?? leg.serviceCategory, serviceProduct: match.serviceProduct ?? leg.serviceProduct, operatorName: match.operatorName ?? leg.operatorName }, 3)
+    await routed
+    if (rank || signal.aborted) return
     try {
       const route = await fetchMappedRoute(leg, AbortSignal.any([signal, AbortSignal.timeout(20000)]))
-      if (route && !signal.aborted) return applyMappedRoute(leg, route)
+      if (route) offer(applyMappedRoute(leg, route), 2)
     } catch {}
-    return leg
   }))
-  return { ...journey, legs }
+  if (pending) {
+    window.clearTimeout(pending)
+    if (!signal.aborted) onProgress?.(snapshot())
+  }
+  return snapshot()
 }

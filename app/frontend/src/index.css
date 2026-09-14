@@ -201,8 +201,12 @@ main:focus { outline: none; }
 .station-options button[aria-selected="true"] { background: #e6efdf; }
 
 /* station markers (HTML, no glyph fonts needed) */
-.station-marker { display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 5px; color: #2c4834; font: 600 10px/1 var(--font-sans); white-space: nowrap; }
+.station-marker { display: grid; place-items: center; width: 22px; height: 22px; background: none; border: 0; padding: 0; color: #2c4834; font: 600 10px/1 var(--font-sans); white-space: nowrap; }
 .station-marker .dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px var(--c, #52794a); flex: none; }
+/* Name plus forecast, stacked; label-placement.ts sets the side through transform and data-align. */
+.station-tag { position: absolute; left: 50%; top: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.station-tag[data-align="center"] { align-items: center; }
+.station-tag[data-align="end"] { align-items: flex-end; }
 .station-marker .label { background: #fffffff2; padding: 6px 9px; border-radius: 7px; border: 1px solid #d9e3d2; box-shadow: 0 2px 5px #2a422018; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
 
 /* phone: keep the tab bar on one line and the attribution out of the sheet */
@@ -406,7 +410,7 @@ html[data-motion="0"] *, html[data-motion="0"] *::before, html[data-motion="0"] 
   .map-experience main { padding-top: 18px; width: 48%; }
   .map-location-label, .map-factor-controls { left: 53%; }
 }
-.station-factor { display: block; font-size: 10px; font-weight: 650; background: #fff9e9; color: #775124; padding: 5px 8px; border-radius: 8px; box-shadow: 0 3px 12px #20352016; margin-left: 5px; white-space: nowrap; }
+.station-factor { display: block; font-size: 10px; font-weight: 650; background: #fff9e9; color: #775124; padding: 5px 8px; border-radius: 8px; box-shadow: 0 3px 12px #20352016; white-space: nowrap; }
 .map-sheet-toggle { position: fixed; bottom: 26px; right: 24px; z-index: 6; border: 1px solid #d2ddca; border-radius: 30px; padding: 13px 19px; min-height: 48px; font-size: 12px; font-weight: 650; color: white; background: #285b43; box-shadow: 0 7px 30px #18322225; }
 .map-experience[data-sheet-open="false"] .site-footer { display: none; }
 .map-experience main[hidden] { display: none; }
